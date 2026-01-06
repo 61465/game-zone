@@ -100,72 +100,6 @@ let lang="en";
 // ==== Tabs ====
 const tabs=document.querySelectorAll(".tab");
 let currentTab="characters";
-tabs.forEach(t=>{
- t.onclick=()=>{
-  tabs.forEach(b=>b.classList.remove("active"));
-  t.classList.add("active");
-  currentTab=t.dataset.tab;
-  setupFilter();
-  render();
- }
-});
-
-// ==== البيانات ====
-const characters=[
-  // Skyrim
-  {w:"Skyrim",en:{n:"Dragonborn",p:"Words shape reality.",m:"Hero on a frozen peak."},ar:{n:"دراجونبورن",p:"الكلمات تشكّل الواقع.",m:"بطل فوق قمة جليدية."}},
-  {w:"Skyrim",en:{n:"Alduin",p:"Destruction is destiny.",m:"World-eating dragon."},ar:{n:"ألدوين",p:"الدمار هو القدر.",m:"تنين يلتهم العالم."}},
-  {w:"Skyrim",en:{n:"Paarthurnax",p:"Restraint over domination.",m:"Ancient wise dragon."},ar:{n:"بارثورنكس",p:"الحكمة فوق السيطرة.",m:"تنين حكيم."}},
-  {w:"Skyrim",en:{n:"Ulfric Stormcloak",p:"Freedom at any cost.",m:"Rebel warlord."},ar:{n:"أولفريك",p:"الحرية بأي ثمن.",m:"قائد متمرد."}},
-  {w:"Skyrim",en:{n:"Miraak",p:"Power must be taken.",m:"Masked tyrant."},ar:{n:"ميرااك",p:"القوة تُنتزع.",m:"طاغية مقنّع."}},
-  {w:"Skyrim",en:{n:"Serana",p:"Survival through choice.",m:"Vampire between worlds."},ar:{n:"سيرانا",p:"البقاء بالتكيف.",m:"مصاصة دماء."}},
-
-  // The Witcher 3
-  {w:"The Witcher 3",en:{n:"Geralt of Rivia",p:"Balance over chaos.",m:"White wolf swordsman."},ar:{n:"جيرالت من ريفيا",p:"التوازن قبل الفوضى.",m:"الذئب الأبيض."}},
-  {w:"The Witcher 3",en:{n:"Ciri",p:"Fate can be broken.",m:"Child of prophecy."},ar:{n:"سيري",p:"القدر يُكسر.",m:"طفلة النبوءة."}},
-  {w:"The Witcher 3",en:{n:"Yennefer",p:"Power demands sacrifice.",m:"Sorceress of fire."},ar:{n:"ينيفر",p:"القوة بثمن.",m:"ساحرة قوية."}},
-  {w:"The Witcher 3",en:{n:"Vesemir",p:"Wisdom of experience.",m:"Old mentor."},ar:{n:"فيسيمير",p:"حكمة الخبرة.",m:"المعلم العجوز."}},
-  {w:"The Witcher 3",en:{n:"Eredin",p:"Rule through fear.",m:"King of the Wild Hunt."},ar:{n:"إيريدين",p:"الحكم بالخوف.",m:"ملك الصيد البري."}},
-  {w:"The Witcher 3",en:{n:"Triss Merigold",p:"Hope over cruelty.",m:"Kind sorceress."},ar:{n:"تريس",p:"الأمل قبل القسوة.",m:"ساحرة طيبة."}},
-
-  // God of War
-  {w:"God of War",en:{n:"Kratos",p:"Master your rage.",m:"Scarred god-slayer."},ar:{n:"كريتوس",p:"سيطر على غضبك.",m:"قاتل الآلهة."}},
-  {w:"God of War",en:{n:"Atreus",p:"Identity defines destiny.",m:"Boy seeking truth."},ar:{n:"أتريوس",p:"الهوية تصنع القدر.",m:"فتى يبحث عن ذاته."}},
-  {w:"God of War",en:{n:"Odin",p:"Knowledge above all.",m:"All-seeing tyrant."},ar:{n:"أودين",p:"المعرفة أولًا.",m:"طاغية حكيم."}},
-  {w:"God of War",en:{n:"Thor",p:"Strength without mercy.",m:"God of thunder."},ar:{n:"ثور",p:"قوة بلا رحمة.",m:"إله الرعد."}},
-  {w:"God of War",en:{n:"Freya",p:"Love turns to wrath.",m:"Vengeful mother."},ar:{n:"فريا",p:"الحب ينقلب غضبًا.",m:"أم غاضبة."}},
-  {w:"God of War",en:{n:"Baldur",p:"Pain defines existence.",m:"Cursed god."},ar:{n:"بالدر",p:"الألم هو الوجود.",m:"إله ملعون."}},
-
-  // Elden Ring
-  {w:"Elden Ring",en:{n:"The Tarnished",p:"Will over destiny.",m:"Exiled warrior."},ar:{n:"التارنشد",p:"الإرادة فوق القدر.",m:"محارب منفي."}},
-  {w:"Elden Ring",en:{n:"Malenia",p:"Pride through suffering.",m:"Scarlet blade."},ar:{n:"مالينيا",p:"الكبرياء عبر الألم.",m:"نصل القرمز."}},
-  {w:"Elden Ring",en:{n:"Radahn",p:"Honor in madness.",m:"Fallen general."},ar:{n:"رادهان",p:"الشرف في الجنون.",m:"جنرال ساقط."}},
-  {w:"Elden Ring",en:{n:"Ranni",p:"Freedom from fate.",m:"Witch of the moon."},ar:{n:"راني",p:"الحرية من القدر.",m:"ساحرة القمر."}},
-  {w:"Elden Ring",en:{n:"Godfrey",p:"Strength is legacy.",m:"First Elden Lord."},ar:{n:"جودفري",p:"القوة إرث.",m:"اللورد الأول."}},
-  {w:"Elden Ring",en:{n:"Marika",p:"Order through sacrifice.",m:"Broken goddess."},ar:{n:"ماريكا",p:"النظام بالتضحية.",m:"إلهة محطمة."}},
-
-  // Red Dead Redemption 2
-  {w:"Red Dead Redemption 2",en:{n:"Arthur Morgan",p:"Outlaw on the run.",m:"Leader in the gang."},ar:{n:"آرثر مورغان",p:"خارج عن القانون.",m:"زعيم في العصابة."}},
-  {w:"Red Dead Redemption 2",en:{n:"Dutch van der Linde",p:"Gang leader.",m:"Charismatic but dangerous."},ar:{n:"داتش فان دير ليند",p:"زعيم العصابة.",m:"جذاب لكنه خطر."}},
-  {w:"Red Dead Redemption 2",en:{n:"John Marston",p:"Gunslinger.",m:"Survivor seeking peace."},ar:{n:"جون مارستون",p:"رامي محترف.",m:"ناجي يبحث عن السلام."}},
-
-  // Assassin’s Creed Valhalla
-  {w:"Assassin’s Creed Valhalla",en:{n:"Eivor",p:"Viking warrior.",m:"Seeker of glory."},ar:{n:"إيفور",p:"محارب فايكنغ.",m:"باحث عن المجد."}},
-
-  // Dark Souls III
-  {w:"Dark Souls III",en:{n:"Ashen One",p:"Protagonist of the cursed land.",m:"Destined to link the flame."},ar:{n:"الآشين وان",p:"بطل الأرض الملعونة.",m:"مقدر لربط النار."}}
-];
-
-const games=[
-  {en:{n:"The Elder Scrolls V: Skyrim",d:"Explore a vast open world of dragons, magic, and ancient conflict.",y:2011,g:"RPG"},ar:{n:"ذا إلدر سكرولز 5: سكايرم",d:"استكشف عالمًا مفتوحًا مليئًا بالتنانين والسحر والصراعات القديمة.",y:2011,g:"تقمص أدوار"}},
-  {en:{n:"The Witcher 3: Wild Hunt",d:"A dark fantasy world where choices define the fate of nations.",y:2015,g:"RPG"},ar:{n:"ذا ويتشر 3: الصيد البري",d:"عالم فانتازي مظلم حيث تحدد اختياراتك مصير الأمم.",y:2015,g:"تقمص أدوار"}},
-  {en:{n:"God of War",d:"A mythological world of gods, monsters, and personal redemption.",y:2018,g:"Action/Adventure"},ar:{n:"جود أوف وور",d:"عالم أسطوري من الآلهة والوحوش والخلاص الشخصي.",y:2018,g:"أكشن/مغامرة"}},
-  {en:{n:"Elden Ring",d:"A vast fantasy universe of kingdoms, demigods, and mystical powers.",y:2022,g:"RPG"},ar:{n:"إلدن رينغ",d:"كون فانتازي شاسع من الممالك وأنصاف الآلهة والقوى الغامضة.",y:2022,g:"تقمص أدوار"}},
-  {en:{n:"Red Dead Redemption 2",d:"A tale of outlaws, honor, and survival in the Wild West.",y:2018,g:"Action/Adventure"},ar:{n:"ريد ديد 2",d:"قصة خارجين عن القانون والشرف والبقاء في الغرب المتوحش.",y:2018,g:"أكشن/مغامرة"}},
-  {en:{n:"Assassin’s Creed Valhalla",d:"Explore England as a Viking raider and conquer kingdoms.",y:2020,g:"RPG/Action"},ar:{n:"أساسنز كريد فالهالا",d:"استكشف إنجلترا كمغزو فايكنغ واحتل الممالك.",y:2020,g:"تقمص أدوار/أكشن"}},
-  {en:{n:"Dark Souls III",d:"Journey through a cursed kingdom full of danger and despair.",y:2016,g:"RPG"},ar:{n:"دارك سولز 3",d:"رحلة عبر مملكة ملعونة مليئة بالخطر واليأس.",y:2016,g:"تقمص أدوار"}},
-  {en:{n:"Cyberpunk 2077",d:"A futuristic open-world game with high-tech and dystopia.",y:2020,g:"RPG/Action"},ar:{n:"سايبربانك 2077",d:"لعبة عالم مفتوح مستقبلية مليئة بالتكنولوجيا والديستوبيا.",y:2020,g:"تقمص أدوار/أكشن"}}
-];
 
 // ==== DOM ====
 const archive=document.getElementById("archive");
@@ -173,17 +107,77 @@ const search=document.getElementById("search");
 const filter=document.getElementById("filter");
 const langBtn=document.querySelector(".lang");
 
+// ==== البيانات ====
+const characters=[
+  {w:"Skyrim",en:{n:"Dragonborn",p:"Words shape reality.",m:"Hero on a frozen peak."},ar:{n:"دراجونبورن",p:"الكلمات تشكّل الواقع.",m:"بطل فوق قمة جليدية."}},
+  {w:"Skyrim",en:{n:"Alduin",p:"Destruction is destiny.",m:"World-eating dragon."},ar:{n:"ألدوين",p:"الدمار هو القدر.",m:"تنين يلتهم العالم."}},
+  {w:"Skyrim",en:{n:"Paarthurnax",p:"Restraint over domination.",m:"Ancient wise dragon."},ar:{n:"بارثورنكس",p:"الحكمة فوق السيطرة.",m:"تنين حكيم."}},
+  {w:"Skyrim",en:{n:"Ulfric Stormcloak",p:"Freedom at any cost.",m:"Rebel warlord."},ar:{n:"أولفريك",p:"الحرية بأي ثمن.",m:"قائد متمرد."}},
+  {w:"Skyrim",en:{n:"Miraak",p:"Power must be taken.",m:"Masked tyrant."},ar:{n:"ميرااك",p:"القوة تُنتزع.",m:"طاغية مقنّع."}},
+  {w:"Skyrim",en:{n:"Serana",p:"Survival through choice.",m:"Vampire between worlds."},ar:{n:"سيرانا",p:"البقاء بالتكيف.",m:"مصاصة دماء."}},
+  
+  {w:"The Witcher 3",en:{n:"Geralt of Rivia",p:"Balance over chaos.",m:"White wolf swordsman."},ar:{n:"جيرالت من ريفيا",p:"التوازن قبل الفوضى.",m:"الذئب الأبيض."}},
+  {w:"The Witcher 3",en:{n:"Ciri",p:"Fate can be broken.",m:"Child of prophecy."},ar:{n:"سيري",p:"القدر يُكسر.",m:"طفلة النبوءة."}},
+  {w:"The Witcher 3",en:{n:"Yennefer",p:"Power demands sacrifice.",m:"Sorceress of fire."},ar:{n:"ينيفر",p:"القوة بثمن.",m:"ساحرة قوية."}},
+  {w:"The Witcher 3",en:{n:"Vesemir",p:"Wisdom of experience.",m:"Old mentor."},ar:{n:"فيسيمير",p:"حكمة الخبرة.",m:"المعلم العجوز."}},
+  {w:"The Witcher 3",en:{n:"Eredin",p:"Rule through fear.",m:"King of the Wild Hunt."},ar:{n:"إيريدين",p:"الحكم بالخوف.",m:"ملك الصيد البري."}},
+  {w:"The Witcher 3",en:{n:"Triss Merigold",p:"Hope over cruelty.",m:"Kind sorceress."},ar:{n:"تريس",p:"الأمل قبل القسوة.",m:"ساحرة طيبة."}},
+
+  {w:"God of War",en:{n:"Kratos",p:"Master your rage.",m:"Scarred god-slayer."},ar:{n:"كريتوس",p:"سيطر على غضبك.",m:"قاتل الآلهة."}},
+  {w:"God of War",en:{n:"Atreus",p:"Identity defines destiny.",m:"Boy seeking truth."},ar:{n:"أتريوس",p:"الهوية تصنع القدر.",m:"فتى يبحث عن ذاته."}},
+  {w:"God of War",en:{n:"Odin",p:"Knowledge above all.",m:"All-seeing tyrant."},ar:{n:"أودين",p:"المعرفة أولًا.",m:"طاغية حكيم."}},
+  {w:"God of War",en:{n:"Thor",p:"Strength without mercy.",m:"God of thunder."},ar:{n:"ثور",p:"قوة بلا رحمة.",m:"إله الرعد."}},
+  {w:"God of War",en:{n:"Freya",p:"Love turns to wrath.",m:"Vengeful mother."},ar:{n:"فريا",p:"الحب ينقلب غضبًا.",m:"أم غاضبة."}},
+  {w:"God of War",en:{n:"Baldur",p:"Pain defines existence.",m:"Cursed god."},ar:{n:"بالدر",p:"الألم هو الوجود.",m:"إله ملعون."}},
+
+  {w:"Elden Ring",en:{n:"The Tarnished",p:"Will over destiny.",m:"Exiled warrior."},ar:{n:"التارنشد",p:"الإرادة فوق القدر.",m:"محارب منفي."}},
+  {w:"Elden Ring",en:{n:"Malenia",p:"Pride through suffering.",m:"Scarlet blade."},ar:{n:"مالينيا",p:"الكبرياء عبر الألم.",m:"نصل القرمز."}},
+  {w:"Elden Ring",en:{n:"Radahn",p:"Honor in madness.",m:"Fallen general."},ar:{n:"رادهان",p:"الشرف في الجنون.",m:"جنرال ساقط."}},
+  {w:"Elden Ring",en:{n:"Ranni",p:"Freedom from fate.",m:"Witch of the moon."},ar:{n:"راني",p:"الحرية من القدر.",m:"ساحرة القمر."}},
+  {w:"Elden Ring",en:{n:"Godfrey",p:"Strength is legacy.",m:"First Elden Lord."},ar:{n:"جودفري",p:"القوة إرث.",m:"اللورد الأول."}},
+  {w:"Elden Ring",en:{n:"Marika",p:"Order through sacrifice.",m:"Broken goddess."},ar:{n:"ماريكا",p:"النظام بالتضحية.",m:"إلهة محطمة."}},
+
+  {w:"Red Dead Redemption 2",en:{n:"Arthur Morgan",p:"Outlaw on the run.",m:"Leader in the gang."},ar:{n:"آرثر مورغان",p:"خارج عن القانون.",m:"زعيم في العصابة."}},
+  {w:"Red Dead Redemption 2",en:{n:"Dutch van der Linde",p:"Gang leader.",m:"Charismatic but dangerous."},ar:{n:"داتش فان دير ليند",p:"زعيم العصابة.",m:"جذاب لكنه خطر."}},
+  {w:"Red Dead Redemption 2",en:{n:"John Marston",p:"Gunslinger.",m:"Survivor seeking peace."},ar:{n:"جون مارستون",p:"رامي محترف.",m:"ناجي يبحث عن السلام."}},
+
+  {w:"Assassin’s Creed Valhalla",en:{n:"Eivor",p:"Viking warrior.",m:"Seeker of glory."},ar:{n:"إيفور",p:"محارب فايكنغ.",m:"باحث عن المجد."}},
+
+  {w:"Dark Souls III",en:{n:"Ashen One",p:"Protagonist of the cursed land.",m:"Destined to link the flame."},ar:{n:"الآشين وان",p:"بطل الأرض الملعونة.",m:"مقدر لربط النار."}},
+
+  {w:"Cyberpunk 2077",en:{n:"V",p:"Cyberpunk mercenary.",m:"Living in dystopia."},ar:{n:"في",p:"مرتزق سايبربانك.",m:"يعيش في ديستوبيا."}},
+  {w:"Horizon Forbidden West",en:{n:"Aloy",p:"Brave hunter.",m:"Explores a robotic world."},ar:{n:"ألوي",p:"صيادة شجاعة.",m:"تستكشف عالمًا آليًا."}},
+  {w:"Spider-Man: Miles Morales",en:{n:"Miles Morales",p:"Young Spider-Man.",m:"Protects New York."},ar:{n:"مايلز موراليس",p:"سبايدر مان الشاب.",m:"يحمي نيويورك."}},
+  {w:"Resident Evil Village",en:{n:"Ethan Winters",p:"Survivor of horrors.",m:"Seeks family safety."},ar:{n:"إيثان وينترز",p:"ناجي من الرعب.",m:"يبحث عن سلام عائلته."}}
+];
+
+// ==== الألعاب ====
+const games=[
+  {en:{n:"Skyrim",d:"Explore a vast open world of dragons, magic, and ancient conflict.",y:2011,g:"RPG"},ar:{n:"سكايرم",d:"استكشف عالمًا مفتوحًا مليئًا بالتنانين والسحر والصراعات القديمة.",y:2011,g:"تقمص أدوار"}},
+  {en:{n:"The Witcher 3",d:"A dark fantasy world where choices define the fate of nations.",y:2015,g:"RPG"},ar:{n:"ذا ويتشر 3",d:"عالم فانتازي مظلم حيث تحدد اختياراتك مصير الأمم.",y:2015,g:"تقمص أدوار"}},
+  {en:{n:"God of War",d:"A mythological world of gods, monsters, and personal redemption.",y:2018,g:"Action/Adventure"},ar:{n:"جود أوف وور",d:"عالم أسطوري من الآلهة والوحوش والخلاص الشخصي.",y:2018,g:"أكشن/مغامرة"}},
+  {en:{n:"Elden Ring",d:"A vast fantasy universe of kingdoms, demigods, and mystical powers.",y:2022,g:"RPG"},ar:{n:"إلدن رينغ",d:"كون فانتازي شاسع من الممالك وأنصاف الآلهة والقوى الغامضة.",y:2022,g:"تقمص أدوار"}},
+  {en:{n:"Red Dead Redemption 2",d:"A tale of outlaws, honor, and survival in the Wild West.",y:2018,g:"Action/Adventure"},ar:{n:"ريد ديد 2",d:"قصة خارجين عن القانون والشرف والبقاء في الغرب المتوحش.",y:2018,g:"أكشن/مغامرة"}},
+  {en:{n:"Assassin’s Creed Valhalla",d:"Explore England as a Viking raider and conquer kingdoms.",y:2020,g:"RPG/Action"},ar:{n:"أساسنز كريد فالهالا",d:"استكشف إنجلترا كمغزو فايكنغ واحتل الممالك.",y:2020,g:"تقمص أدوار/أكشن"}},
+  {en:{n:"Dark Souls III",d:"Journey through a cursed kingdom full of danger and despair.",y:2016,g:"RPG"},ar:{n:"دارك سولز 3",d:"رحلة عبر مملكة ملعونة مليئة بالخطر واليأس.",y:2016,g:"تقمص أدوار"}},
+  {en:{n:"Cyberpunk 2077",d:"A futuristic open-world game with high-tech and dystopia.",y:2020,g:"RPG/Action"},ar:{n:"سايبربانك 2077",d:"لعبة عالم مفتوح مستقبلية مليئة بالتكنولوجيا والديستوبيا.",y:2020,g:"تقمص أدوار/أكشن"}},
+  {en:{n:"Horizon Forbidden West",d:"Explore a post-apocalyptic world filled with robotic creatures.",y:2022,g:"Action/Adventure"},ar:{n:"هورايزن فوربيدن ويست",d:"استكشف عالمًا ما بعد الكارثة مليء بالمخلوقات الآلية.",y:2022,g:"أكشن/مغامرة"}},
+  {en:{n:"Spider-Man: Miles Morales",d:"Swing through New York as the young Spider-Man.",y:2020,g:"Action/Adventure"},ar:{n:"سبايدر مان: مايلز موراليس",d:"تأرجح في نيويورك كسبايدر مان الشاب.",y:2020,g:"أكشن/مغامرة"}},
+  {en:{n:"Resident Evil Village",d:"Survive in a village filled with horror and secrets.",y:2021,g:"Horror"},ar:{n:"ريزدنت إيفل فيليج",d:"البقاء على قيد الحياة في قرية مليئة بالرعب والأسرار.",y:2021,g:"رعب"}},
+  {en:{n:"Final Fantasy VII Remake",d:"Reimagined classic RPG with modern graphics and storytelling.",y:2020,g:"RPG"},ar:{n:"فاينل فانتسي 7 ريميك",d:"إعادة تصور لعبة تقمص أدوار كلاسيكية برسوم حديثة.",y:2020,g:"تقمص أدوار"}}
+];
+
 // ==== إعداد فلتر لكل صفحة ====
 function setupFilter(){
  filter.innerHTML="";
  if(currentTab==="characters"){
   let gamesSet=new Set(characters.map(c=>c.w));
-  filter.innerHTML='<option value="all">All Games</option>';
-  gamesSet.forEach(g=>filter.innerHTML+=`<option>${g}</option>`);
+  filter.innerHTML=`<option value="all">${lang==="en"?"All Games":"كل الألعاب"}</option>`;
+  gamesSet.forEach(g=>filter.innerHTML+=`<option value="${g}">${g}</option>`);
  }else{
   let genres=new Set(games.map(g=>g[lang].g));
-  filter.innerHTML='<option value="all">All Genres</option>';
-  genres.forEach(g=>filter.innerHTML+=`<option>${g}</option>`);
+  filter.innerHTML=`<option value="all">${lang==="en"?"All Genres":"كل الأنواع"}</option>`;
+  genres.forEach(g=>filter.innerHTML+=`<option value="${g}">${g}</option>`);
  }
 }
 
@@ -199,9 +193,9 @@ function render(){
     <div class="card">
      <h2>${c[lang].n}</h2>
      <span class="tag">${c.w}</span>
-     <div class="section">${lang==="en"?"Power Philosophy":"فلسفة القوة"}</div>
+     <div class="section">${lang==="en"?"Phrase":"جملة"}</div>
      <p>${c[lang].p}</p>
-     <div class="section">${lang==="en"?"Mental Image":"الصورة الذهنية"}</div>
+     <div class="section">${lang==="en"?"Image Concept":"الصورة الذهنية"}</div>
      <p>${c[lang].m}</p>
     </div>`;
    }
@@ -223,26 +217,37 @@ function render(){
  }
 }
 
-// ==== اللغة ====
-langBtn.onclick = () => {
- lang = lang === "en" ? "ar" : "en";
- document.body.dir = lang === "ar" ? "rtl" : "ltr";
- langBtn.textContent = lang.toUpperCase();
+// ==== الأحداث ====
+tabs.forEach(t=>{
+ t.addEventListener("click",()=>{
+  tabs.forEach(b=>b.classList.remove("active"));
+  t.classList.add("active");
+  currentTab=t.dataset.tab;
+  setupFilter();
+  render();
+ });
+});
+
+search.addEventListener("input",render);
+filter.addEventListener("change",render);
+
+// زر اللغة
+langBtn.textContent="EN";
+langBtn.addEventListener("click",()=>{
+ lang=lang==="en"?"ar":"en";
+ langBtn.textContent=lang==="en"?"EN":"AR";
  setupFilter();
  render();
-};
-langBtn.textContent = lang.toUpperCase();
+});
 
-// ==== البحث والفلترة ====
-search.oninput = filter.onchange = render;
-
-// ==== إعداد الصفحة الأولى ====
+// أول تحميل
 setupFilter();
 render();
-</script>
 
+</script>
 </body>
 </html>
+
 
 
 
