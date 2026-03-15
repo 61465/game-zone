@@ -288,6 +288,39 @@ textarea.field{resize:none}
 @keyframes shake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
 .lottery-shake{animation:shake 0.15s 6}
 
+/* CINEMA */
+.cinema-overlay{position:fixed;inset:0;background:#000;z-index:500;display:none;flex-direction:column}
+.cinema-overlay.show{display:flex}
+.cinema-intro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:#000;transition:opacity .8s}
+.cinema-intro.fade{opacity:0;pointer-events:none}
+.cinema-screen{flex:1;position:relative;background:#000;overflow:hidden}
+.cinema-screen video{width:100%;height:100%;object-fit:contain}
+.cinema-ctrl{background:rgba(0,0,0,.85);border-top:1px solid rgba(201,168,76,.15);padding:10px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.cinema-progress{width:100%;height:4px;background:rgba(255,255,255,.15);border-radius:4px;cursor:pointer;position:relative}
+.cinema-prog-fill{height:100%;background:var(--g);border-radius:4px;transition:width .5s linear}
+.cinema-btns{display:flex;align-items:center;gap:10px}
+.cinema-btn{width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.1);color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cinema-btn:hover{background:rgba(201,168,76,.3)}
+.cinema-time{font-size:11px;color:rgba(255,255,255,.6);flex:1}
+.cinema-chat{position:absolute;bottom:80px;left:0;right:0;padding:0 12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-height:200px;overflow:hidden;justify-content:flex-end}
+.cinema-bubble{background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:6px 12px;font-size:13px;color:white;backdrop-filter:blur(8px);animation:bubbleIn .3s ease;align-self:flex-start;max-width:75%}
+.cinema-bubble.me{background:rgba(201,168,76,.25);border-color:rgba(201,168,76,.4);align-self:flex-end}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.cinema-input-row{display:flex;gap:7px;pointer-events:all}
+.cinema-tinput{flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:7px 13px;color:white;font-family:Tajawal,sans-serif;font-size:13px;outline:none}
+.cinema-tinput::placeholder{color:rgba(255,255,255,.4)}
+.cinema-tsend{width:34px;height:34px;border-radius:50%;border:none;background:var(--g);color:#000;font-size:14px;cursor:pointer;flex-shrink:0}
+.film-curtain{position:absolute;inset:0;background:linear-gradient(to bottom,#1a0a00,#000);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.film-strip{display:flex;gap:4px;margin-bottom:8px}
+.film-hole{width:16px;height:20px;background:rgba(255,255,255,.08);border-radius:3px}
+/* STARRED */
+.starred-msg{background:rgba(201,168,76,.08)!important;border-color:rgba(201,168,76,.4)!important}
+.star-badge{position:absolute;top:-6px;left:-6px;font-size:12px}
+/* MEDIA BUB */
+.media-bub{background:transparent;border:none;padding:0;max-width:220px}
+.media-bub img,.media-bub video{width:100%;border-radius:14px;display:block;cursor:pointer}
 /* NICKNAME */
 .nk-section{background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;margin-top:4px}
 .nk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -417,6 +450,7 @@ textarea.field{resize:none}
     <button class="tab" onclick="swTab('lottery')">🎲 القرعة</button>
     <button class="tab" onclick="swTab('memories')">✨ ذكريات</button>
     <button class="tab" onclick="swTab('themes')">🎨 سمات</button>
+    <button class="tab" onclick="swTab('cinema')">🎬 سينما</button>
   </div>
 
   <!-- ══ CHAT ══ -->
@@ -454,6 +488,7 @@ textarea.field{resize:none}
     <div class="iarea">
       <div class="irow">
         <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show')">😊</button>
+        <label class="ibtn" title="صورة/فيديو" style="cursor:pointer">📎<input type="file" id="mediaFile" accept="image/*,video/*" style="display:none" onchange="sendMedia(this)"></label>
         <textarea class="minput" id="msgInput" placeholder="اكتب رسالتك..." rows="1" onkeydown="onKey(event)" oninput="aR(this)"></textarea>
         <button class="ibtn" id="recBtn" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()" title="اضغط مطولاً للتسجيل" style="flex-shrink:0">🎙️</button>
         <button class="sbtn" onclick="sendMsg()">➤</button>
@@ -819,9 +854,85 @@ textarea.field{resize:none}
       <div class="ptitle">🎨 سمات التطبيق</div>
       <div style="font-size:13px;color:var(--tm);margin-bottom:10px">اختر سمة تناسب مزاجكما اليوم</div>
       <div class="tgrid" id="thGrid"></div>
+
+  <!-- ══ CINEMA ══ -->
+  <div class="panel" id="panel-cinema">
+    <div class="pi" style="align-items:center;justify-content:center;text-align:center;gap:16px">
+      <div style="font-size:64px">🎬</div>
+      <div style="font-size:22px;font-weight:700;color:var(--g)">سينما للإثنين</div>
+      <div style="font-size:13px;color:var(--tm);max-width:300px;line-height:1.7">شاهدا معاً بشكل متزامن! ارفع ملف فيديو أو أدخل رابط وسيُبث للطرفين في نفس الوقت</div>
+      <div class="card" style="width:100%;text-align:right">
+        <div class="ctitle">🎥 اختر مصدر الفيديو</div>
+        <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;background:var(--d4);margin-bottom:10px;transition:all .2s" id="cinemaDropZone">
+          <span style="font-size:32px">📁</span>
+          <span style="font-size:13px;color:var(--tm)">اضغط لرفع فيديو من جهازك</span>
+          <input type="file" id="cinemaFile" accept="video/*" style="display:none" onchange="loadCinemaFile(this)">
+        </label>
+        <div style="text-align:center;color:var(--tm);font-size:12px;margin-bottom:8px">أو</div>
+        <input class="field" id="cinemaUrl" placeholder="ألصق رابط فيديو مباشر (MP4)..." style="margin-bottom:8px">
+        <button class="pbtn" onclick="openCinemaFromUrl()">🎬 افتح السينما</button>
+      </div>
+      <div class="card" style="width:100%;text-align:right" id="cinemaStatusCard">
+        <div class="ctitle">📡 حالة البث المشترك</div>
+        <div style="font-size:13px;color:var(--tm)" id="cinemaStatusTxt">لا يوجد بث نشط حالياً</div>
+      </div>
     </div>
   </div>
 
+</div>
+
+<!-- CINEMA OVERLAY -->
+<div class="cinema-overlay" id="cinemaOverlay">
+  <!-- Intro animation -->
+  <div class="cinema-intro" id="cinemaIntro">
+    <div class="film-curtain" style="width:100%;height:100%;position:absolute;inset:0">
+      <div class="film-strip">
+        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
+        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
+        <div class="film-hole"></div><div class="film-hole"></div>
+      </div>
+      <div style="font-size:72px;filter:drop-shadow(0 0 30px rgba(201,168,76,.6));animation:pulse 2s infinite">🎬</div>
+      <div style="font-size:26px;font-weight:700;color:var(--g);letter-spacing:3px;text-shadow:0 0 20px rgba(201,168,76,.5)">سينما للإثنين</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px" id="cinemaIntroSub">جاري تحضير العرض...</div>
+      <div class="film-strip">
+        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
+        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
+        <div class="film-hole"></div><div class="film-hole"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen -->
+  <div class="cinema-screen" id="cinemaScreen">
+    <video id="cinemaVideo" playsinline webkit-playsinline></video>
+    <!-- Chat bubbles overlay -->
+    <div class="cinema-chat" id="cinemaBubbles"></div>
+    <!-- Sync indicator -->
+    <div id="cinemaSyncBadge" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(74,222,128,.4);border-radius:20px;padding:4px 10px;font-size:11px;color:#4ade80;display:none">🔴 بث مباشر مشترك</div>
+    <!-- Partner action popup -->
+    <div id="cinemaPartnerAct" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);border:1px solid rgba(201,168,76,.4);border-radius:14px;padding:14px 20px;font-size:14px;color:white;display:none;text-align:center;backdrop-filter:blur(10px)"></div>
+  </div>
+
+  <!-- Controls -->
+  <div class="cinema-ctrl">
+    <div class="cinema-progress" id="cinemaProgress" onclick="cinemaSeek(event)">
+      <div class="cinema-prog-fill" id="cinemaProgFill" style="width:0%"></div>
+    </div>
+    <div class="cinema-btns">
+      <button class="cinema-btn" onclick="cinemaPlayPause()" id="cinemaPlayBtn">▶</button>
+      <button class="cinema-btn" onclick="cinemaRewind()">⏪</button>
+      <button class="cinema-btn" onclick="cinemaForward()">⏩</button>
+      <button class="cinema-btn" onclick="toggleCinemaMute()" id="cinemaMuteBtn">🔊</button>
+      <span class="cinema-time" id="cinemaTimeDisp">0:00 / 0:00</span>
+      <button class="cinema-btn" onclick="toggleCinemaFs()" id="cinemaFsBtn">⛶</button>
+      <button class="cinema-btn" onclick="closeCinema()" style="background:rgba(224,85,85,.3);color:#ff8080">✕</button>
+    </div>
+    <!-- Chat row -->
+    <div class="cinema-input-row">
+      <input class="cinema-tinput" id="cinemaMsgInput" placeholder="💬 اكتب رسالة أثناء المشاهدة..." onkeydown="if(event.key==='Enter')sendCinemaMsg()">
+      <button class="cinema-tsend" onclick="sendCinemaMsg()">➤</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODALS -->
@@ -1056,6 +1167,7 @@ function showLErr(m){const el=document.getElementById('lerr');el.textContent=m;e
 onAuthStateChanged(auth, async (user) => {
   if(!user){showSc('auth');return;}
   uid=user.uid; myName=user.displayName||'أنت'; myInit=myName[0]||'أ'; myEmail=user.email||'';
+  starredMsgs = JSON.parse(localStorage.getItem('starred_'+uid)||'[]');
 
   document.getElementById('smcMe').textContent=myInit;
   document.getElementById('myMavTop').textContent=myInit;
@@ -1092,6 +1204,19 @@ onAuthStateChanged(auth, async (user) => {
         calcAnniv(sd.anniversary);
       }
       if(sd.lotteryItems!==undefined){renderLotteryItems(sd.lotteryItems||[]);}
+      if(sd.cinema && sd.cinema.by !== uid) {
+        if(sd.cinema.action === 'close') {
+          const overlay = document.getElementById('cinemaOverlay');
+          if(overlay.classList.contains('show')) {
+            const video = document.getElementById('cinemaVideo');
+            video.pause(); video.src = '';
+            overlay.classList.remove('show');
+            document.getElementById('cinemaIntro').classList.remove('fade');
+            document.getElementById('cinemaIntro').style.display = '';
+            document.getElementById('cinemaBubbles').innerHTML = '';
+          }
+        }
+      }
       if(sd.lotteryResult!==undefined && sd.lotteryResult){showLotteryResult(sd.lotteryResult);}
     });
 
@@ -1118,7 +1243,7 @@ window.swTab = (n) => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const p=document.getElementById('panel-'+n);
   if(p){p.style.display='flex';p.classList.add('on');}
-  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12};
+  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13};
   const tabs=document.querySelectorAll('.tab');
   if(tabs[map[n]])tabs[map[n]].classList.add('on');
   if(n==='draw')setTimeout(resizeCanvas,100);
@@ -1215,6 +1340,12 @@ function renderMsg(id, data) {
       const s=Math.floor(audio.duration);
       dur.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
     };
+    if(isMe){
+      const delVBtn=document.createElement('button');
+      delVBtn.className='play-btn'; delVBtn.style.cssText='background:rgba(224,85,85,.5);margin-right:4px';
+      delVBtn.textContent='🗑️'; delVBtn.onclick=()=>delVoiceMsg(id);
+      bub.appendChild(delVBtn);
+    }
     bub.appendChild(playBtn); bub.appendChild(wave); bub.appendChild(dur);
     wrap.appendChild(bub);
   } else if(data.type==='img_sticker') {
@@ -1226,27 +1357,58 @@ function renderMsg(id, data) {
     img.onerror=()=>{bub.textContent='🖼️'};
     bub.appendChild(img);
     wrap.appendChild(bub);
+  } else if(data.type==='media_img') {
+    const bub=document.createElement('div');
+    bub.className='media-bub';
+    const img=document.createElement('img');
+    img.src=content;
+    img.style.cssText='max-width:220px;border-radius:14px;display:block;cursor:pointer';
+    img.onclick=()=>{window.open(content,'_blank')};
+    img.onerror=()=>{bub.textContent='🖼️'};
+    bub.appendChild(img);
+    wrap.appendChild(bub);
+  } else if(data.type==='media_video') {
+    const bub=document.createElement('div');
+    bub.className='media-bub';
+    const vid=document.createElement('video');
+    vid.src=content; vid.controls=true;
+    vid.style.cssText='max-width:220px;border-radius:14px;display:block';
+    bub.appendChild(vid);
+    wrap.appendChild(bub);
   } else {
     const bub=document.createElement('div');
     bub.className='bub '+(isMe?'me':'hr');
     bub.textContent=content;
 
+    // Star badge
+    const starBadge = document.createElement('span');
+    starBadge.className = 'star-badge';
+    starBadge.textContent = starredMsgs.includes(id) ? '⭐' : '';
+    wrap.appendChild(starBadge);
+
+    // Message menu (visible on hover for both me and partner)
+    const menu=document.createElement('div');
+    menu.className='msg-menu';
     if(isMe) {
-      const menu=document.createElement('div');
-      menu.className='msg-menu';
-      ['🗑️','❤️','🌹','😂'].forEach(function(emoji,idx){
-        const btn=document.createElement('button');
-        btn.className='mmbtn';
-        btn.textContent=emoji;
-        btn.onclick=function(){
-          if(idx===0) delMsg(id);
-          else addRxn(id,emoji);
-        };
-        menu.appendChild(btn);
-      });
-      wrap.appendChild(menu);
+      const delBtn=document.createElement('button');
+      delBtn.className='mmbtn'; delBtn.textContent='🗑️';
+      delBtn.onclick=()=>delMsg(id);
+      menu.appendChild(delBtn);
     }
+    const starBtn=document.createElement('button');
+    starBtn.className='mmbtn'; starBtn.textContent='⭐';
+    starBtn.onclick=()=>toggleStar(id);
+    menu.appendChild(starBtn);
+    ['❤️','🌹','😂'].forEach(function(emoji){
+      const btn=document.createElement('button');
+      btn.className='mmbtn'; btn.textContent=emoji;
+      btn.onclick=function(){ addRxn(id,emoji); };
+      menu.appendChild(btn);
+    });
+    wrap.appendChild(menu);
     wrap.appendChild(bub);
+    if(starredMsgs.includes(id)) wrap.classList.add('starred-msg');
+    wrap.dataset.msgid = id;
   }
 
   if(data.reactions&&data.reactions.length) {
@@ -2006,6 +2168,229 @@ window.addMemory = async () => {
 window.delMemory = async (id) => {
   await deleteDoc(doc(db,'shared',cid(),'memories',id));
 };
+
+
+// ── STARRED MESSAGES ──
+let starredMsgs = [];
+
+window.toggleStar = async (id) => {
+  const idx = starredMsgs.indexOf(id);
+  if(idx>=0) starredMsgs.splice(idx,1);
+  else starredMsgs.push(id);
+  localStorage.setItem('starred_'+(uid||'x'), JSON.stringify(starredMsgs));
+  // Re-render is handled by the live listener
+  const el = document.querySelector(`[data-msgid="${id}"]`);
+  if(el) {
+    el.classList.toggle('starred-msg', starredMsgs.includes(id));
+    const badge = el.querySelector('.star-badge');
+    if(badge) badge.textContent = starredMsgs.includes(id) ? '⭐' : '';
+  }
+};
+
+// ── SEND MEDIA (images/videos) ──
+window.sendMedia = async (inp) => {
+  if(!pId || !inp.files.length) return;
+  const file = inp.files[0];
+  const isVideo = file.type.startsWith('video/');
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    await addDoc(collection(db,'chats',cid(),'messages'),{
+      content: e.target.result,
+      senderId: uid,
+      type: isVideo ? 'media_video' : 'media_img',
+      reactions:[], sentAt:serverTimestamp()
+    });
+  };
+  reader.readAsDataURL(file);
+  inp.value = '';
+};
+
+// ── VOICE DELETE ──
+window.delVoiceMsg = async (id) => {
+  await deleteDoc(doc(db,'chats',cid(),'messages',id));
+};
+
+// ── CINEMA ──
+let cinemaVideoSrc = '';
+let cinemaListenUnsub = null;
+let cinemaIsSyncing = false;
+let cinemaBubbleTimer = null;
+
+window.loadCinemaFile = (inp) => {
+  if(!inp.files.length) return;
+  const file = inp.files[0];
+  const url = URL.createObjectURL(file);
+  openCinema(url, file.name);
+};
+
+window.openCinemaFromUrl = () => {
+  const url = (document.getElementById('cinemaUrl').value||'').trim();
+  if(!url) return;
+  openCinema(url, 'فيديو مشترك');
+};
+
+function openCinema(src, title) {
+  cinemaVideoSrc = src;
+  const overlay = document.getElementById('cinemaOverlay');
+  const intro = document.getElementById('cinemaIntro');
+  const video = document.getElementById('cinemaVideo');
+  overlay.classList.add('show');
+  document.getElementById('cinemaIntroSub').textContent = '🎬 ' + title;
+
+  // Intro animation
+  setTimeout(() => {
+    intro.classList.add('fade');
+    video.src = src;
+    document.getElementById('cinemaSyncBadge').style.display = 'flex';
+    setupCinemaSync();
+  }, 2200);
+  setTimeout(() => { intro.style.display = 'none'; }, 3000);
+}
+
+function setupCinemaSync() {
+  if(!pId) return;
+  // Listen for sync commands from partner
+  if(cinemaListenUnsub) cinemaListenUnsub();
+  cinemaListenUnsub = onSnapshot(doc(db,'shared',cid()), (snap) => {
+    if(!snap.exists()) return;
+    const sd = snap.data();
+    if(!sd.cinema) return;
+    const video = document.getElementById('cinemaVideo');
+    const cmd = sd.cinema;
+    // Only respond to commands from partner
+    if(cmd.by === uid) return;
+    cinemaIsSyncing = true;
+    if(cmd.action === 'play') {
+      if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
+      video.play().catch(()=>{});
+      document.getElementById('cinemaPlayBtn').textContent = '⏸';
+      showPartnerAct((hrNick||pName) + ' ▶ شغّل');
+    } else if(cmd.action === 'pause') {
+      video.pause();
+      if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
+      document.getElementById('cinemaPlayBtn').textContent = '▶';
+      showPartnerAct((hrNick||pName) + ' ⏸ أوقف');
+    } else if(cmd.action === 'seek') {
+      video.currentTime = cmd.time;
+      showPartnerAct((hrNick||pName) + ' ⏩ تقديم/تأخير');
+    } else if(cmd.action === 'msg') {
+      addCinemaBubble(cmd.msg, false);
+    }
+    setTimeout(() => cinemaIsSyncing = false, 300);
+  });
+
+  // Video event listeners
+  const video = document.getElementById('cinemaVideo');
+  video.ontimeupdate = () => {
+    const prog = video.duration ? (video.currentTime/video.duration*100) : 0;
+    document.getElementById('cinemaProgFill').style.width = prog + '%';
+    const cur = fmtSec(video.currentTime);
+    const dur = fmtSec(video.duration||0);
+    document.getElementById('cinemaTimeDisp').textContent = cur + ' / ' + dur;
+  };
+}
+
+function fmtSec(s) {
+  if(isNaN(s)) return '0:00';
+  const m = Math.floor(s/60), sec = Math.floor(s%60);
+  return m + ':' + String(sec).padStart(2,'0');
+}
+
+async function broadcastCinema(action, extra) {
+  if(!pId || cinemaIsSyncing) return;
+  const video = document.getElementById('cinemaVideo');
+  await setDoc(doc(db,'shared',cid()), {
+    cinema: { action, time: video.currentTime, by: uid, at: Date.now(), ...extra }
+  }, {merge:true});
+}
+
+window.cinemaPlayPause = async () => {
+  const video = document.getElementById('cinemaVideo');
+  const btn = document.getElementById('cinemaPlayBtn');
+  if(video.paused) {
+    await video.play();
+    btn.textContent = '⏸';
+    await broadcastCinema('play');
+  } else {
+    video.pause();
+    btn.textContent = '▶';
+    await broadcastCinema('pause');
+  }
+};
+
+window.cinemaRewind = async () => {
+  const video = document.getElementById('cinemaVideo');
+  video.currentTime = Math.max(0, video.currentTime - 10);
+  await broadcastCinema('seek');
+};
+
+window.cinemaForward = async () => {
+  const video = document.getElementById('cinemaVideo');
+  video.currentTime = Math.min(video.duration||0, video.currentTime + 10);
+  await broadcastCinema('seek');
+};
+
+window.cinemaSeek = async (e) => {
+  const video = document.getElementById('cinemaVideo');
+  const bar = document.getElementById('cinemaProgress');
+  const ratio = e.offsetX / bar.offsetWidth;
+  video.currentTime = ratio * (video.duration||0);
+  await broadcastCinema('seek');
+};
+
+window.toggleCinemaMute = () => {
+  const video = document.getElementById('cinemaVideo');
+  video.muted = !video.muted;
+  document.getElementById('cinemaMuteBtn').textContent = video.muted ? '🔇' : '🔊';
+};
+
+window.toggleCinemaFs = () => {
+  const el = document.getElementById('cinemaOverlay');
+  if(!document.fullscreenElement) el.requestFullscreen().catch(()=>{});
+  else document.exitFullscreen();
+};
+
+window.closeCinema = async () => {
+  const video = document.getElementById('cinemaVideo');
+  video.pause(); video.src = '';
+  document.getElementById('cinemaOverlay').classList.remove('show');
+  document.getElementById('cinemaIntro').classList.remove('fade');
+  document.getElementById('cinemaIntro').style.display = '';
+  document.getElementById('cinemaBubbles').innerHTML = '';
+  if(cinemaListenUnsub) { cinemaListenUnsub(); cinemaListenUnsub = null; }
+  await setDoc(doc(db,'shared',cid()),{cinema:{action:'close',by:uid}},{merge:true});
+};
+
+window.sendCinemaMsg = async () => {
+  const inp = document.getElementById('cinemaMsgInput');
+  const msg = (inp.value||'').trim();
+  if(!msg || !pId) return;
+  inp.value = '';
+  addCinemaBubble(msg, true);
+  await broadcastCinema('msg', {msg});
+  // Also save to regular chat
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:'🎬 '+msg, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+  });
+};
+
+function addCinemaBubble(msg, isMe) {
+  const container = document.getElementById('cinemaBubbles');
+  const bub = document.createElement('div');
+  bub.className = 'cinema-bubble' + (isMe ? ' me' : '');
+  bub.textContent = (isMe ? '' : (hrNick||pName) + ': ') + msg;
+  container.appendChild(bub);
+  // Keep only last 5 bubbles
+  while(container.children.length > 5) container.removeChild(container.firstChild);
+  // Auto remove after 5s
+  setTimeout(() => bub.remove(), 5000);
+}
+
+function showPartnerAct(msg) {
+  const el = document.getElementById('cinemaPartnerAct');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 2500);
+}
 
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
