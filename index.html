@@ -940,18 +940,13 @@ function loadNicks() {
   applyNicks();
 }
 function applyNicks() {
-  // Apply to all name displays
   const mn = myNick || myName;
   const hn = hrNick || pName;
   const mi = mn[0] || 'أ';
   const hi = hn[0] || 'س';
 
-  // Topbar
   document.getElementById('pNameTop').textContent = hn + ' 🌹';
   document.getElementById('pInit').textContent = hi;
-  document.getElementById('pAv').querySelector('#pInit').textContent = hi;
-
-  // Mood bar
   document.getElementById('hrMNameTop').textContent = hn;
   document.getElementById('smcHrN').textContent = hn;
   document.getElementById('myMavTop').textContent = mi;
@@ -959,7 +954,6 @@ function applyNicks() {
   document.getElementById('smcMe').textContent = mi;
   document.getElementById('smcHr').textContent = hi;
 
-  // Nickname panel
   document.getElementById('nkMyName').textContent = mn;
   document.getElementById('nkHrName').textContent = hn;
   document.getElementById('nkMyEmail').textContent = myEmail;
@@ -975,7 +969,6 @@ function applyNicks() {
   document.getElementById('nkPrevMyAv').textContent = mi;
   document.getElementById('nkPrevHrAv').textContent = hi;
 
-  // Game score label
   const sc2L = document.getElementById('sc2L');
   if(sc2L) sc2L.textContent = hn;
 }
@@ -1074,7 +1067,6 @@ onAuthStateChanged(auth, async (user) => {
     if(d.mood){myMood=d.mood; updateMoodUI();}
     if(!pId){showSc('link');return;}
 
-    // Load partner
     const ps=await getDoc(doc(db,'users',pId));
     if(ps.exists()){
       const pd=ps.data();
@@ -1086,12 +1078,10 @@ onAuthStateChanged(auth, async (user) => {
     updateMoodUI();
     showSc('app');
 
-    // Listen partner
     const unsub2=onSnapshot(doc(db,'users',pId),(ps)=>{
       if(ps.exists()&&ps.data().mood){hrMood=ps.data().mood;updateMoodUI();}
     });
 
-    // Listen shared (fight + theme + anniversary + lottery)
     const unsub3=onSnapshot(doc(db,'shared',cid()),(ss)=>{
       if(!ss.exists())return;
       const sd=ss.data();
@@ -1105,13 +1095,9 @@ onAuthStateChanged(auth, async (user) => {
       if(sd.lotteryResult!==undefined && sd.lotteryResult){showLotteryResult(sd.lotteryResult);}
     });
 
-    // Listen messages
     const unsub4=listenMsgs();
-    // Listen ideas
     const unsub5=listenIdeas();
-    // Listen todos
     const unsub6=listenTodos();
-    // Listen memories
     const unsub7=listenMemories();
 
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
@@ -1154,7 +1140,6 @@ function renderMsg(id, data) {
   const area = document.getElementById('msgsArea');
   if(!area) return;
 
-  // Fix: ensure content is always a string
   const content = (data.content !== undefined && data.content !== null)
     ? String(data.content)
     : '';
@@ -1165,7 +1150,6 @@ function renderMsg(id, data) {
   const mi = mn[0]||'أ';
   const hi = hn[0]||'س';
 
-  // System message
   if(data.type==='system') {
     const div=document.createElement('div');
     div.style.cssText='text-align:center;padding:4px 0';
@@ -1180,17 +1164,14 @@ function renderMsg(id, data) {
   const row=document.createElement('div');
   row.className='mrow'+(isMe?' me':'');
 
-  // Avatar
   const av=document.createElement('div');
   av.className='mav2 '+(isMe?'me':'hr');
   av.textContent=isMe?mi:hi;
 
-  // Wrap
   const wrap=document.createElement('div');
   wrap.className='mwrap';
   wrap.style.position='relative';
 
-  // Bubble
   if(data.type==='letter') {
     const bub=document.createElement('div');
     bub.className='bub ltr';
@@ -1263,11 +1244,11 @@ function renderMsg(id, data) {
         };
         menu.appendChild(btn);
       });
-      wrap.appendChild(menu);    }
+      wrap.appendChild(menu);
+    }
     wrap.appendChild(bub);
   }
 
-  // Reactions
   if(data.reactions&&data.reactions.length) {
     const rxns=document.createElement('div');
     rxns.className='rxns';
@@ -1282,7 +1263,6 @@ function renderMsg(id, data) {
     wrap.appendChild(rxns);
   }
 
-  // Time
   const t=document.createElement('div');
   t.className='mtime';
   t.textContent=fmtT(data.sentAt);
@@ -1509,9 +1489,9 @@ function renderIdeas(all) {
       +'<div class="ifooter">'
       +'<span class="itag" style="color:'+col+';border-color:'+col+'40;background:'+col+'15">'+(cn[i.category]||'أخرى')+'</span>'
       +'<span class="iwho">💬 '+(i.byName||'أنت')+'</span>'
-      +'<button class="ilbtn" onclick="likeI(''+i.id+'','+liked+')">'+( liked?'❤️':'🤍')+'</button>'
+      +'<button class="ilbtn" onclick="likeI(\''+i.id+'\','+liked+')">'+( liked?'❤️':'🤍')+'</button>'
       +'<span style="font-size:11px;color:var(--tm)">'+(i.likes||0)+'</span>'
-      +'<button class="idbtn" onclick="delI(''+i.id+'')">🗑️</button>'
+      +'<button class="idbtn" onclick="delI(\''+i.id+'\')">🗑️</button>'
       +'</div></div>';
   }).join('');
 }
@@ -1543,11 +1523,11 @@ function listenTodos() {
 }
 function renderTodos(all) {
   document.getElementById('todoList').innerHTML=all.map(t=>{
-    return '<div class="titem'+(t.isDone?' done':'')+'" onclick="togT(''+t.id+'','+t.isDone+')">'
+    return '<div class="titem'+(t.isDone?' done':'')+'" onclick="togT(\''+t.id+'\','+t.isDone+')">'
       +'<div class="tcheck">'+(t.isDone?'✓':'')+'</div>'
       +'<div class="ttxt">'+(t.title||'')+'</div>'
       +'<span class="twho">'+(t.byName||'أنت')+'</span>'
-      +'<button class="idbtn" onclick="event.stopPropagation();delT(''+t.id+'')">🗑️</button>'
+      +'<button class="idbtn" onclick="event.stopPropagation();delT(\''+t.id+'\')">🗑️</button>'
       +'</div>';
   }).join('');
 }
@@ -1611,7 +1591,7 @@ function renderGames() {
       +'<div class="gdesc">'+g.desc+'</div>'
       +'<div class="gfoot">'
       +'<span class="gtag" style="color:'+col+';border-color:'+col+'40;background:'+col+'15">'+cn[g.cat]+'</span>'
-      +'<button class="gplay" onclick="startG(''+g.id+'')">▶ العب</button>'
+      +'<button class="gplay" onclick="startG(\''+g.id+'\')">▶ العب</button>'
       +'</div></div>';
   }).join('');
 }
@@ -1783,7 +1763,6 @@ function calcAnniv(dateStr) {
   document.getElementById('annivInput').value = dateStr;
 
   if(wed > now) {
-    // Future wedding
     const diff = Math.ceil((wed - now) / 86400000);
     el.textContent = diff;
     lbl.textContent = 'يوم حتى الزواج 💍';
@@ -1791,11 +1770,9 @@ function calcAnniv(dateStr) {
     return;
   }
 
-  // ── Calculate total days together ──
   const totalMs = now - wed;
   const totalDays = Math.floor(totalMs / 86400000);
 
-  // ── Calculate years + remaining months + days ──
   let years = now.getFullYear() - wed.getFullYear();
   let months = now.getMonth() - wed.getMonth();
   let days = now.getDate() - wed.getDate();
@@ -1810,13 +1787,11 @@ function calcAnniv(dateStr) {
     months += 12;
   }
 
-  // ── Next anniversary ──
   const nextAnniv = new Date(now.getFullYear(), wed.getMonth(), wed.getDate());
   if(nextAnniv <= now) nextAnniv.setFullYear(now.getFullYear() + 1);
   const daysToAnniv = Math.ceil((nextAnniv - now) / 86400000);
   const nextYr = nextAnniv.getFullYear() - wed.getFullYear();
 
-  // ── Build display ──
   el.textContent = totalDays.toLocaleString('ar-SA');
   lbl.textContent = 'يوم معاً 💞';
 
@@ -1837,13 +1812,12 @@ function calcAnniv(dateStr) {
     '</div>';
 }
 
-// ── DISCUSSION TOPIC ──
+// ── DISCUSSION TOPIC ── (BUG FIX: replaced literal newline with \n escape)
 window.sendDiscTopic = async () => {
   const topic = (document.getElementById('discTopic').value||'').trim();
   if(!topic || !pId) return;
   await addDoc(collection(db,'chats',cid(),'messages'),{
-    content:'🗣️ موضوع النقاش الجديد:
-' + topic,
+    content: '🗣️ موضوع النقاش الجديد:\n' + topic,
     senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
   });
   document.getElementById('discTopic').value = '';
@@ -1871,7 +1845,6 @@ window.drawLottery = async () => {
     setTimeout(()=>{box.classList.remove('lottery-shake');document.getElementById('lBoxTitle').textContent='اضغط للسحب!';},1500);
     return;
   }
-  // Animate
   const box = document.getElementById('lotteryBox');
   box.classList.add('lottery-shake');
   document.getElementById('lBoxIcon').textContent = '🎲';
@@ -1890,7 +1863,6 @@ window.clearLotteryResult = async () => {
 };
 function renderLotteryItems(items) {
   lotteryItems = items;
-  // Papers in box
   const angles=[-8,-5,3,7,-3,6,-9,4,-6,8,2,-7,5,-4,9];
   document.getElementById('lotteryPapers').innerHTML = items.map((_,i)=>{
     const a=angles[i%angles.length];
@@ -1899,7 +1871,6 @@ function renderLotteryItems(items) {
   document.getElementById('lBoxSub').textContent = items.length > 0
     ? `${items.length} ورقة في الصندوق`
     : 'سيختار واحداً من الأوراق عشوائياً';
-  // List
   const lotEl=document.getElementById('lotteryItemsList');
   lotEl.innerHTML='';
   items.forEach(function(it,i){
