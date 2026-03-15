@@ -329,6 +329,15 @@ textarea.field{resize:none}
 /* STARRED */
 .starred-msg{background:rgba(201,168,76,.08)!important;border-color:rgba(201,168,76,.4)!important}
 .star-badge{position:absolute;top:-6px;left:-6px;font-size:12px}
+/* IMG VIEWER */
+.img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:600;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.img-viewer.show{display:flex}
+.img-viewer img{max-width:95vw;max-height:82vh;object-fit:contain;border-radius:12px}
+.img-viewer-bar{display:flex;gap:10px;align-items:center}
+/* STICKER SAVED TOAST */
+@keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.4);border-radius:20px;padding:8px 18px;font-size:13px;color:#4ade80;z-index:700;animation:toastIn .3s ease;backdrop-filter:blur(8px);white-space:nowrap}
 /* MEDIA BUB */
 .media-bub{background:transparent;border:none;padding:0;max-width:220px}
 .media-bub img,.media-bub video{width:100%;border-radius:14px;display:block;cursor:pointer}
@@ -1318,7 +1327,7 @@ onAuthStateChanged(auth, async (user) => {
       if(!ss.exists())return;
       const sd=ss.data();
       if(sd.fightMode!==undefined){isFight=sd.fightMode;updateFightUI();}
-      if(sd.theme && sd.theme!==curTheme){window.applyTheme(sd.theme,true);}
+      if(sd.theme && sd.themeBy !== uid && sd.theme!==curTheme){applyThemeLocally(sd.theme);}
       if(sd.anniversary){
         document.getElementById('annivDateDisp').textContent=sd.anniversary;
         calcAnniv(sd.anniversary);
@@ -1398,6 +1407,26 @@ function renderMsg(id, data) {
   const area = document.getElementById('msgsArea');
   if(!area) return;
 
+  // Handle "deleted for both" - show placeholder
+  if(data.deletedForBoth) {
+    const row = document.createElement('div');
+    row.className = 'mrow' + (data.senderId===uid?' me':'');
+    const av = document.createElement('div');
+    av.className = 'mav2 ' + (data.senderId===uid?'me':'hr');
+    av.textContent = data.senderId===uid ? ((myNick||myName)[0]||'أ') : ((hrNick||pName)[0]||'س');
+    const wrap = document.createElement('div');
+    wrap.className = 'mwrap';
+    const bub = document.createElement('div');
+    bub.className = 'bub ' + (data.senderId===uid?'me':'hr');
+    bub.style.cssText = 'opacity:.4;font-style:italic;font-size:12px;display:flex;align-items:center;gap:5px';
+    bub.innerHTML = '🚫 <span>تم حذف هذه الرسالة</span>';
+    wrap.appendChild(bub);
+    row.appendChild(av);
+    row.appendChild(wrap);
+    area.appendChild(row);
+    return;
+  }
+
   const content = (data.content !== undefined && data.content !== null)
     ? String(data.content)
     : '';
@@ -1476,29 +1505,76 @@ function renderMsg(id, data) {
     if(isMe){
       const delVBtn=document.createElement('button');
       delVBtn.className='play-btn'; delVBtn.style.cssText='background:rgba(224,85,85,.5);margin-right:4px';
-      delVBtn.textContent='🗑️'; delVBtn.onclick=()=>delVoiceMsg(id);
+      delVBtn.textContent='🗑️'; delVBtn.onclick=()=>showDeleteModal(id);
       bub.appendChild(delVBtn);
     }
     bub.appendChild(playBtn); bub.appendChild(wave); bub.appendChild(dur);
     wrap.appendChild(bub);
   } else if(data.type==='img_sticker') {
     const bub=document.createElement('div');
-    bub.style.cssText='background:transparent;border:none;padding:0';
+    bub.style.cssText='background:transparent;border:none;padding:0;position:relative;display:inline-block';
     const img=document.createElement('img');
     img.src=content;
-    img.style.cssText='width:80px;height:80px;object-fit:contain;border-radius:10px;cursor:pointer';
+    img.style.cssText='width:80px;height:80px;object-fit:contain;border-radius:10px;cursor:pointer;display:block';
     img.onerror=()=>{bub.textContent='🖼️'};
     bub.appendChild(img);
+    // Overlay actions
+    const stkOverlay=document.createElement('div');
+    stkOverlay.style.cssText='position:absolute;top:-6px;right:-6px;display:flex;gap:3px;opacity:0;transition:opacity .2s';
+    bub.onmouseenter=()=>stkOverlay.style.opacity='1';
+    bub.onmouseleave=()=>stkOverlay.style.opacity='0';
+    let stkPressTimer;
+    bub.addEventListener('touchstart',()=>{stkPressTimer=setTimeout(()=>stkOverlay.style.opacity='1',400)},{passive:true});
+    bub.addEventListener('touchend',()=>clearTimeout(stkPressTimer),{passive:true});
+    if(isMe) {
+      const delSB=document.createElement('button');
+      delSB.textContent='🗑️';
+      delSB.style.cssText='width:22px;height:22px;border-radius:50%;border:none;background:rgba(224,85,85,.9);color:white;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center';
+      delSB.onclick=(e)=>{e.stopPropagation();showDeleteModal(id);};
+      stkOverlay.appendChild(delSB);
+    }
+    const saveSB=document.createElement('button');
+    saveSB.textContent='💾';
+    saveSB.title='حفظ في مكتبتي';
+    saveSB.style.cssText='width:22px;height:22px;border-radius:50%;border:none;background:rgba(201,168,76,.9);color:#000;font-size:10px;cursor:pointer;padding:0;line-height:1;display:flex;align-items:center;justify-content:center';
+    saveSB.onclick=(e)=>{e.stopPropagation();saveImgAsSticker(content);};
+    stkOverlay.appendChild(saveSB);
+    bub.appendChild(stkOverlay);
     wrap.appendChild(bub);
   } else if(data.type==='media_img') {
     const bub=document.createElement('div');
     bub.className='media-bub';
+    bub.style.position='relative';
     const img=document.createElement('img');
     img.src=content;
     img.style.cssText='max-width:220px;border-radius:14px;display:block;cursor:pointer';
-    img.onclick=()=>{window.open(content,'_blank')};
+    img.onclick=()=>{openImgViewer(content)};
     img.onerror=()=>{bub.textContent='🖼️'};
     bub.appendChild(img);
+    // Action overlay (delete + save as sticker) - shown on hover, sender only
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:absolute;top:5px;right:5px;display:flex;gap:5px;opacity:0;transition:opacity .2s';
+    bub.onmouseenter=()=>overlay.style.opacity='1';
+    bub.onmouseleave=()=>overlay.style.opacity='0';
+    // Long press for mobile
+    let pressTimer;
+    bub.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>overlay.style.opacity='1',400)},{passive:true});
+    bub.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
+    if(isMe) {
+      const delB=document.createElement('button');
+      delB.textContent='🗑️';
+      delB.title='حذف';
+      delB.style.cssText='width:30px;height:30px;border-radius:50%;border:none;background:rgba(224,85,85,.85);color:white;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+      delB.onclick=(e)=>{e.stopPropagation();showDeleteModal(id);};
+      overlay.appendChild(delB);
+    }
+    const stkB=document.createElement('button');
+    stkB.textContent='🎭';
+    stkB.title='حفظ كستيكر';
+    stkB.style.cssText='width:30px;height:30px;border-radius:50%;border:none;background:rgba(201,168,76,.85);color:#000;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+    stkB.onclick=(e)=>{e.stopPropagation();saveImgAsSticker(content);};
+    overlay.appendChild(stkB);
+    bub.appendChild(overlay);
     wrap.appendChild(bub);
   } else if(data.type==='media_video') {
     const bub=document.createElement('div');
@@ -1525,7 +1601,7 @@ function renderMsg(id, data) {
     if(isMe) {
       const delBtn=document.createElement('button');
       delBtn.className='mmbtn'; delBtn.textContent='🗑️';
-      delBtn.onclick=()=>delMsg(id);
+      delBtn.onclick=()=>showDeleteModal(id);
       menu.appendChild(delBtn);
     }
     const starBtn=document.createElement('button');
@@ -1588,6 +1664,84 @@ window.sendStk = async (emoji) => {
 
 window.delMsg = async (id) => {
   await deleteDoc(doc(db,'chats',cid(),'messages',id));
+};
+
+// Delete for both: mark message as deleted (soft delete) so both sides remove it
+window.delMsgForBoth = async (id) => {
+  await updateDoc(doc(db,'chats',cid(),'messages',id),{
+    deletedForBoth: true,
+    deletedAt: serverTimestamp()
+  });
+};
+
+window.showDeleteModal = (id) => {
+  let modal = document.getElementById('deleteModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'deleteModal';
+    modal.className = 'mbg';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+  }
+
+  modal.innerHTML = '';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--d2);border:1px solid rgba(224,85,85,.25);border-radius:20px;padding:22px;width:100%;max-width:360px;text-align:center';
+
+  // Icon + title
+  const icon = document.createElement('div');
+  icon.textContent = '🗑️';
+  icon.style.cssText = 'font-size:36px;margin-bottom:8px';
+
+  const title = document.createElement('div');
+  title.textContent = 'حذف الرسالة';
+  title.style.cssText = 'font-size:16px;font-weight:700;color:#ff8080;margin-bottom:6px';
+
+  const sub = document.createElement('div');
+  sub.textContent = 'اختر من تريد حذف الرسالة عنه';
+  sub.style.cssText = 'font-size:13px;color:var(--tm);margin-bottom:18px';
+
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;flex-direction:column;gap:9px';
+
+  // Option 1: Delete for me only
+  const forMeBtn = document.createElement('button');
+  forMeBtn.style.cssText = 'padding:13px 16px;border-radius:13px;border:1px solid rgba(201,168,76,.25);background:var(--d3);color:var(--tx);font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right;width:100%;transition:all .2s';
+  forMeBtn.innerHTML = '<span style="font-size:22px;flex-shrink:0">👤</span><div style="flex:1"><div style="font-weight:600;margin-bottom:2px">حذف عندي فقط</div><div style="font-size:11px;color:var(--tm)">تُحذف من شاشتك فقط وتبقى عند الطرف الآخر</div></div>';
+  forMeBtn.onmouseenter = () => forMeBtn.style.background = 'rgba(201,168,76,.1)';
+  forMeBtn.onmouseleave = () => forMeBtn.style.background = 'var(--d3)';
+  forMeBtn.onclick = async () => {
+    modal.classList.remove('show');
+    await deleteDoc(doc(db,'chats',cid(),'messages',id));
+  };
+
+  // Option 2: Delete for both
+  const forBothBtn = document.createElement('button');
+  forBothBtn.style.cssText = 'padding:13px 16px;border-radius:13px;border:1px solid rgba(224,85,85,.3);background:rgba(224,85,85,.07);color:var(--tx);font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right;width:100%;transition:all .2s';
+  forBothBtn.innerHTML = '<span style="font-size:22px;flex-shrink:0">👥</span><div style="flex:1"><div style="font-weight:600;margin-bottom:2px">حذف عند الطرفين</div><div style="font-size:11px;color:var(--tm)">تُحذف نهائياً من المحادثة عند الجميع</div></div>';
+  forBothBtn.onmouseenter = () => forBothBtn.style.background = 'rgba(224,85,85,.15)';
+  forBothBtn.onmouseleave = () => forBothBtn.style.background = 'rgba(224,85,85,.07)';
+  forBothBtn.onclick = async () => {
+    modal.classList.remove('show');
+    await delMsgForBoth(id);
+  };
+
+  // Cancel
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'إلغاء';
+  cancelBtn.style.cssText = 'padding:11px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;width:100%';
+  cancelBtn.onclick = () => modal.classList.remove('show');
+
+  btns.appendChild(forMeBtn);
+  btns.appendChild(forBothBtn);
+  btns.appendChild(cancelBtn);
+
+  box.appendChild(icon);
+  box.appendChild(title);
+  box.appendChild(sub);
+  box.appendChild(btns);
+  modal.appendChild(box);
+  modal.classList.add('show');
 };
 
 window.addRxn = async (id,e) => {
@@ -1746,7 +1900,7 @@ function updateFightUI() {
     document.body.style.setProperty('--d2','#1a080c');
     document.body.style.setProperty('--d3','#220d12');
   } else {
-    applyTheme(curTheme);
+    applyThemeLocally(curTheme);
   }
 }
 window.sendPMsg = async (el) => {
@@ -1971,10 +2125,9 @@ function renderThemes() {
     thEl.appendChild(div);
   });
 }
-window.applyTheme=async(id,skipSave)=>{
-  if(isFight) return;
-  curTheme=id;
+function applyThemeLocally(id) {
   const t=themes.find(x=>x.id===id); if(!t) return;
+  curTheme=id;
   document.body.style.setProperty('--g',t.acc);
   document.body.style.setProperty('--gl',t.acc+'26');
   document.body.style.setProperty('--d',t.d);
@@ -1982,8 +2135,12 @@ window.applyTheme=async(id,skipSave)=>{
   document.body.style.setProperty('--d3',t.d3);
   document.body.style.setProperty('--d4',t.d4);
   renderThemes();
+}
+window.applyTheme=async(id,skipSave)=>{
+  if(isFight) return;
+  applyThemeLocally(id);
   if(!skipSave && pId) {
-    await setDoc(doc(db,'shared',cid()),{theme:id},{merge:true});
+    await setDoc(doc(db,'shared',cid()),{theme:id, themeBy:uid},{merge:true});
   }
 };
 function applyTheme(id){window.applyTheme(id);}
@@ -2336,27 +2493,92 @@ window.toggleStar = async (id) => {
 };
 
 // ── SEND MEDIA (images/videos) ──
-window.sendMedia = async (inp) => {
+window.sendMedia = (inp) => {
   if(!pId || !inp.files.length) return;
   const file = inp.files[0];
   const isVideo = file.type.startsWith('video/');
   const reader = new FileReader();
-  reader.onload = async (e) => {
-    await addDoc(collection(db,'chats',cid(),'messages'),{
-      content: e.target.result,
-      senderId: uid,
-      type: isVideo ? 'media_video' : 'media_img',
-      reactions:[], sentAt:serverTimestamp()
-    });
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    if(isVideo) {
+      // Videos go directly
+      addDoc(collection(db,'chats',cid(),'messages'),{
+        content:dataUrl, senderId:uid, type:'media_video', reactions:[], sentAt:serverTimestamp()
+      });
+    } else {
+      // Images: show send-type picker modal
+      showMediaPickerModal(dataUrl);
+    }
   };
   reader.readAsDataURL(file);
   inp.value = '';
 };
 
-// ── VOICE DELETE ──
-window.delVoiceMsg = async (id) => {
-  await deleteDoc(doc(db,'chats',cid(),'messages',id));
+window.showMediaPickerModal = (dataUrl) => {
+  let modal = document.getElementById('mediaPickerModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'mediaPickerModal';
+    modal.className = 'mbg';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+  }
+  // Build modal content with DOM (avoid template literal issues with data URLs)
+  modal.innerHTML = '';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--d2);border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:20px;width:100%;max-width:360px';
+  
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:15px;font-weight:700;color:var(--g);margin-bottom:14px;text-align:center';
+  title.textContent = '📤 كيف تريد إرسالها؟';
+  
+  const preview = document.createElement('img');
+  preview.src = dataUrl;
+  preview.style.cssText = 'width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin-bottom:14px;display:block';
+  
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;flex-direction:column;gap:9px';
+
+  function mkPickBtn(icon, label, desc, action) {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:12px;border-radius:12px;border:1px solid rgba(201,168,76,.3);background:var(--d3);color:var(--tx);font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:10px;text-align:right;width:100%';
+    btn.innerHTML = '<span style="font-size:22px">'+icon+'</span><div><div style="font-weight:600">'+label+'</div><div style="font-size:11px;color:var(--tm)">'+desc+'</div></div>';
+    btn.onclick = action;
+    return btn;
+  }
+
+  btns.appendChild(mkPickBtn('🖼️','إرسال كصورة','تظهر في المحادثة بحجم كبير',() => confirmSendMedia(dataUrl,'media_img')));
+  btns.appendChild(mkPickBtn('🎭','إرسال كستيكر','تظهر صغيرة وتُحفظ في مكتبتك',() => confirmSendMedia(dataUrl,'img_sticker')));
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'إلغاء';
+  cancelBtn.style.cssText = 'padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;width:100%';
+  cancelBtn.onclick = () => modal.classList.remove('show');
+  btns.appendChild(cancelBtn);
+
+  box.appendChild(title);
+  box.appendChild(preview);
+  box.appendChild(btns);
+  modal.appendChild(box);
+  modal.classList.add('show');
 };
+
+window.confirmSendMedia = async (dataUrl, type) => {
+  document.getElementById('mediaPickerModal').classList.remove('show');
+  if(type === 'img_sticker') {
+    // Auto-save to custom sticker library
+    customStk.push(dataUrl);
+    localStorage.setItem('cstk', JSON.stringify(customStk));
+    renderCustomStickers();
+  }
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:dataUrl, senderId:uid, type, reactions:[], sentAt:serverTimestamp()
+  });
+};
+
+// ── VOICE DELETE ──
+// delVoiceMsg now handled by showDeleteModal
+
 
 // ── CINEMA ──
 let cinemaVideoSrc = '';
@@ -2851,10 +3073,70 @@ function handleRPSSync(sd) {
 window.joinCinema = (url) => {
   openCinema(url, 'مشاهدة مشتركة 🎬');
 };
+
+// ── IMAGE VIEWER ──
+window.openImgViewer = (src) => {
+  const viewer = document.getElementById('imgViewer');
+  const img = document.getElementById('imgViewerImg');
+  const dl = document.getElementById('imgViewerDownload');
+  img.src = src;
+  dl.href = src;
+  viewer.classList.add('show');
+};
+window.closeImgViewer = () => {
+  document.getElementById('imgViewer').classList.remove('show');
+  document.getElementById('imgViewerImg').src = '';
+};
+
+// ── SAVE IMAGE AS STICKER ──
+window.saveImgAsSticker = (src) => {
+  if(customStk.includes(src)) {
+    showToast('الستيكر موجود بالفعل في مكتبتك 👍');
+    return;
+  }
+  customStk.push(src);
+  localStorage.setItem('cstk', JSON.stringify(customStk));
+  renderCustomStickers();
+  showToast('✅ تم حفظ الستيكر في مكتبتك!');
+};
+
+// ── TOAST NOTIFICATION ──
+window.showToast = (msg) => {
+  // Remove existing toast
+  const old = document.querySelector('.toast');
+  if(old) old.remove();
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'toastOut .3s ease forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 2200);
+};
+
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
 window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');}));
 </script>
+
+<!-- IMG VIEWER -->
+<div class="img-viewer" id="imgViewer" onclick="if(event.target===this)closeImgViewer()">
+  <img id="imgViewerImg" src="" alt="">
+  <div class="img-viewer-bar">
+    <button onclick="saveImgAsSticker(document.getElementById('imgViewerImg').src)" 
+      style="padding:8px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.15);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">
+      🎭 حفظ كستيكر
+    </button>
+    <a id="imgViewerDownload" download="image.jpg"
+      style="padding:8px 16px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;text-decoration:none">
+      💾 تحميل
+    </a>
+    <button onclick="closeImgViewer()" 
+      style="width:36px;height:36px;border-radius:50%;border:none;background:rgba(224,85,85,.3);color:#ff8080;font-size:18px;cursor:pointer">✕</button>
+  </div>
+</div>
+
 </body>
 </html>
