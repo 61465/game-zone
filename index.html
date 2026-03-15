@@ -1129,6 +1129,7 @@ textarea.field{resize:none}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, serverTimestamp, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
 const fb = initializeApp({
   apiKey:"AIzaSyA-l0jnxZcKWGa37eBL3u7bvIQY9ItII_Q",
@@ -1140,6 +1141,7 @@ const fb = initializeApp({
 });
 const auth = getAuth(fb);
 const db = getFirestore(fb);
+const storage = getStorage(fb);
 
 // ── STATE ──
 let uid='', myName='أنت', myInit='أ', myEmail='';
@@ -1391,6 +1393,67 @@ function renderMsg(id, data) {
   const area = document.getElementById('msgsArea');
   if(!area) return;
 
+  // Handle cinema invite message type
+  if(data.type === 'cinema_invite') {
+    const isMyInvite = data.senderId === uid;
+    let inviteData = {};
+    try { inviteData = JSON.parse(data.content); } catch(e) {}
+    const invUrl = inviteData.url || '';
+    const invTitle = inviteData.title || 'فيديو مشترك';
+
+    const row = document.createElement('div');
+    row.className = 'mrow' + (isMyInvite?' me':'');
+    const av = document.createElement('div');
+    av.className = 'mav2 ' + (isMyInvite?'me':'hr');
+    av.textContent = isMyInvite ? ((myNick||myName)[0]||'أ') : ((hrNick||pName)[0]||'س');
+
+    const wrap2 = document.createElement('div');
+    wrap2.className = 'mwrap';
+    wrap2.style.maxWidth = '240px';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:linear-gradient(135deg,rgba(0,0,0,.6),rgba(201,168,76,.12));border:1.5px solid rgba(201,168,76,.35);border-radius:16px;padding:14px;text-align:center';
+
+    const cardIcon = document.createElement('div');
+    cardIcon.textContent = '🎬';
+    cardIcon.style.cssText = 'font-size:32px;margin-bottom:6px';
+
+    const cardTitle = document.createElement('div');
+    cardTitle.style.cssText = 'font-size:13px;font-weight:700;color:var(--g);margin-bottom:4px';
+    cardTitle.textContent = 'دعوة لمشاهدة مشتركة';
+
+    const cardSub = document.createElement('div');
+    cardSub.style.cssText = 'font-size:11px;color:rgba(255,255,255,.5);margin-bottom:12px';
+    cardSub.textContent = isMyInvite ? 'أرسلتَ دعوة — بانتظار الشريك' : (hrNick||pName) + ' يدعوك لمشاهدة فيلم معاً!';
+
+    card.appendChild(cardIcon);
+    card.appendChild(cardTitle);
+    card.appendChild(cardSub);
+
+    if(!isMyInvite && invUrl) {
+      const joinBtn = document.createElement('button');
+      joinBtn.style.cssText = 'padding:8px 20px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer';
+      joinBtn.textContent = '▶ انضم الآن';
+      joinBtn.onclick = () => joinCinema(invUrl, invTitle);
+      card.appendChild(joinBtn);
+    } else if(isMyInvite) {
+      const waitBadge = document.createElement('div');
+      waitBadge.style.cssText = 'font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;gap:5px';
+      waitBadge.innerHTML = '⏳ <span>بانتظار انضمام الشريك</span>';
+      card.appendChild(waitBadge);
+    }
+
+    wrap2.appendChild(card);
+    const t2 = document.createElement('div');
+    t2.className = 'mtime';
+    t2.textContent = fmtT(data.sentAt);
+    wrap2.appendChild(t2);
+    row.appendChild(av);
+    row.appendChild(wrap2);
+    area.appendChild(row);
+    return;
+  }
+
   // Handle "deleted for both" - show placeholder
   if(data.deletedForBoth) {
     const row = document.createElement('div');
@@ -1563,10 +1626,29 @@ function renderMsg(id, data) {
   } else if(data.type==='media_video') {
     const bub=document.createElement('div');
     bub.className='media-bub';
+    bub.style.position='relative';
     const vid=document.createElement('video');
     vid.src=content; vid.controls=true;
     vid.style.cssText='max-width:220px;border-radius:14px;display:block';
     bub.appendChild(vid);
+    // "Watch together in Cinema" button — shown on the video sender side
+    const cinBtn=document.createElement('button');
+    cinBtn.style.cssText='margin-top:6px;width:100%;padding:7px 12px;border-radius:10px;border:none;background:linear-gradient(135deg,rgba(0,0,0,.7),rgba(201,168,76,.25));color:var(--g);font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(201,168,76,.35)';
+    cinBtn.innerHTML='🎬 <span>شاهده معي في السينما</span>';
+    cinBtn.onclick=()=>startCinemaFromVideo(content, id);
+    bub.appendChild(cinBtn);
+    // Delete overlay for sender
+    if(isMe){
+      const delOv=document.createElement('div');
+      delOv.style.cssText='position:absolute;top:5px;right:5px;opacity:0;transition:opacity .2s';
+      bub.onmouseenter=()=>delOv.style.opacity='1';
+      bub.onmouseleave=()=>delOv.style.opacity='0';
+      const delB2=document.createElement('button');
+      delB2.textContent='🗑️';
+      delB2.style.cssText='width:30px;height:30px;border-radius:50%;border:none;background:rgba(224,85,85,.85);color:white;font-size:13px;cursor:pointer';
+      delB2.onclick=(e)=>{e.stopPropagation();showDeleteModal(id);};
+      delOv.appendChild(delB2); bub.appendChild(delOv);
+    }
     wrap.appendChild(bub);
   } else {
     const bub=document.createElement('div');
@@ -2485,10 +2567,8 @@ window.sendMedia = (inp) => {
   reader.onload = (e) => {
     const dataUrl = e.target.result;
     if(isVideo) {
-      // Videos go directly
-      addDoc(collection(db,'chats',cid(),'messages'),{
-        content:dataUrl, senderId:uid, type:'media_video', reactions:[], sentAt:serverTimestamp()
-      });
+      // Videos: show picker — send to chat OR send to cinema
+      showVideoPickerModal(dataUrl, file.name);
     } else {
       // Images: show send-type picker modal
       showMediaPickerModal(dataUrl);
@@ -2550,7 +2630,6 @@ window.showMediaPickerModal = (dataUrl) => {
 window.confirmSendMedia = async (dataUrl, type) => {
   document.getElementById('mediaPickerModal').classList.remove('show');
   if(type === 'img_sticker') {
-    // Auto-save to custom sticker library
     customStk.push(dataUrl);
     localStorage.setItem('cstk', JSON.stringify(customStk));
     renderCustomStickers();
@@ -2559,6 +2638,119 @@ window.confirmSendMedia = async (dataUrl, type) => {
     content:dataUrl, senderId:uid, type, reactions:[], sentAt:serverTimestamp()
   });
 };
+
+// ── CINEMA FROM VIDEO ──
+// Called when user taps "شاهده معي في السينما" on a video message
+// OR when sending a video directly to cinema
+window.startCinemaFromVideo = async (videoSrc, msgId) => {
+  // videoSrc is either a blob URL (local file) or a data URL (base64 stored message)
+  // We need to upload it to Firebase Storage so the partner can stream it
+  const isDataUrl = videoSrc.startsWith('data:');
+  const isBlobUrl = videoSrc.startsWith('blob:');
+
+  // Show upload progress UI
+  showCinemaUploadProgress();
+
+  try {
+    let downloadUrl = videoSrc;
+
+    if(isDataUrl || isBlobUrl) {
+      // Convert to blob and upload to Firebase Storage
+      let blob;
+      if(isDataUrl) {
+        const res = await fetch(videoSrc);
+        blob = await res.blob();
+      } else {
+        const res = await fetch(videoSrc);
+        blob = await res.blob();
+      }
+      const storageRef = ref(storage, 'cinema/' + cid() + '/video_' + Date.now() + '.mp4');
+      const uploadTask = uploadBytesResumable(storageRef, blob);
+
+      downloadUrl = await new Promise((resolve, reject) => {
+        uploadTask.on('state_changed',
+          (snap) => {
+            const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+            updateCinemaUploadProgress(pct);
+          },
+          (err) => reject(err),
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(url);
+          }
+        );
+      });
+    }
+
+    hideCinemaUploadProgress();
+
+    // Save session to Firestore with the download URL
+    await setDoc(doc(db,'shared',cid()),{
+      cinemaSession:{
+        url: downloadUrl,
+        title: 'فيديو مشترك 🎬',
+        by: uid,
+        status: 'waiting',
+        startedAt: Date.now()
+      }
+    },{merge:true});
+
+    // Send invite message in chat
+    await addDoc(collection(db,'chats',cid(),'messages'),{
+      content: JSON.stringify({type:'cinema_invite', url:downloadUrl, title:'فيديو مشترك 🎬'}),
+      senderId: uid,
+      type: 'cinema_invite',
+      reactions: [],
+      sentAt: serverTimestamp()
+    });
+
+    // Open cinema for sender
+    openCinemaRoom(downloadUrl, 'فيديو مشترك 🎬', false);
+
+  } catch(err) {
+    hideCinemaUploadProgress();
+    alert('حدث خطأ أثناء رفع الفيديو: ' + err.message);
+  }
+};
+
+// Direct "open in cinema" for already-uploaded URL
+window.openCinemaDirectUrl = (url, title) => {
+  setDoc(doc(db,'shared',cid()),{
+    cinemaSession:{url, title, by:uid, status:'waiting', startedAt:Date.now()}
+  },{merge:true});
+  openCinemaRoom(url, title, false);
+};
+
+// Upload progress overlay
+function showCinemaUploadProgress() {
+  let el = document.getElementById('cinemaUploadProg');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'cinemaUploadProg';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+    el.innerHTML = '<div style="font-size:40px">⬆️</div>'
+      + '<div style="font-size:16px;font-weight:700;color:var(--g)">جاري رفع الفيديو...</div>'
+      + '<div style="width:260px;height:8px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden">'
+      +   '<div id="cinemaUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:10px;transition:width .3s"></div>'
+      + '</div>'
+      + '<div id="cinemaUploadPct" style="font-size:13px;color:rgba(255,255,255,.6)">0%</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,.4)">يرجى الانتظار حتى ينتهي الرفع</div>';
+    document.body.appendChild(el);
+  }
+  el.style.display = 'flex';
+}
+
+function updateCinemaUploadProgress(pct) {
+  const bar = document.getElementById('cinemaUploadBar');
+  const txt = document.getElementById('cinemaUploadPct');
+  if(bar) bar.style.width = pct + '%';
+  if(txt) txt.textContent = pct + '%';
+}
+
+function hideCinemaUploadProgress() {
+  const el = document.getElementById('cinemaUploadProg');
+  if(el) el.style.display = 'none';
+}
 
 // ── VOICE DELETE ──
 // delVoiceMsg now handled by showDeleteModal
@@ -3185,6 +3377,60 @@ window.showToast = (msg) => {
   }, 2200);
 };
 
+
+window.showVideoPickerModal = (dataUrl, filename) => {
+  let modal = document.getElementById('videoPickerModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'videoPickerModal';
+    modal.className = 'mbg';
+    document.body.appendChild(modal);
+    modal.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+  }
+
+  modal.innerHTML = '';
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--d2);border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:22px;width:100%;max-width:360px';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-size:15px;font-weight:700;color:var(--g);margin-bottom:6px;text-align:center';
+  title.textContent = '🎬 ماذا تريد بالفيديو؟';
+
+  const fname = document.createElement('div');
+  fname.style.cssText = 'font-size:11px;color:var(--tm);text-align:center;margin-bottom:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  fname.textContent = '📁 ' + (filename||'فيديو');
+
+  const btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;flex-direction:column;gap:9px';
+
+  function mkBtn(icon, label, desc, color, action) {
+    const btn = document.createElement('button');
+    btn.style.cssText = 'padding:13px 16px;border-radius:13px;border:1px solid '+(color||'rgba(201,168,76,.3)')+';background:var(--d3);color:var(--tx);font-family:Tajawal,sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right;width:100%;transition:background .2s';
+    btn.innerHTML = '<span style="font-size:24px;flex-shrink:0">'+icon+'</span><div><div style="font-weight:600;margin-bottom:2px">'+label+'</div><div style="font-size:11px;color:var(--tm)">'+desc+'</div></div>';
+    btn.onclick = () => { modal.classList.remove('show'); action(); };
+    return btn;
+  }
+
+  // Option 1: Send as video message in chat
+  btns.appendChild(mkBtn('💬','إرسال في المحادثة','يظهر كفيديو في المحادثة مع زر السينما','rgba(201,168,76,.3)',
+    () => addDoc(collection(db,'chats',cid(),'messages'),{content:dataUrl,senderId:uid,type:'media_video',reactions:[],sentAt:serverTimestamp()})
+  ));
+
+  // Option 2: Open directly in cinema (upload + sync)
+  btns.appendChild(mkBtn('🎬','شاهده معي في السينما','يُرفع الفيديو للسيرفر ويُفتح السينما عندكما','rgba(201,168,76,.4)',
+    () => startCinemaFromVideo(dataUrl, null)
+  ));
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.textContent = 'إلغاء';
+  cancelBtn.style.cssText = 'padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;width:100%';
+  cancelBtn.onclick = () => modal.classList.remove('show');
+  btns.appendChild(cancelBtn);
+
+  box.appendChild(title); box.appendChild(fname); box.appendChild(btns);
+  modal.appendChild(box);
+  modal.classList.add('show');
+};
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
 window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
