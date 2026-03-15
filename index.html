@@ -2,683 +2,718 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>عالمنا الخاص 💞</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{
-  --g:#c9a84c;--gl:rgba(201,168,76,0.15);--gll:rgba(201,168,76,0.07);
-  --d:#0e0d12;--d2:#16141c;--d3:#1e1b27;--d4:#272330;
-  --tx:#f0ece2;--tm:#9b9199;--pk:#e07a8e;
-}
+:root{--g:#c9a84c;--gl:rgba(201,168,76,0.15);--d:#0e0d12;--d2:#16141c;--d3:#1e1b27;--d4:#272330;--tx:#f0ece2;--tm:#9b9199;--pk:#e07a8e}
 body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-height:100vh;overflow-x:hidden}
 
-/* ── AUTH ── */
+/* AUTH */
 #authScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
 .logo-box{width:80px;height:80px;background:linear-gradient(135deg,var(--g),var(--pk));border-radius:24px;display:flex;align-items:center;justify-content:center;font-size:40px;margin-bottom:16px}
-.app-title{font-size:26px;font-weight:700;color:var(--g);margin-bottom:6px}
-.app-sub{font-size:14px;color:var(--tm);margin-bottom:32px}
-.tab-row{display:flex;background:var(--d2);border-radius:12px;border:1px solid rgba(201,168,76,.15);margin-bottom:24px;width:100%;max-width:400px}
-.tab-btn{flex:1;padding:11px;border:none;background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s}
-.tab-btn.on{background:var(--gl);color:var(--g)}
-.auth-form{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px}
-.auth-input{background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:12px;padding:13px 16px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;width:100%;text-align:right;transition:border-color .2s}
-.auth-input:focus{border-color:rgba(201,168,76,.5)}
-.auth-input::placeholder{color:var(--tm)}
-.auth-btn{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:14px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .2s}
-.auth-btn:hover{opacity:.9}
-.auth-error{background:rgba(224,85,85,.12);border:1px solid rgba(224,85,85,.3);border-radius:10px;padding:10px 14px;color:#ff8080;font-size:13px;display:none}
+.auth-tabs{display:flex;background:var(--d2);border-radius:12px;border:1px solid rgba(201,168,76,.15);margin-bottom:20px;width:100%;max-width:400px}
+.auth-tab{flex:1;padding:11px;border:none;background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border-radius:10px;transition:all .2s}
+.auth-tab.on{background:var(--gl);color:var(--g)}
+.aform{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px}
+.ainput{background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:12px;padding:13px 16px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;width:100%;text-align:right}
+.ainput:focus{border-color:rgba(201,168,76,.5)}
+.ainput::placeholder{color:var(--tm)}
+.abtn{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:14px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:15px;font-weight:700;cursor:pointer}
+.errmsg{background:rgba(224,85,85,.12);border:1px solid rgba(224,85,85,.3);border-radius:10px;padding:10px 14px;color:#ff8080;font-size:13px;display:none;width:100%;max-width:400px}
+.succmsg{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:14px;color:#4ade80;font-size:14px;text-align:center;display:none;width:100%;max-width:400px}
 
-/* ── LINK PARTNER ── */
+/* LINK */
 #linkScreen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
 
-/* ── MAIN APP ── */
-#appScreen{display:none;flex-direction:column;height:100vh;max-width:600px;margin:0 auto}
+/* APP */
+#appScreen{display:none;flex-direction:column;height:100vh;max-width:650px;margin:0 auto}
 
-/* Topbar */
-.topbar{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.partner-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--pk),var(--g));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0;position:relative}
-.online-dot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;background:#4ade80;border-radius:50%;border:2px solid var(--d2)}
-.partner-info{flex:1}
-.partner-name{font-weight:600;font-size:14px}
-.partner-status{font-size:11px;color:var(--tm);margin-top:1px}
-.top-actions{display:flex;gap:6px}
-.top-btn{width:34px;height:34px;border-radius:9px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.top-btn:hover{color:var(--g);border-color:var(--g);background:var(--gl)}
+/* PROFILE BAR */
+.prof-bar{background:rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.12);padding:7px 16px;display:none;align-items:center;gap:10px;flex-shrink:0}
+.prof-bar.show{display:flex}
 
-/* Mood bar */
-.mood-bar{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.08);padding:8px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.mood-side{flex:1;display:flex;align-items:center;gap:8px}
-.mood-side.right{flex-direction:row-reverse}
-.mood-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
-.mood-av.me{background:linear-gradient(135deg,var(--g),#c4813a)}
-.mood-av.her{background:linear-gradient(135deg,var(--pk),var(--g))}
-.mood-info{display:flex;flex-direction:column;gap:1px}
-.mood-name{font-size:10px;color:var(--tm)}
-.mood-emoji{font-size:16px;line-height:1}
-.mood-msg{font-size:11px;color:var(--tx);max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mood-center{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
-.mood-hearts{font-size:18px}
-.mood-compat{font-size:10px;color:var(--g)}
+/* FIGHT BANNER */
+.fight-banner{background:rgba(224,85,85,.1);border-bottom:1px solid rgba(224,85,85,.25);padding:7px 16px;display:none;align-items:center;gap:9px;flex-shrink:0}
+.fight-banner.show{display:flex}
 
-/* Tabs */
-.tabs{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);display:flex;overflow-x:auto;flex-shrink:0}
+/* LOW NET */
+.ln-bar{background:rgba(255,160,0,.1);border-bottom:1px solid rgba(255,160,0,.25);padding:7px 16px;display:none;align-items:center;gap:9px;flex-shrink:0}
+.ln-bar.show{display:flex}
+
+/* TOPBAR */
+.topbar{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.pav{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--pk),var(--g));display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:white;flex-shrink:0;position:relative}
+.odot{position:absolute;bottom:1px;right:1px;width:11px;height:11px;background:#4ade80;border-radius:50%;border:2px solid var(--d2)}
+.pinfo{flex:1}
+.pname{font-weight:600;font-size:14px}
+.pstatus{font-size:11px;color:var(--tm)}
+.topbtns{display:flex;gap:5px}
+.tbtn{width:34px;height:34px;border-radius:9px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.tbtn:hover{color:var(--g);border-color:var(--g);background:var(--gl)}
+
+/* MOOD BAR */
+.moodbar{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.08);padding:8px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.mside{flex:1;display:flex;align-items:center;gap:8px}
+.mside.r{flex-direction:row-reverse}
+.mav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white}
+.mav.me{background:linear-gradient(135deg,var(--g),#c4813a)}
+.mav.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
+.minfo{display:flex;flex-direction:column;gap:1px}
+.mname{font-size:10px;color:var(--tm)}
+.memoji{font-size:17px;line-height:1}
+.mmsg{font-size:11px;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mcenter{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.mhearts{font-size:18px}
+.mcompat{font-size:10px;color:var(--g);font-weight:600}
+
+/* TABS */
+.tabs{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);display:flex;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
-.tab{padding:10px 12px;font-size:12px;font-weight:500;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;font-family:'Tajawal',sans-serif;background:none;border-top:none;border-left:none;border-right:none;flex-shrink:0}
+.tab{padding:10px 12px;font-size:12px;font-weight:500;color:var(--tm);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:'Tajawal',sans-serif;flex-shrink:0;transition:all .2s}
 .tab.on{color:var(--g);border-bottom-color:var(--g)}
 
-/* Panels */
-.panel{flex:1;overflow-y:auto;display:none;flex-direction:column}
+/* PANELS */
+.panel{flex:1;overflow-y:auto;display:none;flex-direction:column;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.2) transparent}
 .panel.on{display:flex}
-.panel::-webkit-scrollbar{width:3px}
-.panel::-webkit-scrollbar-thumb{background:rgba(201,168,76,.2);border-radius:2px}
-.panel-inner{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
+.pi{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
 .ptitle{font-size:17px;font-weight:700;color:var(--g);margin-bottom:4px}
 
-/* ── CHAT ── */
-.msgs-area{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:12px}
-.msgs-area::-webkit-scrollbar{width:3px}
-.msgs-area::-webkit-scrollbar-thumb{background:rgba(201,168,76,.2);border-radius:2px}
-.date-sep{text-align:center;color:var(--tm);font-size:11px;display:flex;align-items:center;gap:8px;margin:4px 0}
-.date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.1)}
-.msg-row{display:flex;align-items:flex-end;gap:7px;animation:fu .3s ease}
-.msg-row.me{flex-direction:row-reverse}
-@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.msg-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
-.msg-av.me{background:linear-gradient(135deg,var(--g),#c4813a)}
-.msg-av.her{background:linear-gradient(135deg,var(--pk),var(--g))}
-.bubble{max-width:70%;padding:9px 13px;border-radius:17px;font-size:14px;line-height:1.6;word-wrap:break-word;position:relative}
-.bubble.her{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-bottom-right-radius:3px}
-.bubble.me{background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(192,107,75,.18));border:1px solid rgba(201,168,76,.22);border-bottom-left-radius:3px}
-.bubble.system{background:var(--d3);border:1px solid rgba(201,168,76,.1);font-size:12px;color:var(--tm);padding:6px 12px;border-radius:20px;max-width:100%}
-.bubble.letter{background:rgba(201,168,76,.1);border:1.5px solid rgba(201,168,76,.35);cursor:pointer}
-.bubble.letter .lock-icon{font-size:14px}
-.bubble.letter .letter-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px}
-.bubble.letter .letter-time{font-size:11px;color:var(--tm)}
-.bubble.letter .letter-content{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,168,76,.2);display:none}
-.bubble.letter.opened .letter-content{display:block}
-.bubble.letter.opened .letter-time{display:none}
-.msg-time{font-size:10px;color:var(--tm);margin-top:3px}
-.msg-row.me .msg-time{text-align:right}
-.reactions{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
-.reaction-chip{background:var(--d4);border:1px solid rgba(201,168,76,.15);border-radius:20px;padding:2px 7px;font-size:12px;cursor:pointer}
-.msg-actions{position:absolute;top:-30px;background:var(--d3);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 8px;display:none;gap:6px;white-space:nowrap;z-index:10}
-.msg-row:hover .msg-actions{display:flex}
-.msg-act-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)}
-.msg-act-btn:hover{color:var(--g)}
-.typing-row{display:flex;align-items:flex-end;gap:7px}
-.typing-bub{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:17px;border-bottom-right-radius:3px;padding:11px 15px;display:flex;gap:5px;align-items:center}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--tm);animation:bounce 1.2s infinite;display:inline-block}
-.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+/* MESSAGES */
+.msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.2) transparent}
+.dsep{text-align:center;color:var(--tm);font-size:11px;display:flex;align-items:center;gap:8px}
+.dsep::before,.dsep::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.1)}
+.mrow{display:flex;align-items:flex-end;gap:7px}
+.mrow.me{flex-direction:row-reverse}
+.mav2{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
+.mav2.me{background:linear-gradient(135deg,var(--g),#c4813a)}
+.mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
+.mwrap{display:flex;flex-direction:column;max-width:70%}
+.bub{padding:9px 13px;border-radius:17px;font-size:14px;line-height:1.6;word-wrap:break-word;word-break:break-word}
+.bub.hr{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-bottom-right-radius:3px}
+.bub.me{background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(192,107,75,.18));border:1px solid rgba(201,168,76,.22);border-bottom-left-radius:3px}
+.bub.sys{background:var(--d3);border:1px solid rgba(201,168,76,.1);font-size:12px;color:var(--tm);padding:5px 12px;border-radius:20px;text-align:center}
+.bub.ltr{background:rgba(201,168,76,.1);border:1.5px solid rgba(201,168,76,.35);cursor:pointer;border-radius:14px;padding:12px}
+.ltr-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px}
+.ltr-time{font-size:11px;color:var(--tm)}
+.ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,168,76,.2);display:none}
+.ltr-body.open{display:block}
+.mtime{font-size:10px;color:var(--tm);margin-top:3px}
+.mrow.me .mtime{text-align:right}
+.rxns{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
+.rxn{background:var(--d4);border:1px solid rgba(201,168,76,.15);border-radius:20px;padding:2px 7px;font-size:12px;cursor:pointer}
+.msg-menu{background:var(--d3);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 8px;display:none;gap:5px;position:absolute;bottom:100%;right:0;white-space:nowrap;z-index:10}
+.mrow:hover .msg-menu{display:flex}
+.mmbtn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--tm);padding:2px 4px}
+.mmbtn:hover{color:var(--g)}
 
-/* Input */
-.input-area{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;flex-shrink:0}
-.input-row{display:flex;align-items:flex-end;gap:6px}
-.input-btn{width:40px;height:40px;border-radius:10px;border:none;background:var(--d3);color:var(--tm);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.input-btn:hover{color:var(--g)}
-.msg-input{flex:1;background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:11px;padding:9px 13px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;resize:none;min-height:40px;max-height:90px;outline:none;direction:rtl}
-.msg-input:focus{border-color:rgba(201,168,76,.4)}
-.msg-input::placeholder{color:var(--tm)}
-.send-btn{width:40px;height:40px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#b8832a);color:var(--d);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
-.send-btn:hover{transform:scale(1.05)}
-.hints{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.hint{font-size:11px;color:var(--tm);background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:20px;padding:3px 9px;cursor:pointer;transition:all .2s}
+/* INPUT */
+.iarea{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;flex-shrink:0}
+.irow{display:flex;align-items:flex-end;gap:6px}
+.ibtn{width:40px;height:40px;border-radius:10px;border:none;background:var(--d3);color:var(--tm);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ibtn:hover{color:var(--g)}
+.minput{flex:1;background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:11px;padding:9px 13px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;resize:none;min-height:40px;max-height:90px;outline:none;direction:rtl}
+.minput:focus{border-color:rgba(201,168,76,.4)}
+.minput::placeholder{color:var(--tm)}
+.sbtn{width:40px;height:40px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#b8832a);color:var(--d);font-size:16px;cursor:pointer;flex-shrink:0}
+.hints{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+.hint{font-size:11px;color:var(--tm);background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:20px;padding:3px 9px;cursor:pointer}
 .hint:hover{color:var(--g);border-color:rgba(201,168,76,.3)}
 
-/* ── CARDS ── */
+/* STICKERS PANEL */
+.sp{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;display:none;flex-direction:column;gap:8px;flex-shrink:0;max-height:200px;overflow-y:auto}
+.sp.show{display:flex}
+.sp-header{display:flex;align-items:center;gap:8px}
+.sp-label{font-size:11px;color:var(--tm);color:var(--g);font-weight:600}
+.sp-import{padding:4px 10px;border-radius:20px;background:var(--gl);color:var(--g);font-size:11px;cursor:pointer;border:1px solid rgba(201,168,76,.3)}
+.sp-grid{display:flex;flex-wrap:wrap;gap:8px}
+.stk{font-size:28px;cursor:pointer;transition:transform .15s;display:inline-flex;align-items:center;justify-content:center}
+.stk:hover{transform:scale(1.25)}
+.stk-img{width:48px;height:48px;object-fit:contain;cursor:pointer;border-radius:8px;transition:transform .15s}
+.stk-img:hover{transform:scale(1.15)}
+.stk-wrap{position:relative;display:inline-flex}
+.stk-del{position:absolute;top:-4px;right:-4px;background:#e05555;border:none;border-radius:50%;width:16px;height:16px;color:white;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+
+/* CARDS */
 .card{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:14px}
-.card-title{font-size:13px;font-weight:600;color:var(--g);margin-bottom:10px}
+.ctitle{font-size:13px;font-weight:600;color:var(--g);margin-bottom:10px}
 
-/* ── IDEAS ── */
-.idea-card{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:13px;margin-bottom:8px;position:relative;overflow:hidden}
-.idea-bar{position:absolute;right:0;top:0;bottom:0;width:3px;background:var(--g)}
-.idea-bar.travel{background:linear-gradient(to bottom,#4fc3f7,#0288d1)}
-.idea-bar.home{background:linear-gradient(to bottom,#81c784,#2e7d32)}
-.idea-bar.date{background:linear-gradient(to bottom,#f48fb1,#c2185b)}
-.idea-bar.dream{background:linear-gradient(to bottom,#ce93d8,#7b1fa2)}
-.idea-title{font-size:14px;font-weight:600;margin-bottom:3px}
-.idea-desc{font-size:12px;color:var(--tm);margin-bottom:8px}
-.idea-footer{display:flex;align-items:center;gap:7px}
-.idea-tag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid}
-.idea-who{font-size:11px;color:var(--tm);margin-right:auto}
-.like-btn{background:none;border:none;cursor:pointer;font-size:15px;transition:transform .15s}
-.like-btn:hover{transform:scale(1.3)}
-.like-count{font-size:11px;color:var(--tm)}
-.del-btn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)}
-.del-btn:hover{color:#ff6b6b}
+/* FORMS */
+.field{background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:11px;padding:10px 13px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;outline:none;width:100%;direction:rtl;transition:border-color .2s}
+.field:focus{border-color:rgba(201,168,76,.45)}
+.field::placeholder{color:var(--tm)}
+textarea.field{resize:none}
+.pbtn{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:12px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+.pill{padding:5px 12px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
+.pill.on,.pill:hover{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
+.addbtn{background:var(--d3);border:1.5px dashed rgba(201,168,76,.3);border-radius:11px;padding:11px;color:var(--g);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;width:100%}
+.addbtn:hover{background:var(--gl)}
 
-/* ── TODO ── */
-.todo-item{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.08);border-radius:11px;cursor:pointer;transition:all .2s;margin-bottom:7px}
-.todo-check{width:20px;height:20px;border-radius:50%;border:2px solid rgba(201,168,76,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:11px}
-.todo-item.done .todo-check{background:var(--g);border-color:var(--g);color:var(--d)}
-.todo-txt{flex:1;font-size:13px;transition:all .2s}
-.todo-item.done .todo-txt{text-decoration:line-through;color:var(--tm)}
-.todo-who{font-size:11px;color:var(--pk)}
+/* IDEAS */
+.icard{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:13px;margin-bottom:8px;position:relative;overflow:hidden}
+.ibar{position:absolute;right:0;top:0;bottom:0;width:3px}
+.ibar.travel{background:linear-gradient(to bottom,#4fc3f7,#0288d1)}
+.ibar.home{background:linear-gradient(to bottom,#81c784,#2e7d32)}
+.ibar.date{background:linear-gradient(to bottom,#f48fb1,#c2185b)}
+.ibar.dream{background:linear-gradient(to bottom,#ce93d8,#7b1fa2)}
+.ibar.other{background:linear-gradient(to bottom,var(--g),#8a6020)}
+.ititle{font-size:14px;font-weight:600;margin-bottom:3px}
+.idesc{font-size:12px;color:var(--tm);margin-bottom:8px}
+.ifooter{display:flex;align-items:center;gap:7px}
+.itag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid}
+.iwho{font-size:11px;color:var(--tm);margin-right:auto}
+.ilbtn{background:none;border:none;cursor:pointer;font-size:15px}
+.ilbtn:hover{transform:scale(1.3)}
+.idbtn{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)}
+.idbtn:hover{color:#ff6b6b}
 
-/* ── FIGHT ── */
-.fight-banner{display:none;background:rgba(224,85,85,.1);border-bottom:1px solid rgba(224,85,85,.25);padding:7px 16px;align-items:center;gap:9px;flex-shrink:0}
-.fight-banner.show{display:flex}
-.fight-txt{flex:1;font-size:12px;color:#ff8080}
-.fight-txt strong{font-size:13px;display:block}
-.peace-btn-small{padding:5px 12px;border-radius:20px;border:none;background:rgba(201,168,76,.2);color:var(--g);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+/* TODOS */
+.titem{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.08);border-radius:11px;cursor:pointer;margin-bottom:7px;transition:all .2s}
+.tcheck{width:20px;height:20px;border-radius:50%;border:2px solid rgba(201,168,76,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s}
+.titem.done .tcheck{background:var(--g);border-color:var(--g);color:var(--d)}
+.ttxt{flex:1;font-size:13px}
+.titem.done .ttxt{text-decoration:line-through;color:var(--tm)}
+.twho{font-size:11px;color:var(--pk)}
 
-/* ── MOOD PANEL ── */
-.mood-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
-.mood-opt{padding:10px 6px;border-radius:12px;border:1px solid rgba(201,168,76,.15);background:var(--d3);color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;text-align:center}
-.mood-opt:hover,.mood-opt.on{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
-.mood-opt .me2{font-size:20px;display:block;margin-bottom:3px}
+/* ANNIV */
+.anniv{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(224,122,142,.08));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:18px;text-align:center;margin-bottom:12px}
+.adays{font-size:38px;font-weight:700;color:var(--g)}
+.albl{font-size:12px;color:var(--tm);margin-top:2px}
+.aev{font-size:13px;font-weight:600;margin-top:8px}
 
-/* ── THEMES ── */
-.theme-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.theme-card{border-radius:12px;border:2px solid transparent;padding:14px;cursor:pointer;transition:all .25s;text-align:center;position:relative}
-.theme-card.sel{border-color:var(--g)}
-.theme-orb{width:38px;height:38px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.theme-name{font-size:12px;font-weight:600}
-.theme-desc{font-size:10px;color:var(--tm);margin-top:2px}
-.theme-sel-badge{position:absolute;top:6px;left:6px;background:var(--g);color:#000;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;display:none}
-.theme-card.sel .theme-sel-badge{display:block}
+/* GAMES */
+.gcard{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:13px;margin-bottom:9px;position:relative;overflow:hidden}
+.gbar{position:absolute;right:0;top:0;bottom:0;width:3px}
+.gbar.romantic{background:linear-gradient(to bottom,#f48fb1,#c2185b)}
+.gbar.fun{background:linear-gradient(to bottom,#ffb347,#e65100)}
+.gbar.mind{background:linear-gradient(to bottom,#ce93d8,#7b1fa2)}
+.gbar.adventure{background:linear-gradient(to bottom,#4fc3f7,#0288d1)}
+.gicon{font-size:24px;margin-bottom:6px}
+.gtitle{font-size:14px;font-weight:600;margin-bottom:3px}
+.gdesc{font-size:12px;color:var(--tm);margin-bottom:8px}
+.gfoot{display:flex;align-items:center;gap:7px}
+.gtag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid}
+.gplay{padding:5px 13px;border-radius:20px;border:none;background:var(--gl);color:var(--g);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-right:auto}
+.gplay:hover{background:var(--g);color:var(--d)}
+.agame{background:linear-gradient(135deg,var(--d3),var(--d4));border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:16px;margin-bottom:10px}
+.aghead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.agicon{font-size:26px}
+.agtitle{font-size:15px;font-weight:700;color:var(--g);flex:1}
+.agclose{background:var(--d4);border:none;color:var(--tm);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px}
+.agcont{font-size:14px;line-height:1.6;margin-bottom:12px}
+.scores{display:flex;gap:10px;margin-bottom:12px}
+.scbox{flex:1;background:var(--d4);border-radius:10px;padding:10px;text-align:center}
+.sclbl{font-size:11px;color:var(--tm);margin-bottom:2px}
+.scval{font-size:22px;font-weight:700;color:var(--g)}
+.agbtns{display:flex;gap:7px;flex-wrap:wrap}
+.agbtn{padding:8px 14px;border-radius:10px;border:1px solid rgba(201,168,76,.25);background:transparent;color:var(--g);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer}
+.agbtn:hover{background:var(--gl)}
+.agbtn.p{background:var(--g);color:var(--d);border:none;font-weight:700}
 
-/* ── ANNIV ── */
-.anniv-card{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(224,122,142,.08));border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:18px;text-align:center;margin-bottom:12px}
-.anniv-days{font-size:38px;font-weight:700;color:var(--g)}
-.anniv-lbl{font-size:12px;color:var(--tm);margin-top:2px}
-.anniv-ev{font-size:13px;font-weight:600;margin-top:8px}
-
-/* ── LETTER ── */
-.time-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.time-chip{padding:5px 12px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
-.time-chip.on{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
-
-/* ── FIGHT PANEL ── */
-.fight-who-row{display:flex;gap:7px;margin-bottom:12px}
-.fight-who-btn{flex:1;padding:10px 6px;border-radius:11px;border:1px solid rgba(224,85,85,.2);background:rgba(224,85,85,.06);color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;text-align:center}
-.fight-who-btn.on,.fight-who-btn:hover{background:rgba(224,85,85,.15);color:#ff8080;border-color:rgba(224,85,85,.4)}
-.peace-msg{padding:10px 13px;background:var(--d3);border:1px solid rgba(224,85,85,.18);border-radius:11px;font-size:13px;cursor:pointer;margin-bottom:7px;transition:all .2s}
-.peace-msg:hover{border-color:rgba(201,168,76,.3)}
-.peace-big-btn{background:linear-gradient(135deg,#4ade80,#16a34a);border:none;border-radius:12px;padding:13px;color:white;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:4px}
-
-/* ── DRAWING ── */
-#drawCanvas{background:#1a1726;cursor:crosshair;display:block;width:100%;touch-action:none}
-.draw-palette{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--d2);border-top:1px solid rgba(201,168,76,.1);flex-wrap:wrap}
-.swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .15s;flex-shrink:0}
-.swatch:hover{transform:scale(1.15)}
-.swatch.sel{border-color:white;transform:scale(1.25)}
-.draw-toolbar{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);padding:9px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0}
-.draw-btn{width:36px;height:36px;border-radius:9px;border:1px solid rgba(201,168,76,.2);background:var(--d3);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.draw-btn:hover{background:var(--gl);color:var(--g)}
-.draw-btn.on{background:var(--gl);border-color:var(--g);color:var(--g)}
-.draw-send{padding:0 16px;height:36px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:var(--d);font-size:13px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;margin-right:auto}
-
-/* ── GENERAL ── */
-.btn-primary{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:12px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:opacity .2s}
-.btn-primary:hover{opacity:.9}
-.input-field{background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:11px;padding:10px 13px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;resize:none;outline:none;width:100%;direction:rtl;transition:border-color .2s}
-.input-field:focus{border-color:rgba(201,168,76,.45)}
-.input-field::placeholder{color:var(--tm)}
-.add-btn{background:var(--d3);border:1.5px dashed rgba(201,168,76,.3);border-radius:11px;padding:11px;color:var(--g);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;width:100%;transition:all .2s}
-.add-btn:hover{background:var(--gl)}
-.pill-btn{padding:5px 13px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
-.pill-btn.on,.pill-btn:hover{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
-.error-box{background:rgba(224,85,85,.12);border:1px solid rgba(224,85,85,.3);border-radius:10px;padding:10px 14px;color:#ff8080;font-size:13px;display:none}
-.success-box{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:14px;color:#4ade80;font-size:14px;text-align:center;display:none}
-
-/* Modal */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-bg.show{display:flex}
-.modal{background:var(--d2);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:22px;width:100%;max-width:400px;animation:popIn .3s ease}
-@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-title{font-size:16px;font-weight:700;color:var(--g);margin-bottom:14px}
-.modal-cats{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.modal-actions{display:flex;gap:7px;justify-content:flex-end;margin-top:10px}
-.btn-cancel{background:var(--d3);border:1px solid rgba(201,168,76,.1);color:var(--tm);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px}
-.btn-save{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;color:var(--d);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700}
-
-/* Low net */
-.ln-bar{display:none;background:rgba(255,160,0,.1);border-bottom:1px solid rgba(255,160,0,.25);padding:7px 16px;align-items:center;gap:9px;flex-shrink:0}
-.ln-bar.show{display:flex}
-.ln-txt{flex:1;font-size:12px;color:#ffb347}
-.ln-txt strong{font-size:13px;display:block}
-
-/* Games */
-.game-card{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:13px;margin-bottom:9px;position:relative;overflow:hidden}
-.game-bar{position:absolute;right:0;top:0;bottom:0;width:3px}
-.game-bar.romantic{background:linear-gradient(to bottom,#f48fb1,#c2185b)}
-.game-bar.fun{background:linear-gradient(to bottom,#ffb347,#e65100)}
-.game-bar.mind{background:linear-gradient(to bottom,#ce93d8,#7b1fa2)}
-.game-bar.adventure{background:linear-gradient(to bottom,#4fc3f7,#0288d1)}
-.game-icon{font-size:24px;margin-bottom:6px}
-.game-title{font-size:14px;font-weight:600;margin-bottom:3px}
-.game-desc{font-size:12px;color:var(--tm);margin-bottom:8px}
-.game-footer{display:flex;align-items:center;gap:7px}
-.game-tag{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid}
-.game-play{padding:5px 13px;border-radius:20px;border:none;background:var(--gl);color:var(--g);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-right:auto}
-.game-play:hover{background:var(--g);color:var(--d)}
-
-/* Active game */
-.active-game{background:linear-gradient(135deg,var(--d3),var(--d4));border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:16px;margin-bottom:10px}
-.ag-header{display:flex;align-items:center;gap:9px;margin-bottom:12px}
-.ag-icon{font-size:26px}
-.ag-title{font-size:15px;font-weight:700;color:var(--g);flex:1}
-.ag-close{background:var(--d4);border:none;color:var(--tm);width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px}
-.ag-content{font-size:14px;line-height:1.6;margin-bottom:12px}
-.score-row{display:flex;gap:10px;margin-bottom:12px}
-.score-box{flex:1;background:var(--d4);border-radius:10px;padding:10px;text-align:center}
-.score-lbl{font-size:11px;color:var(--tm);margin-bottom:2px}
-.score-val{font-size:22px;font-weight:700;color:var(--g)}
-.ag-btns{display:flex;gap:7px;flex-wrap:wrap}
-.ag-btn{padding:8px 14px;border-radius:10px;border:1px solid rgba(201,168,76,.25);background:transparent;color:var(--g);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
-.ag-btn:hover{background:var(--gl)}
-.ag-btn.primary{background:var(--g);color:var(--d);border:none;font-weight:700}
-
-/* Disc */
-.disc-moods{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+/* DISCUSSION */
 .disc-card{background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:16px;margin-bottom:12px}
 .disc-q{font-size:15px;line-height:1.6;margin-bottom:12px}
 .disc-acts{display:flex;gap:7px;flex-wrap:wrap}
-.disc-act{padding:6px 13px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
-.disc-act:hover{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
-.shuffle-btn{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:12px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px}
+.disc-act{padding:6px 13px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer}
+.disc-act:hover{background:var(--gl);color:var(--g)}
+.shfl{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;border-radius:12px;padding:12px;color:var(--d);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:7px}
 
-/* Memories */
-.mem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.mem-item{aspect-ratio:1;border-radius:11px;border:1px solid rgba(201,168,76,.08);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.mem-item:hover{border-color:rgba(201,168,76,.3);transform:scale(1.04)}
-.mem-yr{position:absolute;bottom:5px;right:5px;font-size:10px;background:rgba(0,0,0,.6);color:var(--g);padding:2px 5px;border-radius:5px}
+/* THEMES */
+.tgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.thcard{border-radius:12px;border:2px solid transparent;padding:14px;cursor:pointer;transition:all .25s;text-align:center;position:relative}
+.thcard.sel{border-color:var(--g)}
+.thorb{width:38px;height:38px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.thname{font-size:12px;font-weight:600}
+.thdesc{font-size:10px;color:var(--tm);margin-top:2px}
+.thbdg{position:absolute;top:6px;left:6px;background:var(--g);color:#000;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;display:none}
+.thcard.sel .thbdg{display:block}
 
-/* Stickers panel */
-.stickers-panel{display:none;background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;flex-wrap:wrap;gap:8px;flex-shrink:0}
-.stickers-panel.show{display:flex}
-.sticker{font-size:28px;cursor:pointer;transition:transform .15s}
-.sticker:hover{transform:scale(1.2)}
+/* MOOD PANEL */
+.moodgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
+.mopt{padding:10px 6px;border-radius:12px;border:1px solid rgba(201,168,76,.15);background:var(--d3);color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;text-align:center}
+.mopt.on,.mopt:hover{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
+.mopt .me2{font-size:20px;display:block;margin-bottom:3px}
 
-@media(max-width:400px){.mem-grid{grid-template-columns:repeat(2,1fr)}}
+/* FIGHT */
+.fwrow{display:flex;gap:7px;margin-bottom:12px}
+.fwbtn{flex:1;padding:10px 6px;border-radius:11px;border:1px solid rgba(224,85,85,.2);background:rgba(224,85,85,.06);color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer;text-align:center}
+.fwbtn.on,.fwbtn:hover{background:rgba(224,85,85,.15);color:#ff8080;border-color:rgba(224,85,85,.4)}
+.pmsg{padding:10px 13px;background:var(--d3);border:1px solid rgba(224,85,85,.18);border-radius:11px;font-size:13px;cursor:pointer;margin-bottom:7px}
+.pmsg:hover{border-color:rgba(201,168,76,.3)}
+.peace-btn{background:linear-gradient(135deg,#4ade80,#16a34a);border:none;border-radius:12px;padding:13px;color:white;font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%}
+
+/* LETTER */
+.tchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tchip{padding:5px 12px;border-radius:20px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer}
+.tchip.on{background:var(--gl);color:var(--g);border-color:rgba(201,168,76,.4)}
+
+/* DRAW */
+#dcanvas{background:#1a1726;display:block;width:100%;touch-action:none}
+.dtool{background:var(--d2);border-bottom:1px solid rgba(201,168,76,.1);padding:9px 13px;display:flex;align-items:center;gap:7px;flex-shrink:0}
+.dbtn{width:36px;height:36px;border-radius:9px;border:1px solid rgba(201,168,76,.2);background:var(--d3);color:var(--tx);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.dbtn.on{background:var(--gl);border-color:var(--g);color:var(--g)}
+.dpal{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.dsend{padding:0 16px;height:36px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:var(--d);font-size:13px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;margin-right:auto}
+.sw{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0}
+.sw.sel{border-color:white;transform:scale(1.25)}
+
+/* MEMORIES */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.mitem{aspect-ratio:1;border-radius:11px;border:1px solid rgba(201,168,76,.08);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;position:relative;overflow:hidden}
+.mitem:hover{border-color:rgba(201,168,76,.3);transform:scale(1.04)}
+.myr{position:absolute;bottom:5px;right:5px;font-size:10px;background:rgba(0,0,0,.6);color:var(--g);padding:2px 5px;border-radius:5px}
+
+/* MODALS */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.mbg.show{display:flex}
+.mbox{background:var(--d2);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:22px;width:100%;max-width:400px}
+.mttl{font-size:16px;font-weight:700;color:var(--g);margin-bottom:14px}
+.macts{display:flex;gap:7px;justify-content:flex-end;margin-top:10px}
+.mcx{background:var(--d3);border:1px solid rgba(201,168,76,.1);color:var(--tm);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px}
+.msv{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;color:var(--d);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700}
+
+/* NICKNAME */
+.nk-section{background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;margin-top:4px}
+.nk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.nk-av{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0}
+.nk-info{flex:1}
+.nk-name{font-size:14px;font-weight:600}
+.nk-email{font-size:11px;color:var(--tm)}
+.nk-tag{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--gl);color:var(--g);border:1px solid rgba(201,168,76,.3)}
 </style>
 </head>
 <body>
 
-<!-- ══ AUTH SCREEN ══ -->
+<!-- AUTH -->
 <div id="authScreen">
   <div class="logo-box">💞</div>
-  <div class="app-title">عالمنا الخاص</div>
-  <div class="app-sub">مساحتك الخاصة معها</div>
-  <div class="tab-row" style="max-width:400px;width:100%">
-    <button class="tab-btn on" onclick="switchAuthTab('login')">تسجيل الدخول</button>
-    <button class="tab-btn" onclick="switchAuthTab('register')">حساب جديد</button>
+  <div style="font-size:26px;font-weight:700;color:var(--g);margin-bottom:6px">عالمنا الخاص</div>
+  <div style="font-size:14px;color:var(--tm);margin-bottom:28px">مساحتك الخاصة معها</div>
+  <div class="auth-tabs">
+    <button class="auth-tab on" onclick="authTab('login')">تسجيل الدخول</button>
+    <button class="auth-tab" onclick="authTab('register')">حساب جديد</button>
   </div>
-  <div id="authError" class="error-box" style="max-width:400px;width:100%;margin-bottom:10px"></div>
-  <!-- Login -->
-  <div id="loginForm" class="auth-form">
-    <input class="auth-input" id="loginEmail" type="email" placeholder="البريد الإلكتروني">
-    <input class="auth-input" id="loginPass" type="password" placeholder="كلمة المرور">
-    <button class="auth-btn" onclick="doLogin()">دخول 💞</button>
+  <div id="aerr" class="errmsg"></div>
+  <div id="loginForm" class="aform">
+    <input class="ainput" id="lEmail" type="email" placeholder="البريد الإلكتروني">
+    <input class="ainput" id="lPass" type="password" placeholder="كلمة المرور">
+    <button class="abtn" onclick="doLogin()">دخول 💞</button>
   </div>
-  <!-- Register -->
-  <div id="registerForm" class="auth-form" style="display:none">
-    <input class="auth-input" id="regName" type="text" placeholder="اسمك">
-    <input class="auth-input" id="regEmail" type="email" placeholder="البريد الإلكتروني">
-    <input class="auth-input" id="regPass" type="password" placeholder="كلمة المرور (٦ أحرف+)">
-    <button class="auth-btn" onclick="doRegister()">إنشاء الحساب ✨</button>
+  <div id="regForm" class="aform" style="display:none">
+    <input class="ainput" id="rName" type="text" placeholder="اسمك">
+    <input class="ainput" id="rEmail" type="email" placeholder="البريد الإلكتروني">
+    <input class="ainput" id="rPass" type="password" placeholder="كلمة المرور (٦ أحرف+)">
+    <button class="abtn" onclick="doRegister()">إنشاء الحساب ✨</button>
   </div>
 </div>
 
-<!-- ══ LINK PARTNER SCREEN ══ -->
+<!-- LINK -->
 <div id="linkScreen">
-  <div style="font-size:60px;margin-bottom:16px">💞</div>
+  <div style="font-size:58px;margin-bottom:14px">💞</div>
   <div style="font-size:24px;font-weight:700;color:var(--g);margin-bottom:8px">ربط الحسابات</div>
-  <div style="font-size:14px;color:var(--tm);margin-bottom:28px;text-align:center">أدخل إيميل شريكتك لربط الحسابين</div>
-  <div id="linkError" class="error-box" style="max-width:400px;width:100%;margin-bottom:10px"></div>
-  <div id="linkSuccess" class="success-box" style="max-width:400px;width:100%;margin-bottom:10px">
-    🎉 تم الربط بنجاح! الآن يمكنكما التواصل
-  </div>
+  <div style="font-size:14px;color:var(--tm);margin-bottom:24px;text-align:center">أدخل إيميل شريكتك لربط الحسابين معاً</div>
+  <div id="lerr" class="errmsg" style="max-width:400px;width:100%;margin-bottom:10px"></div>
+  <div id="lsucc" class="succmsg" style="max-width:400px;width:100%;margin-bottom:10px">🎉 تم الربط بنجاح! الآن يمكنكما التواصل</div>
   <div style="width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px">
-    <input class="auth-input" id="partnerEmail" type="email" placeholder="إيميل شريكتك">
-    <button class="auth-btn" onclick="doLinkPartner()">ربط الحساب 💞</button>
+    <input class="ainput" id="pEmail" type="email" placeholder="إيميل شريكتك">
+    <button class="abtn" onclick="doLink()">ربط الحساب 💞</button>
     <button style="background:none;border:none;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:13px;cursor:pointer;padding:8px" onclick="doLogout()">تسجيل خروج</button>
   </div>
 </div>
 
-<!-- ══ MAIN APP ══ -->
+<!-- APP -->
 <div id="appScreen">
 
   <!-- Profile bar -->
-  <div id="profileBar" style="display:none;background:rgba(201,168,76,0.08);border-bottom:1px solid rgba(201,168,76,.1);padding:6px 16px;flex-shrink:0;align-items:center;gap:10px">
-    <div style="font-size:13px;color:var(--tm)">📧 حسابك: <span id="myEmailShow" style="color:var(--g);font-weight:600"></span></div>
-    <button onclick="document.getElementById('profileBar').style.display='none'" style="background:none;border:none;color:var(--tm);cursor:pointer;margin-right:auto">✕</button>
-  </div>
-
-  <!-- Low net banner -->
-  <div class="ln-bar" id="lnBar">
-    <div class="lni" style="font-size:16px">📶</div>
-    <div class="ln-txt"><strong>وضع النت الضعيف مفعّل</strong>الصور والفيديو معطّلة</div>
-    <button style="background:none;border:none;color:#ffb347;font-size:14px;cursor:pointer" onclick="toggleLowNet()">✕</button>
+  <div class="prof-bar" id="profBar">
+    <div style="display:flex;flex-direction:column;gap:2px;flex:1">
+      <div style="font-size:12px;color:var(--tm)">📧 حسابك المسجل:</div>
+      <div style="font-size:13px;color:var(--g);font-weight:600" id="myEmailDisp"></div>
+    </div>
+    <button onclick="document.getElementById('profBar').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px">✕</button>
   </div>
 
   <!-- Fight banner -->
   <div class="fight-banner" id="fightBanner">
     <div style="font-size:18px">😤</div>
-    <div class="fight-txt"><strong>وضع المشاجرة مفعّل</strong>خذوا وقتاً للتهدئة 💙</div>
-    <button class="peace-btn-small" onclick="showPeaceModal()">🕊️ صلح</button>
+    <div style="flex:1;font-size:12px;color:#ff8080"><strong style="display:block;font-size:13px">وضع المشاجرة مفعّل</strong>خذوا وقتاً للتهدئة 💙</div>
+    <button onclick="showModal('peaceModal')" style="padding:5px 12px;border-radius:20px;border:none;background:rgba(201,168,76,.2);color:var(--g);font-family:'Tajawal',sans-serif;font-size:12px;font-weight:700;cursor:pointer">🕊️ صلح</button>
+  </div>
+
+  <!-- Low net -->
+  <div class="ln-bar" id="lnBar">
+    <div style="font-size:16px">📶</div>
+    <div style="flex:1;font-size:12px;color:#ffb347"><strong style="display:block;font-size:13px">وضع النت الضعيف مفعّل</strong>الصور والفيديو معطّلة</div>
+    <button onclick="toggleLN()" style="background:none;border:none;color:#ffb347;font-size:14px;cursor:pointer">✕</button>
   </div>
 
   <!-- Topbar -->
   <div class="topbar">
-    <div class="partner-av" id="partnerAv">
-      <span id="partnerInitial">س</span>
-      <div class="online-dot"></div>
+    <div class="pav" id="pAv"><span id="pInit">س</span><div class="odot"></div></div>
+    <div class="pinfo">
+      <div class="pname" id="pNameTop">شريكتك</div>
+      <div class="pstatus" id="pStatus">متصلة الآن</div>
     </div>
-    <div class="partner-info">
-      <div class="partner-name" id="partnerNameTop">شريكتك</div>
-      <div class="partner-status" id="statusText">متصلة الآن</div>
-    </div>
-    <div class="top-actions">
-      <button class="top-btn" id="lnBtn" onclick="toggleLowNet()" title="نت ضعيف">📶</button>
-      <button class="top-btn" id="fightBtn" onclick="toggleFightMode()" title="مشاجرة">😤</button>
-      <button class="top-btn" onclick="showProfile()" title="حسابي">👤</button>
-      <button class="top-btn" onclick="doLogout()" title="خروج">🚪</button>
+    <div class="topbtns">
+      <button class="tbtn" id="lnBtn" onclick="toggleLN()" title="نت ضعيف">📶</button>
+      <button class="tbtn" id="fBtn" onclick="toggleFight()" title="مشاجرة">😤</button>
+      <button class="tbtn" onclick="showProfile()" title="حسابي">👤</button>
+      <button class="tbtn" onclick="doLogout()" title="خروج">🚪</button>
     </div>
   </div>
 
   <!-- Mood bar -->
-  <div class="mood-bar">
-    <div class="mood-side">
-      <div class="mood-av me" id="myMoodAv">أ</div>
-      <div class="mood-info">
-        <div class="mood-name">أنت</div>
-        <div class="mood-emoji" id="myMoodEmoji">😊</div>
-        <div class="mood-msg" id="myMoodMsg">كلو بخير</div>
+  <div class="moodbar">
+    <div class="mside">
+      <div class="mav me" id="myMavTop">أ</div>
+      <div class="minfo">
+        <div class="mname">أنت</div>
+        <div class="memoji" id="myMETop">😊</div>
+        <div class="mmsg" id="myMMTop">كلو بخير</div>
       </div>
     </div>
-    <div class="mood-center" onclick="switchTab('mood')">
-      <div class="mood-hearts" id="moodHearts">💞</div>
-      <div class="mood-compat" id="moodCompat">منسجمان</div>
+    <div class="mcenter" onclick="swTab('mood')">
+      <div class="mhearts" id="mHearts">💞</div>
+      <div class="mcompat" id="mCompat">منسجمان</div>
     </div>
-    <div class="mood-side right">
-      <div class="mood-av her" id="herMoodAv">س</div>
-      <div class="mood-info" style="align-items:flex-end">
-        <div class="mood-name" id="herMoodName">شريكتك</div>
-        <div class="mood-emoji" id="herMoodEmoji">😴</div>
-        <div class="mood-msg" id="herMoodMsg">تعبانة شوي</div>
+    <div class="mside r">
+      <div class="mav hr" id="hrMavTop">س</div>
+      <div class="minfo" style="align-items:flex-end">
+        <div class="mname" id="hrMNameTop">شريكتك</div>
+        <div class="memoji" id="hrMETop">😴</div>
+        <div class="mmsg" id="hrMMTop">تعبانة شوي</div>
       </div>
     </div>
   </div>
 
   <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab on" onclick="switchTab('chat')">💬 محادثة</button>
-    <button class="tab" onclick="switchTab('letter')">💌 رسائل</button>
-    <button class="tab" onclick="switchTab('mood')">🌡️ مزاج</button>
-    <button class="tab" onclick="switchTab('fight')">😤 مشاجرة</button>
-    <button class="tab" onclick="switchTab('games')">🎮 ألعاب</button>
-    <button class="tab" onclick="switchTab('disc')">🗣️ نقاش</button>
-    <button class="tab" onclick="switchTab('ideas')">💡 أفكار</button>
-    <button class="tab" onclick="switchTab('todo')">📋 أهداف</button>
-    <button class="tab" onclick="switchTab('draw')">🎨 رسم</button>
-    <button class="tab" onclick="switchTab('memories')">✨ ذكريات</button>
-    <button class="tab" onclick="switchTab('themes')">🎨 سمات</button>
+  <div class="tabs" id="tabsBar">
+    <button class="tab on" onclick="swTab('chat')">💬 محادثة</button>
+    <button class="tab" onclick="swTab('letter')">💌 رسائل</button>
+    <button class="tab" onclick="swTab('mood')">🌡️ مزاج</button>
+    <button class="tab" onclick="swTab('fight')">😤 مشاجرة</button>
+    <button class="tab" onclick="swTab('games')">🎮 ألعاب</button>
+    <button class="tab" onclick="swTab('disc')">🗣️ نقاش</button>
+    <button class="tab" onclick="swTab('ideas')">💡 أفكار</button>
+    <button class="tab" onclick="swTab('todo')">📋 أهداف</button>
+    <button class="tab" onclick="swTab('draw')">🎨 رسم</button>
+    <button class="tab" onclick="swTab('nick')">🏷️ كنيات</button>
+    <button class="tab" onclick="swTab('memories')">✨ ذكريات</button>
+    <button class="tab" onclick="swTab('themes')">🎨 سمات</button>
   </div>
 
-  <!-- ══ CHAT PANEL ══ -->
+  <!-- ══ CHAT ══ -->
   <div class="panel on" id="panel-chat" style="overflow:hidden">
-    <div class="msgs-area" id="msgsArea"></div>
-    <div class="stickers-panel" id="stickersPanel">
-      <div style="width:100%;display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--tm)">الملصقات:</span>
-        <label style="padding:4px 10px;border-radius:20px;background:var(--gl);color:var(--g);font-size:11px;cursor:pointer;border:1px solid rgba(201,168,76,.3)">
+    <div class="msgs" id="msgsArea"></div>
+    <div class="sp" id="stickerPanel">
+      <div class="sp-header">
+        <span class="sp-label">الملصقات</span>
+        <label class="sp-import">
           📥 استيراد صور
-          <input type="file" id="stickerImport" accept="image/*,image/webp" multiple style="display:none" onchange="importStickers(this)">
+          <input type="file" id="stickerFile" accept="image/*" multiple style="display:none" onchange="importStickers(this)">
         </label>
-        <button onclick="document.getElementById('stickersPanel').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;margin-right:auto;font-size:16px">✕</button>
+        <button onclick="document.getElementById('stickerPanel').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;margin-right:auto">✕</button>
       </div>
-      <div id="stickersList" style="display:flex;flex-wrap:wrap;gap:8px;width:100%">
-        <span class="sticker" onclick="sendSticker('🌹')">🌹</span>
-        <span class="sticker" onclick="sendSticker('💛')">💛</span>
-        <span class="sticker" onclick="sendSticker('😍')">😍</span>
-        <span class="sticker" onclick="sendSticker('🥰')">🥰</span>
-        <span class="sticker" onclick="sendSticker('💋')">💋</span>
-        <span class="sticker" onclick="sendSticker('✨')">✨</span>
-        <span class="sticker" onclick="sendSticker('🌙')">🌙</span>
-        <span class="sticker" onclick="sendSticker('💎')">💎</span>
-        <span class="sticker" onclick="sendSticker('🔥')">🔥</span>
-        <span class="sticker" onclick="sendSticker('🎉')">🎉</span>
-        <span class="sticker" onclick="sendSticker('💐')">💐</span>
-        <span class="sticker" onclick="sendSticker('🫶')">🫶</span>
-        <span class="sticker" onclick="sendSticker('😘')">😘</span>
-        <span class="sticker" onclick="sendSticker('🥺')">🥺</span>
-        <span class="sticker" onclick="sendSticker('💪')">💪</span>
-        <span class="sticker" onclick="sendSticker('🌺')">🌺</span>
+      <div class="sp-grid" id="stickerGrid">
+        <span class="stk" onclick="sendStk('🌹')">🌹</span>
+        <span class="stk" onclick="sendStk('💛')">💛</span>
+        <span class="stk" onclick="sendStk('😍')">😍</span>
+        <span class="stk" onclick="sendStk('🥰')">🥰</span>
+        <span class="stk" onclick="sendStk('💋')">💋</span>
+        <span class="stk" onclick="sendStk('✨')">✨</span>
+        <span class="stk" onclick="sendStk('🌙')">🌙</span>
+        <span class="stk" onclick="sendStk('💎')">💎</span>
+        <span class="stk" onclick="sendStk('🔥')">🔥</span>
+        <span class="stk" onclick="sendStk('🎉')">🎉</span>
+        <span class="stk" onclick="sendStk('💐')">💐</span>
+        <span class="stk" onclick="sendStk('🫶')">🫶</span>
+        <span class="stk" onclick="sendStk('😘')">😘</span>
+        <span class="stk" onclick="sendStk('🥺')">🥺</span>
+        <span class="stk" onclick="sendStk('🌺')">🌺</span>
+        <span class="stk" onclick="sendStk('💍')">💍</span>
       </div>
-      <div id="customStickers" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px"></div>
+      <div class="sp-grid" id="customSGrid"></div>
     </div>
-    <div class="input-area">
-      <div class="input-row">
-        <button class="input-btn" onclick="toggleStickers()">😊</button>
-        <textarea class="msg-input" id="msgInput" placeholder="اكتب رسالتك..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-        <button class="send-btn" onclick="sendMsg()">➤</button>
+    <div class="iarea">
+      <div class="irow">
+        <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show')">😊</button>
+        <textarea class="minput" id="msgInput" placeholder="اكتب رسالتك..." rows="1" onkeydown="onKey(event)" oninput="aR(this)"></textarea>
+        <button class="sbtn" onclick="sendMsg()">➤</button>
       </div>
       <div class="hints">
-        <div class="hint" onclick="switchTab('letter')">💌 رسالة مؤجلة</div>
-        <div class="hint" onclick="openMoodModal()">🌡️ حالتي</div>
-        <div class="hint" onclick="toggleFightMode()">😤 أنا زعلان</div>
-        <div class="hint" onclick="switchTab('draw')">🎨 ارسم</div>
-        <div class="hint" onclick="switchTab('games')">🎮 العب</div>
+        <div class="hint" onclick="swTab('letter')">💌 رسالة مؤجلة</div>
+        <div class="hint" onclick="showModal('moodModal')">🌡️ حالتي</div>
+        <div class="hint" onclick="toggleFight()">😤 أنا زعلان</div>
+        <div class="hint" onclick="swTab('draw')">🎨 ارسم</div>
+        <div class="hint" onclick="swTab('games')">🎮 العب</div>
       </div>
     </div>
   </div>
 
-  <!-- ══ LETTER PANEL ══ -->
+  <!-- ══ LETTER ══ -->
   <div class="panel" id="panel-letter">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">💌 الرسائل المؤجلة</div>
       <div class="card">
-        <div class="card-title">✍️ اكتب رسالة تُفتح في وقت محدد</div>
-        <input class="input-field" id="lTitle" placeholder="عنوان الرسالة (اختياري)..." style="margin-bottom:8px">
-        <textarea class="input-field" id="lContent" placeholder="اكتب رسالتك... 🔒" rows="4" style="margin-bottom:10px"></textarea>
+        <div class="ctitle">✍️ اكتب رسالة تُفتح في وقت محدد</div>
+        <input class="field" id="lTitle" placeholder="عنوان الرسالة (اختياري)..." style="margin-bottom:8px">
+        <textarea class="field" id="lBody" placeholder="اكتب رسالتك... 🔒" rows="4" style="margin-bottom:10px"></textarea>
         <div style="font-size:12px;color:var(--tm);margin-bottom:8px">تُفتح بعد:</div>
-        <div class="time-chips">
-          <button class="time-chip on" data-t="1h" onclick="selTime(this)">ساعة</button>
-          <button class="time-chip" data-t="3h" onclick="selTime(this)">٣ ساعات</button>
-          <button class="time-chip" data-t="tonight" onclick="selTime(this)">الليلة</button>
-          <button class="time-chip" data-t="tomorrow" onclick="selTime(this)">غداً</button>
-          <button class="time-chip" data-t="week" onclick="selTime(this)">أسبوع</button>
-          <button class="time-chip" data-t="anniv" onclick="selTime(this)">عيد الزواج 💍</button>
+        <div class="tchips">
+          <button class="tchip on" data-t="1h" onclick="selT(this)">ساعة</button>
+          <button class="tchip" data-t="3h" onclick="selT(this)">٣ ساعات</button>
+          <button class="tchip" data-t="tonight" onclick="selT(this)">الليلة</button>
+          <button class="tchip" data-t="tomorrow" onclick="selT(this)">غداً</button>
+          <button class="tchip" data-t="week" onclick="selT(this)">أسبوع</button>
+          <button class="tchip" data-t="anniv" onclick="selT(this)">عيد الزواج 💍</button>
         </div>
-        <button class="btn-primary" onclick="sendLetter()">🔒 أرسل الرسالة المشفّرة</button>
+        <button class="pbtn" onclick="sendLetter()">🔒 أرسل الرسالة المشفّرة</button>
       </div>
-      <div style="font-size:13px;font-weight:600;color:var(--tm)">📬 الرسائل المرسلة</div>
-      <div id="lettersList"></div>
     </div>
   </div>
 
-  <!-- ══ MOOD PANEL ══ -->
+  <!-- ══ MOOD ══ -->
   <div class="panel" id="panel-mood">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">🌡️ المزاج المشترك</div>
       <div class="card" style="text-align:center;margin-bottom:4px">
         <div style="display:flex;justify-content:space-evenly;align-items:center">
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-            <div class="mood-av me" style="width:44px;height:44px;font-size:16px" id="smcMe">أ</div>
-            <div style="font-size:26px" id="smcMyEmoji">😊</div>
+            <div class="mav me" style="width:44px;height:44px;font-size:16px" id="smcMe">أ</div>
+            <div style="font-size:26px" id="smcMyE">😊</div>
             <div style="font-size:11px;color:var(--tm)">أنت</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div style="font-size:28px" id="smcHearts">💞</div>
-            <div style="font-size:12px;color:var(--g);font-weight:600" id="smcLabel">منسجمان</div>
+            <div style="font-size:28px" id="smcH">💞</div>
+            <div style="font-size:12px;color:var(--g);font-weight:600" id="smcL">منسجمان</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
-            <div class="mood-av her" style="width:44px;height:44px;font-size:16px" id="smcHer">س</div>
-            <div style="font-size:26px" id="smcHerEmoji">😴</div>
-            <div style="font-size:11px;color:var(--tm)" id="smcHerName">شريكتك</div>
+            <div class="mav hr" style="width:44px;height:44px;font-size:16px" id="smcHr">س</div>
+            <div style="font-size:26px" id="smcHrE">😴</div>
+            <div style="font-size:11px;color:var(--tm)" id="smcHrN">شريكتك</div>
           </div>
         </div>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--tm)">اختر حالتك الآن</div>
-      <div class="mood-grid" id="moodGrid">
-        <button class="mood-opt on" onclick="setMood(this,'😊','سعيد')"><span class="me2">😊</span>سعيد</button>
-        <button class="mood-opt" onclick="setMood(this,'😍','محب')"><span class="me2">😍</span>محب</button>
-        <button class="mood-opt" onclick="setMood(this,'😴','متعب')"><span class="me2">😴</span>متعب</button>
-        <button class="mood-opt" onclick="setMood(this,'😔','حزين')"><span class="me2">😔</span>حزين</button>
-        <button class="mood-opt" onclick="setMood(this,'😂','ضاحك')"><span class="me2">😂</span>ضاحك</button>
-        <button class="mood-opt" onclick="setMood(this,'🤩','متحمس')"><span class="me2">🤩</span>متحمس</button>
-        <button class="mood-opt" onclick="setMood(this,'🥺','محتاج حب')"><span class="me2">🥺</span>محتاج حب</button>
-        <button class="mood-opt" onclick="setMood(this,'🥰','ممتنن')"><span class="me2">🥰</span>ممتنن</button>
+      <div class="moodgrid">
+        <button class="mopt on" onclick="setMood(this,'😊','سعيد')"><span class="me2">😊</span>سعيد</button>
+        <button class="mopt" onclick="setMood(this,'😍','محب')"><span class="me2">😍</span>محب</button>
+        <button class="mopt" onclick="setMood(this,'😴','متعب')"><span class="me2">😴</span>متعب</button>
+        <button class="mopt" onclick="setMood(this,'😔','حزين')"><span class="me2">😔</span>حزين</button>
+        <button class="mopt" onclick="setMood(this,'😂','ضاحك')"><span class="me2">😂</span>ضاحك</button>
+        <button class="mopt" onclick="setMood(this,'🤩','متحمس')"><span class="me2">🤩</span>متحمس</button>
+        <button class="mopt" onclick="setMood(this,'🥺','محتاج حب')"><span class="me2">🥺</span>محتاج حب</button>
+        <button class="mopt" onclick="setMood(this,'🥰','ممتنن')"><span class="me2">🥰</span>ممتنن</button>
       </div>
       <div class="card">
-        <div class="card-title">📨 أرسل رسالة مزاجية</div>
-        <input class="input-field" id="moodMsgInput" placeholder="كيف حالك؟ أخبر شريكك..." style="margin-bottom:8px">
-        <button class="btn-primary" onclick="sendMoodMsg()">إرسال للشريك 💛</button>
+        <div class="ctitle">📨 أرسل رسالة مزاجية</div>
+        <input class="field" id="moodMsg" placeholder="كيف حالك؟ أخبر شريكك..." style="margin-bottom:8px">
+        <button class="pbtn" onclick="sendMoodMsg()">إرسال للشريك 💛</button>
       </div>
     </div>
   </div>
 
-  <!-- ══ FIGHT PANEL ══ -->
+  <!-- ══ FIGHT ══ -->
   <div class="panel" id="panel-fight">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">😤 وضع المشاجرة</div>
-      <div class="card" style="text-align:center;margin-bottom:4px">
-        <div style="font-size:38px;margin-bottom:8px" id="fightIcon">😊</div>
-        <div style="font-size:15px;font-weight:700" id="fightStatusTxt" style="color:#4ade80">كلشي بخير 💚</div>
+      <div class="card" style="text-align:center">
+        <div style="font-size:38px;margin-bottom:8px" id="fIcon">😊</div>
+        <div style="font-size:15px;font-weight:700" id="fTxt">كلشي بخير 💚</div>
         <div style="font-size:12px;color:var(--tm);margin-top:4px">يمكن لأي طرف تفعيل هذا الوضع</div>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--tm)">من الزعلان؟</div>
-      <div class="fight-who-row">
-        <button class="fight-who-btn on" onclick="setFightWho(this,'me')">😤 أنا زعلان</button>
-        <button class="fight-who-btn" onclick="setFightWho(this,'her')">😢 هي زعلانة</button>
-        <button class="fight-who-btn" onclick="setFightWho(this,'both')">💥 كلانا</button>
+      <div class="fwrow">
+        <button class="fwbtn on" onclick="setFWho(this,'me')">😤 أنا زعلان</button>
+        <button class="fwbtn" onclick="setFWho(this,'her')">😢 هي زعلانة</button>
+        <button class="fwbtn" onclick="setFWho(this,'both')">💥 كلانا</button>
       </div>
-      <input class="input-field" id="fightReason" placeholder="ما الذي حدث؟ (اختياري)" style="margin-bottom:10px">
+      <input class="field" id="fReason" placeholder="ما الذي حدث؟ (اختياري)" style="margin-bottom:10px">
       <div class="card" style="margin-bottom:10px">
-        <div class="card-title">💡 نصيحة للتهدئة</div>
+        <div class="ctitle">💡 نصيحة للتهدئة</div>
         <div style="font-size:13px;color:var(--tm);line-height:1.6">خذوا وقتاً للتنفس قبل الرد. تذكروا أنكما فريق واحد. المشاجرة ليست حرباً، بل هي طريق للتفاهم 💙</div>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:8px">أرسل رسالة تهدئة</div>
-      <div class="peace-msg" onclick="sendPeaceMsg(this)">🤍 أنا آسف، ما كان قصدي يجرحك</div>
-      <div class="peace-msg" onclick="sendPeaceMsg(this)">💙 نحتاج نتكلم بهدوء</div>
-      <div class="peace-msg" onclick="sendPeaceMsg(this)">🌹 بحبك حتى لما نختلف</div>
-      <div class="peace-msg" onclick="sendPeaceMsg(this)">⏰ خليني أهدأ شوي ثم نتكلم</div>
-      <div id="fightToggleBtn">
-        <button class="btn-primary" onclick="toggleFightMode()" id="fightMainBtn">😤 تفعيل وضع المشاجرة</button>
+      <div class="pmsg" onclick="sendPMsg(this)">🤍 أنا آسف، ما كان قصدي يجرحك</div>
+      <div class="pmsg" onclick="sendPMsg(this)">💙 نحتاج نتكلم بهدوء</div>
+      <div class="pmsg" onclick="sendPMsg(this)">🌹 بحبك حتى لما نختلف</div>
+      <div class="pmsg" onclick="sendPMsg(this)">⏰ خليني أهدأ شوي ثم نتكلم</div>
+      <div id="fToggle">
+        <button class="pbtn" onclick="toggleFight()" id="fMainBtn" style="background:linear-gradient(135deg,#e05555,#8b1c1c)">😤 تفعيل وضع المشاجرة</button>
       </div>
-      <button class="peace-big-btn" id="peaceBigBtn" style="display:none" onclick="showPeaceModal()">🤝 صلح وعودة للحب</button>
+      <button class="peace-btn" id="peaceBtn" style="display:none;margin-top:8px" onclick="showModal('peaceModal')">🤝 صلح وعودة للحب</button>
     </div>
   </div>
 
-  <!-- ══ GAMES PANEL ══ -->
+  <!-- ══ GAMES ══ -->
   <div class="panel" id="panel-games">
-    <div class="panel-inner">
-      <div class="ptitle">🎮 ألعاب معاً (٢٠ لعبة)</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="gameFilters">
-        <button class="pill-btn on" data-gf="all" onclick="filterGames(this)">الكل</button>
-        <button class="pill-btn" data-gf="romantic" onclick="filterGames(this)">💕 رومانسي</button>
-        <button class="pill-btn" data-gf="fun" onclick="filterGames(this)">😂 مرح</button>
-        <button class="pill-btn" data-gf="mind" onclick="filterGames(this)">🧠 تحدٍّ</button>
-        <button class="pill-btn" data-gf="adventure" onclick="filterGames(this)">🌟 مغامرة</button>
+    <div class="pi">
+      <div class="ptitle">🎮 ألعاب معاً</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="gFilters">
+        <button class="pill on" data-gf="all" onclick="fGames(this)">الكل</button>
+        <button class="pill" data-gf="romantic" onclick="fGames(this)">💕 رومانسي</button>
+        <button class="pill" data-gf="fun" onclick="fGames(this)">😂 مرح</button>
+        <button class="pill" data-gf="mind" onclick="fGames(this)">🧠 تحدٍّ</button>
+        <button class="pill" data-gf="adventure" onclick="fGames(this)">🌟 مغامرة</button>
       </div>
-      <div class="active-game" id="activeGame" style="display:none">
-        <div class="ag-header">
-          <div class="ag-icon" id="agIcon">🎮</div>
-          <div class="ag-title" id="agTitle"></div>
-          <button class="ag-close" onclick="closeGame()">✕</button>
+      <div class="agame" id="aGame" style="display:none">
+        <div class="aghead">
+          <div class="agicon" id="agI">🎮</div>
+          <div class="agtitle" id="agT"></div>
+          <button class="agclose" onclick="closeGame()">✕</button>
         </div>
-        <div class="ag-content" id="agContent"></div>
-        <div class="score-row" id="scoreRow" style="display:none">
-          <div class="score-box"><div class="score-lbl">أنت</div><div class="score-val" id="sc1">0</div></div>
-          <div class="score-box"><div class="score-lbl" id="sc2Lbl">شريكتك</div><div class="score-val" id="sc2">0</div></div>
+        <div class="agcont" id="agC"></div>
+        <div class="scores" id="agS" style="display:none">
+          <div class="scbox"><div class="sclbl">أنت</div><div class="scval" id="sc1">0</div></div>
+          <div class="scbox"><div class="sclbl" id="sc2L">شريكتك</div><div class="scval" id="sc2">0</div></div>
         </div>
-        <div class="ag-btns" id="agBtns"></div>
+        <div class="agbtns" id="agB"></div>
       </div>
       <div id="gamesList"></div>
     </div>
   </div>
 
-  <!-- ══ DISCUSSION PANEL ══ -->
+  <!-- ══ DISCUSSION ══ -->
   <div class="panel" id="panel-disc">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">🗣️ وقت النقاش</div>
-      <div class="disc-moods">
-        <button class="pill-btn on" data-dm="romantic" onclick="setDiscMood(this)">💕 رومانسي</button>
-        <button class="pill-btn" data-dm="fun" onclick="setDiscMood(this)">😂 مرح</button>
-        <button class="pill-btn" data-dm="deep" onclick="setDiscMood(this)">🌙 عميق</button>
-        <button class="pill-btn" data-dm="movie" onclick="setDiscMood(this)">🎬 فيلم</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="dMoods">
+        <button class="pill on" data-dm="romantic" onclick="setDM(this)">💕 رومانسي</button>
+        <button class="pill" data-dm="fun" onclick="setDM(this)">😂 مرح</button>
+        <button class="pill" data-dm="deep" onclick="setDM(this)">🌙 عميق</button>
+        <button class="pill" data-dm="movie" onclick="setDM(this)">🎬 فيلم</button>
       </div>
       <div class="disc-card">
-        <div class="disc-q" id="discQ">لو قدرتوا تسافرون لأي مكان في العالم الليلة، وين تختارون؟ 🌍✈️</div>
+        <div class="disc-q" id="dQ">لو قدرتوا تسافرون لأي مكان الليلة، وين تختارون؟ 🌍✈️</div>
         <div class="disc-acts">
-          <button class="disc-act" onclick="sendDiscToChat()">💬 أرسل للمحادثة</button>
+          <button class="disc-act" onclick="sendDisc()">💬 أرسل للمحادثة</button>
           <button class="disc-act" onclick="likeDisc(this)">❤️ أعجبني</button>
         </div>
       </div>
-      <button class="shuffle-btn" onclick="shuffleDisc()">🔀 سؤال جديد</button>
-      <div class="card">
-        <div class="card-title">📝 سجّل إجاباتكم</div>
-        <textarea class="input-field" id="discAnswer" placeholder="اكتب إجابتك هنا..." rows="3" style="margin-bottom:8px"></textarea>
-        <button class="btn-primary" onclick="saveDiscAnswer()">حفظ الإجابة</button>
-      </div>
-      <div id="discAnswers"></div>
+      <button class="shfl" onclick="shuffleD()">🔀 سؤال جديد</button>
     </div>
   </div>
 
-  <!-- ══ IDEAS PANEL ══ -->
+  <!-- ══ IDEAS ══ -->
   <div class="panel" id="panel-ideas">
-    <div class="panel-inner">
+    <div class="pi">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <div class="ptitle" style="margin:0">💡 قائمة أفكارنا</div>
-        <div style="font-size:11px;color:var(--tm)" id="ideasCount">٠ أفكار</div>
+        <div class="ptitle" style="margin:0">💡 أفكارنا</div>
+        <div style="font-size:11px;color:var(--tm)" id="iCount">٠ أفكار</div>
       </div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="ideaFilters">
-        <button class="pill-btn on" data-f="all" onclick="filterIdeas(this)">الكل</button>
-        <button class="pill-btn" data-f="travel" onclick="filterIdeas(this)">✈️ سفر</button>
-        <button class="pill-btn" data-f="home" onclick="filterIdeas(this)">🏠 البيت</button>
-        <button class="pill-btn" data-f="date" onclick="filterIdeas(this)">💕 لقاء</button>
-        <button class="pill-btn" data-f="dream" onclick="filterIdeas(this)">🌙 أحلام</button>
-        <button class="pill-btn" data-f="other" onclick="filterIdeas(this)">💛 أخرى</button>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="iFilters">
+        <button class="pill on" data-f="all" onclick="fIdeas(this)">الكل</button>
+        <button class="pill" data-f="travel" onclick="fIdeas(this)">✈️ سفر</button>
+        <button class="pill" data-f="home" onclick="fIdeas(this)">🏠 البيت</button>
+        <button class="pill" data-f="date" onclick="fIdeas(this)">💕 لقاء</button>
+        <button class="pill" data-f="dream" onclick="fIdeas(this)">🌙 أحلام</button>
+        <button class="pill" data-f="other" onclick="fIdeas(this)">💛 أخرى</button>
       </div>
       <div id="ideasList"></div>
-      <button class="add-btn" onclick="openIdeaModal()">✨ أضف فكرة جديدة</button>
+      <button class="addbtn" onclick="showModal('ideaModal')">✨ أضف فكرة جديدة</button>
     </div>
   </div>
 
-  <!-- ══ TODO PANEL ══ -->
+  <!-- ══ TODO ══ -->
   <div class="panel" id="panel-todo">
-    <div class="panel-inner">
-      <div class="ptitle">📋 أهدافنا وقائمتنا</div>
-      <div class="anniv-card">
+    <div class="pi">
+      <div class="ptitle">📋 أهدافنا</div>
+      <div class="anniv">
         <div style="font-size:34px">💍</div>
-        <div class="anniv-days" id="annivDays">47</div>
-        <div class="anniv-lbl">يوماً على عيد زواجكما</div>
-        <div class="anniv-ev">١ مايو ٢٠٢٦ · الذكرى الثالثة</div>
+        <div class="adays" id="aD">47</div>
+        <div class="albl">يوماً على عيد زواجكما</div>
+        <div class="aev">١ مايو ٢٠٢٦ · الذكرى الثالثة</div>
       </div>
-      <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:8px">🛒 قائمة المشتريات</div>
+      <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:8px">🛒 القائمة المشتركة</div>
       <div id="todoList"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
-        <input class="input-field" id="newTodo" placeholder="أضف عنصر جديد..." style="flex:1">
-        <button class="btn-primary" style="width:auto;padding:10px 16px" onclick="addTodoItem()">+</button>
+        <input class="field" id="newTodo" placeholder="أضف عنصر..." style="flex:1">
+        <button class="pbtn" style="width:auto;padding:10px 16px" onclick="addTodo()">+</button>
       </div>
     </div>
   </div>
 
-  <!-- ══ DRAW PANEL ══ -->
+  <!-- ══ DRAW ══ -->
   <div class="panel" id="panel-draw" style="overflow:hidden">
-    <div class="draw-toolbar">
-      <button class="draw-btn" id="undoBtn" onclick="undoDraw()" disabled>↩</button>
-      <button class="draw-btn" id="clearBtn" onclick="clearDraw()" disabled>🗑</button>
-      <button class="draw-btn" id="eraserBtn" onclick="toggleEraser()">◻</button>
-      <button class="draw-send" onclick="sendDrawing()">إرسال ➤</button>
+    <div class="dtool">
+      <button class="dbtn" id="dUndo" onclick="dUndo()" disabled>↩</button>
+      <button class="dbtn" id="dClear" onclick="dClear()" disabled>🗑</button>
+      <button class="dbtn" id="dErase" onclick="dErase()">◻</button>
+      <button class="dsend" onclick="dSend()">إرسال ➤</button>
     </div>
-    <canvas id="drawCanvas"></canvas>
-    <div class="draw-palette">
-      <span style="font-size:12px;color:var(--tm)">اللون:</span>
-      <div id="swatchRow"></div>
-      <span style="font-size:12px;color:var(--tm);margin-right:8px">الحجم:</span>
-      <input type="range" id="sizeSlider" min="2" max="20" value="5" step="1" oninput="updateBrushSize(this.value)" style="flex:1;accent-color:var(--g)">
-      <div id="sizePrev" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center"></div>
+    <canvas id="dcanvas"></canvas>
+    <div class="dpal">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;color:var(--tm)">اللون:</span>
+        <div id="swRow" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+        <span style="font-size:12px;color:var(--tm);margin-right:8px">الحجم:</span>
+        <input type="range" id="bSize" min="2" max="20" value="5" step="1" oninput="bSz(this.value)" style="flex:1;accent-color:var(--g)">
+        <div id="bPrev"></div>
+      </div>
     </div>
   </div>
 
-  <!-- ══ MEMORIES PANEL ══ -->
+  <!-- ══ NICKNAMES ══ -->
+  <div class="panel" id="panel-nick">
+    <div class="pi">
+      <div class="ptitle">🏷️ الكنيات</div>
+      <div style="font-size:13px;color:var(--tm);margin-bottom:10px">خصّص اسمك وكنيتك داخل التطبيق فقط</div>
+
+      <!-- My nickname -->
+      <div class="nk-section">
+        <div class="ctitle">👤 كنيتك أنت</div>
+        <div class="nk-row">
+          <div class="nk-av me" id="nkMyAv" style="background:linear-gradient(135deg,var(--g),#c4813a)">أ</div>
+          <div class="nk-info">
+            <div class="nk-name" id="nkMyName">أنت</div>
+            <div class="nk-email" id="nkMyEmail"></div>
+          </div>
+          <span class="nk-tag" id="nkMyTag">أنت</span>
+        </div>
+        <input class="field" id="nkMyInput" placeholder="الاسم الظاهر (مثل: حبيبي، أبو فلان...)" style="margin-bottom:8px">
+        <button class="pbtn" onclick="saveMyNick()">💾 حفظ الكنية</button>
+      </div>
+
+      <!-- Partner nickname -->
+      <div class="nk-section">
+        <div class="ctitle">💕 كنية شريكتك</div>
+        <div class="nk-row">
+          <div class="nk-av hr" id="nkHrAv" style="background:linear-gradient(135deg,var(--pk),var(--g))">س</div>
+          <div class="nk-info">
+            <div class="nk-name" id="nkHrName">شريكتك</div>
+            <div class="nk-email" id="nkHrEmail"></div>
+          </div>
+          <span class="nk-tag" id="nkHrTag">شريكتك</span>
+        </div>
+        <input class="field" id="nkHrInput" placeholder="كنيتها (مثل: حبيبتي، أم فلان...)" style="margin-bottom:8px">
+        <button class="pbtn" onclick="saveHrNick()">💾 حفظ الكنية</button>
+      </div>
+
+      <!-- Display name preview -->
+      <div class="card" style="margin-top:4px">
+        <div class="ctitle">👁️ معاينة الأسماء</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          <div class="mav me" style="width:36px;height:36px;font-size:13px" id="nkPrevMyAv">أ</div>
+          <div>
+            <div style="font-size:14px;font-weight:600" id="nkPrevMyName">أنت</div>
+            <div style="font-size:11px;color:var(--tm)">ستظهر هكذا في المحادثة</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="mav hr" style="width:36px;height:36px;font-size:13px" id="nkPrevHrAv">س</div>
+          <div>
+            <div style="font-size:14px;font-weight:600" id="nkPrevHrName">شريكتك</div>
+            <div style="font-size:11px;color:var(--tm)">ستظهر هكذا في المحادثة</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ MEMORIES ══ -->
   <div class="panel" id="panel-memories">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">✨ صندوق الذكريات</div>
       <div class="card" style="display:flex;align-items:center;gap:13px;margin-bottom:4px">
         <div style="font-size:34px">🎞️</div>
@@ -687,1105 +722,883 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
           <div style="font-size:12px;color:var(--tm);margin-top:2px">في مثل هذا اليوم منذ ٢ سنوات 🌹</div>
         </div>
       </div>
-      <div class="mem-grid">
-        <div class="mem-item" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">🌅<div class="mem-yr">2024</div></div>
-        <div class="mem-item" style="background:linear-gradient(135deg,#0d1b2a,#1b2838)">🎂<div class="mem-yr">2023</div></div>
-        <div class="mem-item" style="background:linear-gradient(135deg,#1a0a1a,#2d0a2d)">💐<div class="mem-yr">2024</div></div>
-        <div class="mem-item" style="background:linear-gradient(135deg,#0a1a0a,#1a3a1a)">🌿<div class="mem-yr">2023</div></div>
-        <div class="mem-item" style="background:linear-gradient(135deg,#1a1a0a,#3a3a0a)">⭐<div class="mem-yr">2022</div></div>
-        <div class="mem-item" style="background:linear-gradient(135deg,#1a0a0a,#3a1a1a)">🌙<div class="mem-yr">2022</div></div>
+      <div class="mgrid">
+        <div class="mitem" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">🌅<div class="myr">2024</div></div>
+        <div class="mitem" style="background:linear-gradient(135deg,#0d1b2a,#1b2838)">🎂<div class="myr">2023</div></div>
+        <div class="mitem" style="background:linear-gradient(135deg,#1a0a1a,#2d0a2d)">💐<div class="myr">2024</div></div>
+        <div class="mitem" style="background:linear-gradient(135deg,#0a1a0a,#1a3a1a)">🌿<div class="myr">2023</div></div>
+        <div class="mitem" style="background:linear-gradient(135deg,#1a1a0a,#3a3a0a)">⭐<div class="myr">2022</div></div>
+        <div class="mitem" style="background:linear-gradient(135deg,#1a0a0a,#3a1a1a)">🌙<div class="myr">2022</div></div>
       </div>
     </div>
   </div>
 
-  <!-- ══ THEMES PANEL ══ -->
+  <!-- ══ THEMES ══ -->
   <div class="panel" id="panel-themes">
-    <div class="panel-inner">
+    <div class="pi">
       <div class="ptitle">🎨 سمات التطبيق</div>
-      <div class="theme-grid" id="themeGrid"></div>
+      <div style="font-size:13px;color:var(--tm);margin-bottom:10px">اختر سمة تناسب مزاجكما اليوم</div>
+      <div class="tgrid" id="thGrid"></div>
     </div>
   </div>
 
 </div>
 
-<!-- ══ MODALS ══ -->
-<!-- Idea modal -->
-<div class="modal-bg" id="ideaModal">
-  <div class="modal">
-    <div class="modal-title">💡 أضف فكرة جديدة</div>
-    <input class="input-field" id="ideaTitleInput" placeholder="عنوان الفكرة..." style="margin-bottom:8px">
-    <textarea class="input-field" id="ideaDescInput" placeholder="اشرح الفكرة باختصار..." rows="3" style="margin-bottom:10px"></textarea>
-    <div class="modal-cats" id="modalCats">
-      <button class="pill-btn on" data-cat="travel" onclick="selIdeaCat(this)">✈️ سفر</button>
-      <button class="pill-btn" data-cat="home" onclick="selIdeaCat(this)">🏠 البيت</button>
-      <button class="pill-btn" data-cat="date" onclick="selIdeaCat(this)">💕 لقاء</button>
-      <button class="pill-btn" data-cat="dream" onclick="selIdeaCat(this)">🌙 حلم</button>
-      <button class="pill-btn" data-cat="other" onclick="selIdeaCat(this)">💛 أخرى</button>
+<!-- MODALS -->
+<div class="mbg" id="ideaModal">
+  <div class="mbox">
+    <div class="mttl">💡 أضف فكرة جديدة</div>
+    <input class="field" id="iT" placeholder="عنوان الفكرة..." style="margin-bottom:8px">
+    <textarea class="field" id="iD" placeholder="اشرح الفكرة..." rows="3" style="margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px" id="iCats">
+      <button class="pill on" data-cat="travel" onclick="selCat(this)">✈️ سفر</button>
+      <button class="pill" data-cat="home" onclick="selCat(this)">🏠 البيت</button>
+      <button class="pill" data-cat="date" onclick="selCat(this)">💕 لقاء</button>
+      <button class="pill" data-cat="dream" onclick="selCat(this)">🌙 حلم</button>
+      <button class="pill" data-cat="other" onclick="selCat(this)">💛 أخرى</button>
     </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('ideaModal')">إلغاء</button>
-      <button class="btn-save" onclick="saveIdea()">حفظ</button>
-    </div>
-  </div>
-</div>
-
-<!-- Mood modal -->
-<div class="modal-bg" id="moodModal">
-  <div class="modal">
-    <div class="modal-title">🌡️ حالتك الآن</div>
-    <div class="mood-grid" id="moodModalGrid">
-      <button class="mood-opt" onclick="selMoodModal(this,'😊','سعيد')"><span class="me2">😊</span>سعيد</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'😍','محب')"><span class="me2">😍</span>محب</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'😴','متعب')"><span class="me2">😴</span>متعب</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'😔','حزين')"><span class="me2">😔</span>حزين</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'😂','ضاحك')"><span class="me2">😂</span>ضاحك</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'🤩','متحمس')"><span class="me2">🤩</span>متحمس</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'🥺','محتاج حب')"><span class="me2">🥺</span>محتاج حب</button>
-      <button class="mood-opt" onclick="selMoodModal(this,'🥰','ممتنن')"><span class="me2">🥰</span>ممتنن</button>
-    </div>
-    <input class="input-field" id="moodMsgModal" placeholder="رسالة قصيرة لشريكك..." style="margin-bottom:12px">
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal('moodModal')">إلغاء</button>
-      <button class="btn-save" onclick="saveMoodModal()">حفظ وإرسال</button>
+    <div class="macts">
+      <button class="mcx" onclick="closeModal('ideaModal')">إلغاء</button>
+      <button class="msv" onclick="saveIdea()">حفظ</button>
     </div>
   </div>
 </div>
 
-<!-- Peace modal -->
-<div class="modal-bg" id="peaceModal">
-  <div class="modal" style="text-align:center">
-    <div style="font-size:52px;margin-bottom:10px">🤝💕</div>
-    <div class="modal-title" style="justify-content:center;color:#4ade80;font-size:18px">وقت الصلح</div>
-    <div style="font-size:14px;color:var(--tm);margin-bottom:20px">هل أنتما مستعدان للصلح والمضي للأمام؟</div>
-    <div class="modal-actions" style="justify-content:center">
-      <button class="btn-cancel" onclick="closeModal('peaceModal')">ليس الآن</button>
+<div class="mbg" id="moodModal">
+  <div class="mbox">
+    <div class="mttl">🌡️ حالتك الآن</div>
+    <div class="moodgrid" id="mmGrid">
+      <button class="mopt" onclick="selMM(this,'😊','سعيد')"><span class="me2">😊</span>سعيد</button>
+      <button class="mopt" onclick="selMM(this,'😍','محب')"><span class="me2">😍</span>محب</button>
+      <button class="mopt" onclick="selMM(this,'😴','متعب')"><span class="me2">😴</span>متعب</button>
+      <button class="mopt" onclick="selMM(this,'😔','حزين')"><span class="me2">😔</span>حزين</button>
+      <button class="mopt" onclick="selMM(this,'😂','ضاحك')"><span class="me2">😂</span>ضاحك</button>
+      <button class="mopt" onclick="selMM(this,'🤩','متحمس')"><span class="me2">🤩</span>متحمس</button>
+      <button class="mopt" onclick="selMM(this,'🥺','محتاج حب')"><span class="me2">🥺</span>محتاج حب</button>
+      <button class="mopt" onclick="selMM(this,'🥰','ممتنن')"><span class="me2">🥰</span>ممتنن</button>
+    </div>
+    <input class="field" id="mmMsg" placeholder="رسالة قصيرة..." style="margin-bottom:12px">
+    <div class="macts">
+      <button class="mcx" onclick="closeModal('moodModal')">إلغاء</button>
+      <button class="msv" onclick="saveMM()">حفظ وإرسال</button>
+    </div>
+  </div>
+</div>
+
+<div class="mbg" id="peaceModal">
+  <div class="mbox" style="text-align:center">
+    <div style="font-size:50px;margin-bottom:10px">🤝💕</div>
+    <div class="mttl" style="justify-content:center;color:#4ade80;font-size:18px">وقت الصلح</div>
+    <div style="font-size:14px;color:var(--tm);margin-bottom:18px">هل أنتما مستعدان للصلح؟</div>
+    <div class="macts" style="justify-content:center">
+      <button class="mcx" onclick="closeModal('peaceModal')">ليس الآن</button>
       <button style="background:linear-gradient(135deg,#4ade80,#16a34a);border:none;color:white;padding:9px 20px;border-radius:10px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700" onclick="makePeace()">نعم، نحن بخير ❤️</button>
     </div>
   </div>
 </div>
 
-<!-- ══ FIREBASE ══ -->
+<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where, serverTimestamp, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA-l0jnxZcKWGa37eBL3u7bvIQY9ItII_Q",
-  authDomain: "alamna-8af25.firebaseapp.com",
-  projectId: "alamna-8af25",
-  storageBucket: "alamna-8af25.firebasestorage.app",
-  messagingSenderId: "305196160145",
-  appId: "1:305196160145:web:4fb7aa42e1c5b9d4595b30",
-  measurementId: "G-GNKL95HG94"
+const fb = initializeApp({
+  apiKey:"AIzaSyA-l0jnxZcKWGa37eBL3u7bvIQY9ItII_Q",
+  authDomain:"alamna-8af25.firebaseapp.com",
+  projectId:"alamna-8af25",
+  storageBucket:"alamna-8af25.firebasestorage.app",
+  messagingSenderId:"305196160145",
+  appId:"1:305196160145:web:4fb7aa42e1c5b9d4595b30"
+});
+const auth = getAuth(fb);
+const db = getFirestore(fb);
+
+// ── STATE ──
+let uid='', myName='أنت', myInit='أ', myEmail='';
+let pId='', pName='شريكتك', pInit='س', pEmail='';
+let myMood={e:'😊',l:'سعيد',m:''};
+let hrMood={e:'😴',l:'متعبة',m:''};
+let myNick='', hrNick='';
+let isFight=false, isLN=false;
+let curTheme='golden', selTime='1h';
+let selIdeaCat='travel', selMMood={e:'😊',l:'سعيد'};
+let curGF='all', curIF='all', curDM='romantic', dIdx=0;
+let activeGame=null, gs1=0, gs2=0, gStep=0;
+let unsubs=[];
+
+const cid = () => [uid,pId].sort().join('_');
+
+// ── HELPERS ──
+function fmtT(ts) {
+  if (!ts) return '';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleTimeString('ar',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){ return ''; }
+}
+function fmtD(ts) {
+  if (!ts) return '';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return d.toLocaleDateString('ar');
+  } catch(e){ return ''; }
+}
+function openAt() {
+  const n=new Date();
+  const m={'1h':3600000,'3h':10800000,'tonight':0,'tomorrow':86400000,'week':604800000,'anniv':0};
+  if(selTime==='tonight') return new Date(n.getFullYear(),n.getMonth(),n.getDate(),22,0);
+  if(selTime==='anniv') return new Date(n.getFullYear()+1,4,1);
+  return new Date(n.getTime()+(m[selTime]||3600000));
+}
+const tLbls={'1h':'بعد ساعة','3h':'بعد ٣ ساعات','tonight':'الليلة','tomorrow':'غداً','week':'بعد أسبوع','anniv':'عيد الزواج 💍'};
+
+// ── NICKNAMES ──
+function loadNicks() {
+  myNick = localStorage.getItem('nick_my_'+uid) || myName;
+  hrNick = localStorage.getItem('nick_hr_'+uid) || pName;
+  applyNicks();
+}
+function applyNicks() {
+  // Apply to all name displays
+  const mn = myNick || myName;
+  const hn = hrNick || pName;
+  const mi = mn[0] || 'أ';
+  const hi = hn[0] || 'س';
+
+  // Topbar
+  document.getElementById('pNameTop').textContent = hn + ' 🌹';
+  document.getElementById('pInit').textContent = hi;
+  document.getElementById('pAv').querySelector('#pInit').textContent = hi;
+
+  // Mood bar
+  document.getElementById('hrMNameTop').textContent = hn;
+  document.getElementById('smcHrN').textContent = hn;
+  document.getElementById('myMavTop').textContent = mi;
+  document.getElementById('hrMavTop').textContent = hi;
+  document.getElementById('smcMe').textContent = mi;
+  document.getElementById('smcHr').textContent = hi;
+
+  // Nickname panel
+  document.getElementById('nkMyName').textContent = mn;
+  document.getElementById('nkHrName').textContent = hn;
+  document.getElementById('nkMyEmail').textContent = myEmail;
+  document.getElementById('nkHrEmail').textContent = pEmail;
+  document.getElementById('nkMyTag').textContent = mn;
+  document.getElementById('nkHrTag').textContent = hn;
+  document.getElementById('nkMyAv').textContent = mi;
+  document.getElementById('nkHrAv').textContent = hi;
+  document.getElementById('nkMyInput').value = myNick;
+  document.getElementById('nkHrInput').value = hrNick;
+  document.getElementById('nkPrevMyName').textContent = mn;
+  document.getElementById('nkPrevHrName').textContent = hn;
+  document.getElementById('nkPrevMyAv').textContent = mi;
+  document.getElementById('nkPrevHrAv').textContent = hi;
+
+  // Game score label
+  const sc2L = document.getElementById('sc2L');
+  if(sc2L) sc2L.textContent = hn;
+}
+
+window.saveMyNick = () => {
+  const v = document.getElementById('nkMyInput').value.trim();
+  if(!v) return;
+  myNick = v; localStorage.setItem('nick_my_'+uid, v); applyNicks();
+  document.getElementById('nkMyInput').style.borderColor='rgba(74,222,128,.5)';
+  setTimeout(()=>document.getElementById('nkMyInput').style.borderColor='',1500);
+};
+window.saveHrNick = () => {
+  const v = document.getElementById('nkHrInput').value.trim();
+  if(!v) return;
+  hrNick = v; localStorage.setItem('nick_hr_'+uid, v); applyNicks();
+  document.getElementById('nkHrInput').style.borderColor='rgba(74,222,128,.5)';
+  setTimeout(()=>document.getElementById('nkHrInput').style.borderColor='',1500);
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// ── PROFILE ──
+window.showProfile = () => {
+  document.getElementById('myEmailDisp').textContent = myEmail;
+  document.getElementById('profBar').classList.toggle('show');
+};
 
-// ── State ──
-let myUid = '';
-let myName = '';
-let myInitial = '';
-let partnerId = '';
-let partnerName = '';
-let partnerInitial = '';
-let isFight = false;
-let isLowNet = false;
-let curTheme = 'golden';
-let myMood = {emoji:'😊', label:'سعيد', message:''};
-let herMood = {emoji:'😴', label:'متعبة', message:''};
-let selectedTime = '1h';
-let selectedIdeaCat = 'travel';
-let curGFilter = 'all';
-let curIFilter = 'all';
-let curDiscMood = 'romantic';
-let discIdx = 0;
-let activeGame = null;
-let myScore = 0;
-let herScore = 0;
-let gameStep = 0;
-let selectedModalMood = {emoji:'😊', label:'سعيد'};
-let msgListeners = [];
-
-// ── Chat ID ──
-function chatId() {
-  return [myUid, partnerId].sort().join('_');
-}
-
-// ── TIME HELPERS ──
-function getOpenAt(t) {
-  const now = new Date();
-  switch(t) {
-    case '1h': return new Date(now.getTime() + 3600000);
-    case '3h': return new Date(now.getTime() + 10800000);
-    case 'tonight': return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 22, 0);
-    case 'tomorrow': return new Date(now.getTime() + 86400000);
-    case 'week': return new Date(now.getTime() + 604800000);
-    case 'anniv': return new Date(now.getFullYear() + 1, 4, 1);
-    default: return new Date(now.getTime() + 3600000);
-  }
-}
-
-const timeLbls = {'1h':'بعد ساعة','3h':'بعد ٣ ساعات','tonight':'الليلة','tomorrow':'غداً','week':'بعد أسبوع','anniv':'عيد الزواج 💍'};
-
-function fmtTime(date) {
-  if (!date) return '';
-  const d = date.toDate ? date.toDate() : new Date(date);
-  return d.toLocaleTimeString('ar', {hour:'2-digit', minute:'2-digit'});
-}
-
-function fmtDate(date) {
-  if (!date) return '';
-  const d = date.toDate ? date.toDate() : new Date(date);
-  return d.toLocaleDateString('ar');
-}
-
-// ══ AUTH ══
-window.switchAuthTab = (tab) => {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('on'));
-  document.querySelectorAll('.tab-btn')[tab === 'login' ? 0 : 1].classList.add('on');
-  document.getElementById('loginForm').style.display = tab === 'login' ? 'flex' : 'none';
-  document.getElementById('registerForm').style.display = tab === 'register' ? 'flex' : 'none';
-  hideAuthError();
+// ── AUTH ──
+window.authTab = (t) => {
+  document.querySelectorAll('.auth-tab').forEach((b,i)=>b.classList.toggle('on',i===(t==='login'?0:1)));
+  document.getElementById('loginForm').style.display = t==='login'?'flex':'none';
+  document.getElementById('regForm').style.display = t==='register'?'flex':'none';
+  document.getElementById('aerr').style.display='none';
 };
 
 window.doLogin = async () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPass').value;
-  if (!email || !pass) { showAuthError('أدخل البريد وكلمة المرور'); return; }
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    showAuthError('البريد أو كلمة المرور غير صحيحة');
-  }
+  const e=document.getElementById('lEmail').value.trim();
+  const p=document.getElementById('lPass').value;
+  if(!e||!p){showAErr('أدخل البريد وكلمة المرور');return;}
+  try{ await signInWithEmailAndPassword(auth,e,p); }
+  catch(err){showAErr('البريد أو كلمة المرور غير صحيحة');}
 };
 
 window.doRegister = async () => {
-  const name = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const pass = document.getElementById('regPass').value;
-  if (!name) { showAuthError('أدخل اسمك'); return; }
-  if (pass.length < 6) { showAuthError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, {displayName: name});
-    await setDoc(doc(db, 'users', cred.user.uid), {
-      name, email, initial: name[0] || '?',
-      createdAt: serverTimestamp(), partnerId: '',
-      mood: {emoji:'😊', label:'سعيد', message:''}
+  const n=document.getElementById('rName').value.trim();
+  const e=document.getElementById('rEmail').value.trim();
+  const p=document.getElementById('rPass').value;
+  if(!n){showAErr('أدخل اسمك');return;}
+  if(p.length<6){showAErr('كلمة المرور 6 أحرف على الأقل');return;}
+  try{
+    const c=await createUserWithEmailAndPassword(auth,e,p);
+    await updateProfile(c.user,{displayName:n});
+    await setDoc(doc(db,'users',c.user.uid),{
+      name:n, email:e, initial:n[0]||'?',
+      createdAt:serverTimestamp(), partnerId:'',
+      mood:{e:'😊',l:'سعيد',m:''}
     });
-  } catch(e) {
-    showAuthError('حدث خطأ، تأكد من البريد الإلكتروني');
-  }
+  }catch(err){showAErr('حدث خطأ، تأكد من البريد الإلكتروني');}
 };
 
 window.doLogout = async () => {
-  // Clear listeners
-  msgListeners.forEach(u => u());
-  msgListeners = [];
+  unsubs.forEach(u=>u()); unsubs=[];
   await signOut(auth);
 };
 
-window.doLinkPartner = async () => {
-  const email = document.getElementById('partnerEmail').value.trim();
-  if (!email) return;
-  try {
-    const q = query(collection(db, 'users'), where('email', '==', email));
-    const snap = await new Promise(resolve => {
-      onSnapshot(q, resolve);
-    });
-    if (snap.empty) {
-      document.getElementById('linkError').style.display = 'block';
-      document.getElementById('linkError').textContent = 'لم يتم إيجاد هذا الحساب';
-      return;
-    }
-    const pid = snap.docs[0].id;
-    await updateDoc(doc(db, 'users', myUid), {partnerId: pid});
-    await updateDoc(doc(db, 'users', pid), {partnerId: myUid});
-    document.getElementById('linkSuccess').style.display = 'block';
-    document.getElementById('linkError').style.display = 'none';
-    setTimeout(() => loadApp(), 1500);
-  } catch(e) {
-    document.getElementById('linkError').style.display = 'block';
-    document.getElementById('linkError').textContent = 'حدث خطأ، حاول مرة أخرى';
-  }
+window.doLink = async () => {
+  const e=document.getElementById('pEmail').value.trim();
+  if(!e) return;
+  try{
+    const q=query(collection(db,'users'),where('email','==',e));
+    const snap=await new Promise(res=>onSnapshot(q,(s)=>{res(s);},err=>res(null)));
+    if(!snap||snap.empty){showLErr('لم يتم إيجاد هذا الحساب');return;}
+    const pid=snap.docs[0].id;
+    if(pid===uid){showLErr('لا يمكنك ربط حسابك بنفسك');return;}
+    await updateDoc(doc(db,'users',uid),{partnerId:pid});
+    await updateDoc(doc(db,'users',pid),{partnerId:uid});
+    document.getElementById('lsucc').style.display='block';
+    document.getElementById('lerr').style.display='none';
+    setTimeout(()=>location.reload(),2000);
+  }catch(err){showLErr('حدث خطأ، حاول مرة أخرى');}
 };
 
-function showAuthError(msg) {
-  const el = document.getElementById('authError');
-  el.textContent = msg; el.style.display = 'block';
-}
-function hideAuthError() {
-  document.getElementById('authError').style.display = 'none';
-}
+function showAErr(m){const el=document.getElementById('aerr');el.textContent=m;el.style.display='block';}
+function showLErr(m){const el=document.getElementById('lerr');el.textContent=m;el.style.display='block';}
 
-// ══ AUTH STATE ══
+// ── AUTH STATE ──
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    showScreen('auth');
-    return;
-  }
-  myUid = user.uid;
-  myName = user.displayName || 'أنت';
-  myInitial = myName[0] || 'أ';
+  if(!user){showSc('auth');return;}
+  uid=user.uid; myName=user.displayName||'أنت'; myInit=myName[0]||'أ'; myEmail=user.email||'';
 
-  // Listen to profile
-  onSnapshot(doc(db, 'users', myUid), async (snap) => {
-    if (!snap.exists()) return;
-    const data = snap.data();
-    partnerId = data.partnerId || '';
-    if (data.mood) {
-      myMood = data.mood;
-      updateMoodUI();
-    }
+  document.getElementById('smcMe').textContent=myInit;
+  document.getElementById('myMavTop').textContent=myInit;
 
-    if (!partnerId) {
-      showScreen('link');
-      return;
-    }
+  const unsub1=onSnapshot(doc(db,'users',uid), async (snap) => {
+    if(!snap.exists())return;
+    const d=snap.data();
+    pId=d.partnerId||'';
+    if(d.mood){myMood=d.mood; updateMoodUI();}
+    if(!pId){showSc('link');return;}
 
     // Load partner
-    const pSnap = await getDoc(doc(db, 'users', partnerId));
-    if (pSnap.exists()) {
-      const pd = pSnap.data();
-      partnerName = pd.name || 'شريكتك';
-      partnerInitial = pd.initial || partnerName[0] || 'س';
-      if (pd.mood) {
-        herMood = pd.mood;
-        updateMoodUI();
-      }
-      document.getElementById('partnerNameTop').textContent = partnerName + ' 🌹';
-      document.getElementById('partnerInitial').textContent = partnerInitial;
-      document.getElementById('herMoodName').textContent = partnerName;
-      document.getElementById('smcHerName').textContent = partnerName;
-      document.getElementById('smcHer').textContent = partnerInitial;
-      document.getElementById('herMoodAv').textContent = partnerInitial;
-      document.getElementById('sc2Lbl').textContent = partnerName;
+    const ps=await getDoc(doc(db,'users',pId));
+    if(ps.exists()){
+      const pd=ps.data();
+      pName=pd.name||'شريكتك'; pInit=(pd.initial||pName[0]||'س'); pEmail=pd.email||'';
+      if(pd.mood){hrMood=pd.mood;}
     }
 
-    // Listen partner mood
-    onSnapshot(doc(db, 'users', partnerId), (ps) => {
-      if (ps.exists() && ps.data().mood) {
-        herMood = ps.data().mood;
-        updateMoodUI();
-      }
+    loadNicks();
+    updateMoodUI();
+    showSc('app');
+
+    // Listen partner
+    const unsub2=onSnapshot(doc(db,'users',pId),(ps)=>{
+      if(ps.exists()&&ps.data().mood){hrMood=ps.data().mood;updateMoodUI();}
     });
 
-    // Listen shared state (fight)
-    onSnapshot(doc(db, 'shared', chatId()), (ss) => {
-      if (!ss.exists()) return;
-      const sd = ss.data();
-      if (sd.fightMode !== undefined) {
-        isFight = sd.fightMode;
-        updateFightUI();
-      }
+    // Listen shared (fight)
+    const unsub3=onSnapshot(doc(db,'shared',cid()),(ss)=>{
+      if(!ss.exists())return;
+      const sd=ss.data();
+      if(sd.fightMode!==undefined){isFight=sd.fightMode;updateFightUI();}
     });
 
-    showScreen('app');
-    loadApp();
+    // Listen messages
+    const unsub4=listenMsgs();
+    // Listen ideas
+    const unsub5=listenIdeas();
+    // Listen todos
+    const unsub6=listenTodos();
+
+    unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6].filter(Boolean);
+    renderThemes(); renderGames(); initDraw();
+    renderCustomStickers();
   });
 });
 
-function showScreen(name) {
-  document.getElementById('authScreen').style.display = name === 'auth' ? 'flex' : 'none';
-  document.getElementById('linkScreen').style.display = name === 'link' ? 'flex' : 'none';
-  document.getElementById('appScreen').style.display = name === 'app' ? 'flex' : 'none';
+function showSc(n){
+  document.getElementById('authScreen').style.display=n==='auth'?'flex':'none';
+  document.getElementById('linkScreen').style.display=n==='link'?'flex':'none';
+  document.getElementById('appScreen').style.display=n==='app'?'flex':'none';
 }
 
-// ══ LOAD APP ══
-function loadApp() {
-  document.getElementById('myMoodAv').textContent = myInitial;
-  document.getElementById('smcMe').textContent = myInitial;
-  listenMessages();
-  listenIdeas();
-  listenTodos();
-  renderThemes();
-  renderGames();
-  initDraw();
-}
-
-// ══ NAVIGATION ══
-window.switchTab = (name) => {
-  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('on'); p.style.display = 'none'; });
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
-  const panel = document.getElementById('panel-' + name);
-  if (panel) { panel.style.display = 'flex'; panel.classList.add('on'); }
-  const tabs = document.querySelectorAll('.tab');
-  const map = {chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,memories:9,themes:10};
-  if (tabs[map[name]]) tabs[map[name]].classList.add('on');
-  if (name === 'draw') setTimeout(resizeCanvas, 100);
+// ── NAVIGATION ──
+window.swTab = (n) => {
+  document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  const p=document.getElementById('panel-'+n);
+  if(p){p.style.display='flex';p.classList.add('on');}
+  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,memories:10,themes:11};
+  const tabs=document.querySelectorAll('.tab');
+  if(tabs[map[n]])tabs[map[n]].classList.add('on');
+  if(n==='draw')setTimeout(resizeCanvas,100);
 };
 
-// ══ MESSAGES ══
-function listenMessages() {
-  const cid = chatId();
-  const q = query(collection(db, 'chats', cid, 'messages'), orderBy('sentAt', 'asc'));
-  const unsub = onSnapshot(q, (snap) => {
-    const area = document.getElementById('msgsArea');
-    area.innerHTML = '';
-    snap.forEach(d => renderMsg(d.id, d.data()));
-    area.scrollTop = area.scrollHeight;
+// ── MESSAGES ──
+function listenMsgs() {
+  if(!pId) return null;
+  const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));
+  return onSnapshot(q,(snap)=>{
+    const area=document.getElementById('msgsArea');
+    area.innerHTML='';
+    snap.docs.forEach(d=>renderMsg(d.id,d.data()));
+    area.scrollTop=area.scrollHeight;
   });
-  msgListeners.push(unsub);
 }
 
 function renderMsg(id, data) {
   const area = document.getElementById('msgsArea');
-  const isMe = data.senderId === myUid;
-  const row = document.createElement('div');
-  row.className = 'msg-row' + (isMe ? ' me' : '');
+  if(!area) return;
 
-  const av = document.createElement('div');
-  av.className = 'msg-av ' + (isMe ? 'me' : 'her');
-  av.textContent = isMe ? myInitial : partnerInitial;
+  // Fix: ensure content is always a string
+  const content = (data.content !== undefined && data.content !== null)
+    ? String(data.content)
+    : '';
 
-  const msgWrap = document.createElement('div');
-  msgWrap.style.display = 'flex'; msgWrap.style.flexDirection = 'column';
+  const isMe = data.senderId === uid;
+  const mn = myNick||myName;
+  const hn = hrNick||pName;
+  const mi = mn[0]||'أ';
+  const hi = hn[0]||'س';
 
-  if (data.type === 'system') {
-    const bub = document.createElement('div');
-    bub.className = 'bubble system';
-    bub.textContent = String(data.content || '');
-    area.appendChild(bub);
+  // System message
+  if(data.type==='system') {
+    const div=document.createElement('div');
+    div.style.cssText='text-align:center;padding:4px 0';
+    const bub=document.createElement('span');
+    bub.className='bub sys';
+    bub.textContent=content;
+    div.appendChild(bub);
+    area.appendChild(div);
     return;
   }
 
-  if (data.type === 'letter') {
-    const bub = document.createElement('div');
-    const isLocked = data.openAt && !data.isOpened && data.openAt.toDate() > new Date();
-    bub.className = 'bubble letter' + (isMe ? ' me' : ' her') + (data.isOpened ? ' opened' : '');
-    bub.innerHTML = `
-      <div class="lock-icon">${data.isOpened ? '💌' : '🔒'}</div>
-      <div class="letter-title">${data.letterTitle || 'رسالة مؤجلة'}</div>
-      <div class="letter-time">${isLocked ? 'تُفتح: ' + fmtDate(data.openAt) + ' ⏰' : ''}</div>
-      <div class="letter-content">${data.content}</div>`;
-    if (!isLocked && !data.isOpened) {
-      bub.onclick = () => {
-        updateDoc(doc(db, 'chats', chatId(), 'messages', id), {isOpened: true});
-      };
+  const row=document.createElement('div');
+  row.className='mrow'+(isMe?' me':'');
+
+  // Avatar
+  const av=document.createElement('div');
+  av.className='mav2 '+(isMe?'me':'hr');
+  av.textContent=isMe?mi:hi;
+
+  // Wrap
+  const wrap=document.createElement('div');
+  wrap.className='mwrap';
+  wrap.style.position='relative';
+
+  // Bubble
+  if(data.type==='letter') {
+    const bub=document.createElement('div');
+    bub.className='bub ltr';
+    const locked=data.openAt && !data.isOpened && data.openAt.toDate()>new Date();
+    bub.innerHTML=`<div style="font-size:14px">${data.isOpened?'💌':'🔒'}</div><div class="ltr-title">${data.letterTitle||'رسالة مؤجلة 💌'}</div><div class="ltr-time">${locked?'تُفتح: '+fmtD(data.openAt)+' ⏰':''}</div><div class="ltr-body${data.isOpened?' open':''}">${content}</div>`;
+    if(!locked&&!data.isOpened){
+      bub.onclick=()=>updateDoc(doc(db,'chats',cid(),'messages',id),{isOpened:true});
     }
-    msgWrap.appendChild(bub);
-  } else if (data.type === 'sticker' && data.content && data.content.startsWith('data:')) {
-    const bub = document.createElement('div');
-    bub.style.background = 'transparent';
-    bub.style.border = 'none';
-    bub.style.padding = '0';
-    const img = document.createElement('img');
-    img.src = data.content;
-    img.style.cssText = 'width:80px;height:80px;object-fit:contain;border-radius:10px';
+    wrap.appendChild(bub);
+  } else if(data.type==='img_sticker') {
+    const bub=document.createElement('div');
+    bub.style.cssText='background:transparent;border:none;padding:0';
+    const img=document.createElement('img');
+    img.src=content;
+    img.style.cssText='width:80px;height:80px;object-fit:contain;border-radius:10px;cursor:pointer';
+    img.onerror=()=>{bub.textContent='🖼️'};
     bub.appendChild(img);
-    msgWrap.appendChild(bub);
+    wrap.appendChild(bub);
   } else {
-    const bub = document.createElement('div');
-    bub.className = 'bubble ' + (isMe ? 'me' : 'her');
-    bub.textContent = String(data.content || '');
+    const bub=document.createElement('div');
+    bub.className='bub '+(isMe?'me':'hr');
+    bub.textContent=content;
 
-    // Long press to delete
-    if (isMe) {
-      const actions = document.createElement('div');
-      actions.className = 'msg-actions';
-      actions.innerHTML = `<button class="msg-act-btn" onclick="deleteMsg('${id}')">🗑️</button><button class="msg-act-btn" onclick="addReactionMsg('${id}','❤️')">❤️</button><button class="msg-act-btn" onclick="addReactionMsg('${id}','🌹')">🌹</button>`;
-      bub.appendChild(actions);
-      bub.style.position = 'relative';
+    if(isMe) {
+      const menu=document.createElement('div');
+      menu.className='msg-menu';
+      menu.innerHTML=`
+        <button class="mmbtn" onclick="delMsg('${id}')">🗑️</button>
+        <button class="mmbtn" onclick="addRxn('${id}','❤️')">❤️</button>
+        <button class="mmbtn" onclick="addRxn('${id}','🌹')">🌹</button>
+        <button class="mmbtn" onclick="addRxn('${id}','😂')">😂</button>`;
+      wrap.appendChild(menu);
     }
-    msgWrap.appendChild(bub);
+    wrap.appendChild(bub);
   }
 
-  if (data.reactions && data.reactions.length) {
-    const rBar = document.createElement('div');
-    rBar.className = 'reactions';
-    const counts = {};
-    data.reactions.forEach(r => counts[r] = (counts[r] || 0) + 1);
-    Object.entries(counts).forEach(([e, c]) => {
-      const chip = document.createElement('div');
-      chip.className = 'reaction-chip';
-      chip.textContent = `${e} ${c}`;
-      rBar.appendChild(chip);
+  // Reactions
+  if(data.reactions&&data.reactions.length) {
+    const rxns=document.createElement('div');
+    rxns.className='rxns';
+    const counts={};
+    data.reactions.forEach(r=>counts[r]=(counts[r]||0)+1);
+    Object.entries(counts).forEach(([e,c])=>{
+      const chip=document.createElement('div');
+      chip.className='rxn';
+      chip.textContent=`${e} ${c}`;
+      rxns.appendChild(chip);
     });
-    msgWrap.appendChild(rBar);
+    wrap.appendChild(rxns);
   }
 
-  const timeEl = document.createElement('div');
-  timeEl.className = 'msg-time';
-  timeEl.textContent = fmtTime(data.sentAt);
-  msgWrap.appendChild(timeEl);
+  // Time
+  const t=document.createElement('div');
+  t.className='mtime';
+  t.textContent=fmtT(data.sentAt);
+  wrap.appendChild(t);
 
   row.appendChild(av);
-  row.appendChild(msgWrap);
+  row.appendChild(wrap);
   area.appendChild(row);
 }
 
 window.sendMsg = async () => {
-  const input = document.getElementById('msgInput');
-  const text = input.value.trim();
-  if (!text || !partnerId) return;
-  input.value = ''; autoResize(input);
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: text, senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
+  const inp=document.getElementById('msgInput');
+  const text=(inp.value||'').trim();
+  if(!text||!pId) return;
+  inp.value=''; aR(inp);
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:text, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
   });
 };
 
-window.sendSticker = async (sticker) => {
-  if (!partnerId) return;
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: sticker, senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
+window.sendStk = async (emoji) => {
+  if(!pId) return;
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:emoji, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
   });
-  document.getElementById('stickersPanel').classList.remove('show');
+  document.getElementById('stickerPanel').classList.remove('show');
 };
 
-window.deleteMsg = async (id) => {
-  await deleteDoc(doc(db, 'chats', chatId(), 'messages', id));
+window.delMsg = async (id) => {
+  await deleteDoc(doc(db,'chats',cid(),'messages',id));
 };
 
-window.addReactionMsg = async (id, emoji) => {
-  await updateDoc(doc(db, 'chats', chatId(), 'messages', id), {
-    reactions: arrayUnion(emoji)
-  });
+window.addRxn = async (id,e) => {
+  await updateDoc(doc(db,'chats',cid(),'messages',id),{reactions:arrayUnion(e)});
 };
 
-window.handleKey = (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+window.onKey = (ev) => {
+  if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendMsg();}
+};
+window.aR = (el) => {
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,90)+'px';
 };
 
-window.autoResize = (el) => {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
-};
+// ── STICKERS IMPORT ──
+let customStk = JSON.parse(localStorage.getItem('cstk')||'[]');
 
-window.toggleStickers = () => {
-  document.getElementById('stickersPanel').classList.toggle('show');
-};
-
-// ══ LETTER ══
-window.selTime = (btn) => {
-  document.querySelectorAll('.time-chip').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  selectedTime = btn.dataset.t;
-};
-
-window.sendLetter = async () => {
-  const content = document.getElementById('lContent').value.trim();
-  if (!content || !partnerId) return;
-  const title = document.getElementById('lTitle').value.trim();
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content, senderId: myUid, type: 'letter',
-    letterTitle: title || 'رسالة مؤجلة 💌',
-    openAt: getOpenAt(selectedTime),
-    isOpened: false, reactions: [], sentAt: serverTimestamp()
-  });
-  document.getElementById('lContent').value = '';
-  document.getElementById('lTitle').value = '';
-  switchTab('chat');
-};
-
-// ══ MOOD ══
-window.setMood = async (btn, emoji, label) => {
-  document.querySelectorAll('#moodGrid .mood-opt').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  myMood = {emoji, label, message: myMood.message || label};
-  await updateDoc(doc(db, 'users', myUid), {mood: {...myMood, updatedAt: serverTimestamp()}});
-  updateMoodUI();
-};
-
-window.openMoodModal = () => {
-  document.getElementById('moodModal').classList.add('show');
-};
-
-window.selMoodModal = (btn, emoji, label) => {
-  document.querySelectorAll('#moodModalGrid .mood-opt').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  selectedModalMood = {emoji, label};
-};
-
-window.saveMoodModal = async () => {
-  const msg = document.getElementById('moodMsgModal').value || selectedModalMood.label;
-  myMood = {...selectedModalMood, message: msg};
-  await updateDoc(doc(db, 'users', myUid), {mood: {...myMood, updatedAt: serverTimestamp()}});
-  updateMoodUI();
-  closeModal('moodModal');
-  // Send to chat
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: `🌡️ حالتي الآن: ${myMood.emoji} · ${msg}`,
-    senderId: myUid, type: 'text', reactions: [], sentAt: serverTimestamp()
-  });
-};
-
-window.sendMoodMsg = async () => {
-  const msg = document.getElementById('moodMsgInput').value.trim();
-  if (!msg) return;
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: `🌡️ ${msg}`, senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
-  });
-  document.getElementById('moodMsgInput').value = '';
-  switchTab('chat');
-};
-
-function updateMoodUI() {
-  document.getElementById('myMoodEmoji').textContent = myMood.emoji;
-  document.getElementById('myMoodMsg').textContent = myMood.message || myMood.label;
-  document.getElementById('herMoodEmoji').textContent = herMood.emoji;
-  document.getElementById('herMoodMsg').textContent = herMood.message || herMood.label;
-  document.getElementById('smcMyEmoji').textContent = myMood.emoji;
-  document.getElementById('smcHerEmoji').textContent = herMood.emoji;
-  const happy = ['😊','😍','😂','🤩','🥰'];
-  const myH = happy.includes(myMood.emoji);
-  const herH = happy.includes(herMood.emoji);
-  const compat = isFight ? {icon:'😤', label:'خذوا وقتاً'} :
-    myH && herH ? {icon:'💞', label:'منسجمان'} :
-    !myH && !herH ? {icon:'🤍', label:'تحتاجان دعماً'} :
-    {icon:'💛', label:'ادعم شريكك'};
-  document.getElementById('moodHearts').textContent = compat.icon;
-  document.getElementById('moodCompat').textContent = compat.label;
-  document.getElementById('smcHearts').textContent = compat.icon;
-  document.getElementById('smcLabel').textContent = compat.label;
+function renderCustomStickers() {
+  const grid=document.getElementById('customSGrid');
+  if(!grid) return;
+  grid.innerHTML=customStk.map((src,i)=>`
+    <div class="stk-wrap">
+      <img class="stk-img" src="${src}" onclick="sendCustomStk('${i}')">
+      <button class="stk-del" onclick="delCustomStk(${i})">×</button>
+    </div>`).join('');
 }
 
-// ══ FIGHT ══
-let fightWho = 'me';
-window.setFightWho = (btn, who) => {
-  document.querySelectorAll('.fight-who-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on'); fightWho = who;
+window.importStickers = (inp) => {
+  Array.from(inp.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      customStk.push(e.target.result);
+      localStorage.setItem('cstk',JSON.stringify(customStk));
+      renderCustomStickers();
+    };
+    r.readAsDataURL(f);
+  });
+  inp.value='';
 };
 
-window.toggleFightMode = async () => {
-  isFight = !isFight;
-  await setDoc(doc(db, 'shared', chatId()), {
-    fightMode: isFight, fightWho, fightUpdatedBy: myUid, fightAt: serverTimestamp()
-  }, {merge: true});
-  if (isFight) {
-    await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-      content: '😤 وضع المشاجرة مفعّل. خذوا وقتكم للتهدئة 💙',
-      senderId: myUid, type: 'system', reactions: [], sentAt: serverTimestamp()
-    });
-  }
+window.sendCustomStk = async (i) => {
+  if(!pId||i>=customStk.length) return;
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:customStk[i], senderId:uid, type:'img_sticker', reactions:[], sentAt:serverTimestamp()
+  });
+  document.getElementById('stickerPanel').classList.remove('show');
+};
+
+window.delCustomStk = (i) => {
+  customStk.splice(i,1);
+  localStorage.setItem('cstk',JSON.stringify(customStk));
+  renderCustomStickers();
+};
+
+// ── LETTER ──
+window.selT = (btn) => {
+  document.querySelectorAll('.tchip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); selTime=btn.dataset.t;
+};
+window.sendLetter = async () => {
+  const body=(document.getElementById('lBody').value||'').trim();
+  if(!body||!pId) return;
+  const title=(document.getElementById('lTitle').value||'').trim();
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:body, senderId:uid, type:'letter',
+    letterTitle:title||'رسالة مؤجلة 💌',
+    openAt:openAt(), isOpened:false,
+    reactions:[], sentAt:serverTimestamp()
+  });
+  document.getElementById('lBody').value='';
+  document.getElementById('lTitle').value='';
+  swTab('chat');
+};
+
+// ── MOOD ──
+window.setMood = async (btn,e,l) => {
+  document.querySelectorAll('#panel-mood .moodgrid .mopt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  myMood={e,l,m:l};
+  await updateDoc(doc(db,'users',uid),{mood:{e,l,m:l,at:serverTimestamp()}});
+  updateMoodUI();
+};
+window.sendMoodMsg = async () => {
+  const m=(document.getElementById('moodMsg').value||'').trim();
+  if(!m) return;
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:'🌡️ '+m, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+  });
+  document.getElementById('moodMsg').value='';
+  swTab('chat');
+};
+window.selMM = (btn,e,l) => {
+  document.querySelectorAll('#mmGrid .mopt').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on'); selMMood={e,l};
+};
+window.saveMM = async () => {
+  const m=(document.getElementById('mmMsg').value||'').trim()||selMMood.l;
+  myMood={e:selMMood.e,l:selMMood.l,m};
+  await updateDoc(doc(db,'users',uid),{mood:{...myMood,at:serverTimestamp()}});
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:`🌡️ حالتي الآن: ${myMood.e} · ${m}`,
+    senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+  });
+  updateMoodUI(); closeModal('moodModal'); swTab('chat');
+};
+function updateMoodUI() {
+  const mn=myNick||myName; const hn=hrNick||pName;
+  const mi=mn[0]||'أ'; const hi=hn[0]||'س';
+  document.getElementById('myMETop').textContent=myMood.e;
+  document.getElementById('myMMTop').textContent=myMood.m||myMood.l;
+  document.getElementById('hrMETop').textContent=hrMood.e;
+  document.getElementById('hrMMTop').textContent=hrMood.m||hrMood.l;
+  document.getElementById('smcMyE').textContent=myMood.e;
+  document.getElementById('smcHrE').textContent=hrMood.e;
+  const happy=['😊','😍','😂','🤩','🥰'];
+  const c=isFight?{i:'😤',l:'خذوا وقتاً'}:
+    happy.includes(myMood.e)&&happy.includes(hrMood.e)?{i:'💞',l:'منسجمان'}:
+    !happy.includes(myMood.e)&&!happy.includes(hrMood.e)?{i:'🤍',l:'تحتاجان دعماً'}:
+    {i:'💛',l:'ادعم شريكك'};
+  document.getElementById('mHearts').textContent=c.i;
+  document.getElementById('mCompat').textContent=c.l;
+  document.getElementById('smcH').textContent=c.i;
+  document.getElementById('smcL').textContent=c.l;
+}
+
+// ── FIGHT ──
+let fWho='me';
+window.setFWho=(btn,w)=>{document.querySelectorAll('.fwbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');fWho=w;};
+window.toggleFight = async () => {
+  isFight=!isFight;
+  await setDoc(doc(db,'shared',cid()),{fightMode:isFight,fightWho:fWho,fightBy:uid,at:serverTimestamp()},{merge:true});
+  if(isFight) await addDoc(collection(db,'chats',cid(),'messages'),{content:'😤 وضع المشاجرة مفعّل. خذوا وقتكم للتهدئة 💙',senderId:uid,type:'system',reactions:[],sentAt:serverTimestamp()});
   updateFightUI();
 };
-
 function updateFightUI() {
-  const banner = document.getElementById('fightBanner');
-  const mainBtn = document.getElementById('fightMainBtn');
-  const peaceBig = document.getElementById('peaceBigBtn');
-  const icon = document.getElementById('fightIcon');
-  const txt = document.getElementById('fightStatusTxt');
-  const fightBtn = document.getElementById('fightBtn');
-  const statusText = document.getElementById('statusText');
-
-  if (isFight) {
-    banner.classList.add('show');
-    icon.textContent = '😤'; txt.textContent = 'وضع المشاجرة مفعّل';
-    txt.style.color = '#ff8080';
-    mainBtn.style.display = 'none'; peaceBig.style.display = 'block';
-    fightBtn.textContent = '💚';
-    statusText.textContent = '😤 وضع المشاجرة مفعّل';
+  document.getElementById('fightBanner').classList.toggle('show',isFight);
+  document.getElementById('fBtn').textContent=isFight?'💚':'😤';
+  document.getElementById('pStatus').textContent=isFight?'😤 وضع المشاجرة مفعّل':'متصلة الآن';
+  document.getElementById('fIcon').textContent=isFight?'😤':'😊';
+  document.getElementById('fTxt').textContent=isFight?'وضع المشاجرة مفعّل 😤':'كلشي بخير 💚';
+  document.getElementById('fTxt').style.color=isFight?'#ff8080':'#4ade80';
+  document.getElementById('fMainBtn').style.display=isFight?'none':'block';
+  document.getElementById('peaceBtn').style.display=isFight?'block':'none';
+  updateMoodUI();
+  if(isFight){
     document.body.style.setProperty('--g','#e05555');
     document.body.style.setProperty('--d','#120608');
     document.body.style.setProperty('--d2','#1a080c');
     document.body.style.setProperty('--d3','#220d12');
   } else {
-    banner.classList.remove('show');
-    icon.textContent = '😊'; txt.textContent = 'كلشي بخير 💚';
-    txt.style.color = '#4ade80';
-    mainBtn.style.display = 'block'; peaceBig.style.display = 'none';
-    fightBtn.textContent = '😤';
-    statusText.textContent = 'متصلة الآن';
     applyTheme(curTheme);
   }
-  updateMoodUI();
 }
-
-window.sendPeaceMsg = async (el) => {
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: el.textContent.trim(), senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
-  });
-  switchTab('chat');
+window.sendPMsg = async (el) => {
+  await addDoc(collection(db,'chats',cid(),'messages'),{content:el.textContent.trim(),senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});
+  swTab('chat');
 };
-
-window.showPeaceModal = () => { document.getElementById('peaceModal').classList.add('show'); };
-
 window.makePeace = async () => {
-  isFight = false;
-  await setDoc(doc(db, 'shared', chatId()), {fightMode: false}, {merge: true});
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: '🕊️ تم الصلح! عودة للحب ❤️',
-    senderId: myUid, type: 'system', reactions: [], sentAt: serverTimestamp()
-  });
-  updateFightUI();
-  closeModal('peaceModal');
+  isFight=false;
+  await setDoc(doc(db,'shared',cid()),{fightMode:false},{merge:true});
+  await addDoc(collection(db,'chats',cid(),'messages'),{content:'🕊️ تم الصلح! عودة للحب ❤️',senderId:uid,type:'system',reactions:[],sentAt:serverTimestamp()});
+  updateFightUI(); closeModal('peaceModal');
 };
 
-// ══ IDEAS ══
+// ── IDEAS ──
 function listenIdeas() {
-  if (!partnerId) return;
-  const q = query(collection(db, 'shared', chatId(), 'ideas'), orderBy('createdAt', 'desc'));
-  const unsub = onSnapshot(q, (snap) => {
-    let ideas = [];
-    snap.forEach(d => ideas.push({id: d.id, ...d.data()}));
-    renderIdeas(ideas);
+  if(!pId) return null;
+  const q=query(collection(db,'shared',cid(),'ideas'),orderBy('createdAt','desc'));
+  return onSnapshot(q,(snap)=>{
+    let all=[]; snap.forEach(d=>all.push({id:d.id,...d.data()}));
+    renderIdeas(all);
   });
-  msgListeners.push(unsub);
 }
-
-function renderIdeas(ideas) {
-  const filt = curIFilter === 'all' ? ideas : ideas.filter(i => i.category === curIFilter);
-  document.getElementById('ideasCount').textContent = ideas.length + ' أفكار';
-  const catColors = {travel:'#4fc3f7', home:'#81c784', date:'#f48fb1', dream:'#ce93d8', other:'#c9a84c'};
-  const catNames = {travel:'✈️ سفر', home:'🏠 البيت', date:'💕 لقاء', dream:'🌙 حلم', other:'💛 أخرى'};
-  document.getElementById('ideasList').innerHTML = filt.map(i => `
-    <div class="idea-card">
-      <div class="idea-bar ${i.category}"></div>
-      <div class="idea-title">${i.title}</div>
-      <div class="idea-desc">${i.description}</div>
-      <div class="idea-footer">
-        <span class="idea-tag" style="color:${catColors[i.category]||'#c9a84c'};border-color:${catColors[i.category]||'#c9a84c'}40;background:${catColors[i.category]||'#c9a84c'}12">${catNames[i.category]||'أخرى'}</span>
-        <span class="idea-who">💬 ${i.addedByName || 'أنت'}</span>
-        <button class="like-btn" onclick="toggleIdeaLike('${i.id}',${(i.likedBy||[]).includes(myUid)})">${(i.likedBy||[]).includes(myUid)?'❤️':'🤍'}</button>
-        <span class="like-count">${i.likes||0}</span>
-        <button class="del-btn" onclick="deleteIdea('${i.id}')">🗑️</button>
+function renderIdeas(all) {
+  const flt=curIF==='all'?all:all.filter(i=>i.category===curIF);
+  document.getElementById('iCount').textContent=all.length+' أفكار';
+  const cc={travel:'#4fc3f7',home:'#81c784',date:'#f48fb1',dream:'#ce93d8',other:'#c9a84c'};
+  const cn={travel:'✈️ سفر',home:'🏠 البيت',date:'💕 لقاء',dream:'🌙 حلم',other:'💛 أخرى'};
+  document.getElementById('ideasList').innerHTML=flt.map(i=>`
+    <div class="icard">
+      <div class="ibar ${i.category||'other'}"></div>
+      <div class="ititle">${i.title||''}</div>
+      <div class="idesc">${i.description||''}</div>
+      <div class="ifooter">
+        <span class="itag" style="color:${cc[i.category]||'#c9a84c'};border-color:${cc[i.category]||'#c9a84c'}40;background:${cc[i.category]||'#c9a84c'}15">${cn[i.category]||'أخرى'}</span>
+        <span class="iwho">💬 ${i.byName||'أنت'}</span>
+        <button class="ilbtn" onclick="likeI('${i.id}',${(i.likedBy||[]).includes(uid)})">${(i.likedBy||[]).includes(uid)?'❤️':'🤍'}</button>
+        <span style="font-size:11px;color:var(--tm)">${i.likes||0}</span>
+        <button class="idbtn" onclick="delI('${i.id}')">🗑️</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-window.filterIdeas = (btn) => {
-  document.querySelectorAll('#ideaFilters .pill-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on'); curIFilter = btn.dataset.f;
-};
-
-window.openIdeaModal = () => { document.getElementById('ideaModal').classList.add('show'); };
-
-window.selIdeaCat = (btn) => {
-  document.querySelectorAll('#modalCats .pill-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on'); selectedIdeaCat = btn.dataset.cat;
-};
-
-window.saveIdea = async () => {
-  const title = document.getElementById('ideaTitleInput').value.trim();
-  const desc = document.getElementById('ideaDescInput').value.trim();
-  if (!title) return;
-  await addDoc(collection(db, 'shared', chatId(), 'ideas'), {
-    title, description: desc || 'فكرة رائعة!', category: selectedIdeaCat,
-    addedBy: myUid, addedByName: myName, likes: 0, likedBy: [], createdAt: serverTimestamp()
-  });
-  document.getElementById('ideaTitleInput').value = '';
-  document.getElementById('ideaDescInput').value = '';
+window.fIdeas=(btn)=>{document.querySelectorAll('#iFilters .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curIF=btn.dataset.f;};
+window.selCat=(btn)=>{document.querySelectorAll('#iCats .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');selIdeaCat=btn.dataset.cat;};
+window.saveIdea=async()=>{
+  const t=(document.getElementById('iT').value||'').trim();
+  const d=(document.getElementById('iD').value||'').trim();
+  if(!t) return;
+  await addDoc(collection(db,'shared',cid(),'ideas'),{title:t,description:d||'فكرة رائعة!',category:selIdeaCat,by:uid,byName:myNick||myName,likes:0,likedBy:[],createdAt:serverTimestamp()});
+  document.getElementById('iT').value=''; document.getElementById('iD').value='';
   closeModal('ideaModal');
 };
-
-window.toggleIdeaLike = async (id, liked) => {
-  const ref = doc(db, 'shared', chatId(), 'ideas', id);
-  if (liked) {
-    await updateDoc(ref, {likedBy: arrayRemove(myUid), likes: increment(-1)});
-  } else {
-    await updateDoc(ref, {likedBy: arrayUnion(myUid), likes: increment(1)});
-  }
+window.likeI=async(id,liked)=>{
+  const r=doc(db,'shared',cid(),'ideas',id);
+  if(liked) await updateDoc(r,{likedBy:arrayRemove(uid),likes:increment(-1)});
+  else await updateDoc(r,{likedBy:arrayUnion(uid),likes:increment(1)});
 };
+window.delI=async(id)=>await deleteDoc(doc(db,'shared',cid(),'ideas',id));
 
-window.deleteIdea = async (id) => {
-  await deleteDoc(doc(db, 'shared', chatId(), 'ideas', id));
-};
-
-// ══ TODOS ══
+// ── TODOS ──
 function listenTodos() {
-  if (!partnerId) return;
-  const q = query(collection(db, 'shared', chatId(), 'todos'), orderBy('createdAt', 'asc'));
-  const unsub = onSnapshot(q, (snap) => {
-    let todos = [];
-    snap.forEach(d => todos.push({id: d.id, ...d.data()}));
-    renderTodos(todos);
+  if(!pId) return null;
+  const q=query(collection(db,'shared',cid(),'todos'),orderBy('createdAt','asc'));
+  return onSnapshot(q,(snap)=>{
+    let all=[]; snap.forEach(d=>all.push({id:d.id,...d.data()}));
+    renderTodos(all);
   });
-  msgListeners.push(unsub);
 }
-
-function renderTodos(todos) {
-  document.getElementById('todoList').innerHTML = todos.map(t => `
-    <div class="todo-item${t.isDone?' done':''}" onclick="toggleTodo('${t.id}',${t.isDone})">
-      <div class="todo-check">${t.isDone?'✓':''}</div>
-      <div class="todo-txt">${t.title}</div>
-      <span class="todo-who">${t.assignedToName||'أنت'}</span>
-      <button class="del-btn" onclick="event.stopPropagation();deleteTodo('${t.id}')">🗑️</button>
-    </div>
-  `).join('');
+function renderTodos(all) {
+  document.getElementById('todoList').innerHTML=all.map(t=>`
+    <div class="titem${t.isDone?' done':''}" onclick="togT('${t.id}',${t.isDone})">
+      <div class="tcheck">${t.isDone?'✓':''}</div>
+      <div class="ttxt">${t.title||''}</div>
+      <span class="twho">${t.byName||'أنت'}</span>
+      <button class="idbtn" onclick="event.stopPropagation();delT('${t.id}')">🗑️</button>
+    </div>`).join('');
 }
-
-window.addTodoItem = async () => {
-  const title = document.getElementById('newTodo').value.trim();
-  if (!title || !partnerId) return;
-  await addDoc(collection(db, 'shared', chatId(), 'todos'), {
-    title, isDone: false, assignedTo: myUid, assignedToName: myName, createdAt: serverTimestamp()
-  });
-  document.getElementById('newTodo').value = '';
+window.addTodo=async()=>{
+  const t=(document.getElementById('newTodo').value||'').trim();
+  if(!t||!pId) return;
+  await addDoc(collection(db,'shared',cid(),'todos'),{title:t,isDone:false,by:uid,byName:myNick||myName,createdAt:serverTimestamp()});
+  document.getElementById('newTodo').value='';
 };
+window.togT=async(id,done)=>await updateDoc(doc(db,'shared',cid(),'todos',id),{isDone:!done});
+window.delT=async(id)=>await deleteDoc(doc(db,'shared',cid(),'todos',id));
 
-window.toggleTodo = async (id, isDone) => {
-  await updateDoc(doc(db, 'shared', chatId(), 'todos', id), {isDone: !isDone});
-};
-
-window.deleteTodo = async (id) => {
-  await deleteDoc(doc(db, 'shared', chatId(), 'todos', id));
-};
-
-// ══ DISCUSSION ══
-const discQs = {
+// ── DISCUSSION ──
+const dQs={
   romantic:['لو قدرتوا تسافرون لأي مكان الليلة، وين تختارون؟ 🌍✈️','ما هو أجمل لحظة عشتموها معاً؟ 🌹','ما هو الشي اللي تحبه فيّ أكثر شي؟ 💛','وصف الحياة المثالية بعد ٥ سنوات 🌙','لو كتبت لي رسالة بعد ١٠ سنوات إيش تكتب؟ 💌'],
   fun:['لو كنت حيوان إيش تكون؟ 🦁','أكثر شي يضحكك مني إيش؟ 😂','كيف تصف يومنا في ٣ إيموجي؟','من فيكم الأكثر فوضوية؟ 🙈','أكثر شي محرج حدث لك أمامي؟ 😳'],
-  deep:['إيش أكثر شي تغيّر فيك منذ كنّا مع بعض؟ 🌱','ما هو حلمك الكبير اللي لسا ما حققته؟ 🌟','ما الدرس الأهم في حياتك؟ 📖','متى آخر مرة شعرت بسعادة حقيقية؟ 💙','لو قدرت تغير شي في ماضيك إيش تغير؟ ⏳'],
-  movie:['أكثر مشهد في الفيلم أثّر فيك ليش؟ 🎬','لو أنتم الشخصيتين الرئيسيتين مين مين؟ 😄','هل كنت تتوقع هالنهاية؟ 🤔','الفيلم يذكرك بأي لحظة؟ 🌙','إيش أكثر جملة أعجبتك؟ 💬']
+  deep:['إيش أكثر شي تغيّر فيك منذ كنّا مع بعض؟ 🌱','ما هو حلمك الكبير؟ 🌟','ما الدرس الأهم في حياتك؟ 📖','متى آخر مرة شعرت بسعادة حقيقية؟ 💙','لو قدرت تغير شي في ماضيك؟ ⏳'],
+  movie:['أكثر مشهد أثّر فيك؟ 🎬','لو أنتم الشخصيتين الرئيسيتين مين مين؟ 😄','هل كنت تتوقع هالنهاية؟ 🤔','الفيلم يذكرك بأي لحظة؟ 🌙','إيش أكثر جملة أعجبتك؟ 💬']
 };
-
-window.setDiscMood = (btn) => {
-  document.querySelectorAll('.disc-moods .pill-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on'); curDiscMood = btn.dataset.dm; discIdx = 0;
-  document.getElementById('discQ').textContent = discQs[curDiscMood][0];
+window.setDM=(btn)=>{document.querySelectorAll('#dMoods .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curDM=btn.dataset.dm;dIdx=0;document.getElementById('dQ').textContent=dQs[curDM][0];};
+window.shuffleD=()=>{const qs=dQs[curDM];dIdx=(dIdx+1)%qs.length;document.getElementById('dQ').textContent=qs[dIdx];};
+window.sendDisc=async()=>{
+  await addDoc(collection(db,'chats',cid(),'messages'),{content:'🗣️ '+document.getElementById('dQ').textContent,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});
+  swTab('chat');
 };
+window.likeDisc=(btn)=>{btn.textContent=btn.textContent==='❤️ أعجبني'?'❤️ تم':'❤️ أعجبني';};
 
-window.shuffleDisc = () => {
-  const qs = discQs[curDiscMood];
-  discIdx = (discIdx + 1) % qs.length;
-  document.getElementById('discQ').textContent = qs[discIdx];
-};
-
-window.sendDiscToChat = async () => {
-  const q = document.getElementById('discQ').textContent;
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: '🗣️ سؤال النقاش:\n' + q, senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
-  });
-  switchTab('chat');
-};
-
-window.likeDisc = (btn) => {
-  btn.textContent = btn.textContent === '❤️ أعجبني' ? '❤️ تم' : '❤️ أعجبني';
-};
-
-window.saveDiscAnswer = async () => {
-  const ans = document.getElementById('discAnswer').value.trim();
-  if (!ans || !partnerId) return;
-  await addDoc(collection(db, 'shared', chatId(), 'discAnswers'), {
-    question: discQs[curDiscMood][discIdx], answer: ans,
-    by: myUid, byName: myName, createdAt: serverTimestamp()
-  });
-  document.getElementById('discAnswer').value = '';
-};
-
-// ══ GAMES ══
-const games = [
-  {id:'g1',cat:'romantic',icon:'💌',title:'رسالة من القلب',desc:'كل واحد يكتب رسالة في ٣٠ ثانية ثم يتبادلانها',steps:['كل واحد يكتب رسالة في ٣٠ ثانية','لا تريا ما يكتبه الآخر','تبادلا الرسائل في نفس الوقت','اقرأها بصوت عالٍ']},
-  {id:'g2',cat:'fun',icon:'🤔',title:'من أنا؟',desc:'فكّر بشخصية والآخر يسأل أسئلة نعم/لا',steps:['أحدكم يفكر بشخصية مشهورة','الآخر يسأل أسئلة نعم أو لا','يملك ٢٠ سؤالاً فقط','إذا خمّن صح ينتقل الدور']},
-  {id:'g3',cat:'mind',icon:'🧩',title:'تحدي الكلمات',desc:'قل كلمة والآخر يكمل بكلمة تبدأ بآخر حرف في ٥ ثوانٍ',steps:['أحدكم يقول كلمة','الآخر لديه ٥ ثوانٍ','من يفشل يخسر نقطة','يلعبان ١٠ جولات']},
+// ── GAMES ──
+const games=[
+  {id:'g1',cat:'romantic',icon:'💌',title:'رسالة من القلب',desc:'كل واحد يكتب رسالة في ٣٠ ثانية ثم يتبادلانها',steps:['اكتب رسالة في ٣٠ ثانية','لا تريا ما يكتبه الآخر','تبادلا الرسائل في نفس الوقت','اقرأها بصوت عالٍ 💕']},
+  {id:'g2',cat:'fun',icon:'🤔',title:'من أنا؟',desc:'فكّر بشخصية والآخر يسأل أسئلة نعم/لا',steps:['فكّر بشخصية مشهورة','الآخر يسأل نعم أو لا','يملك ٢٠ سؤالاً','إذا خمّن صح ينتقل الدور']},
+  {id:'g3',cat:'mind',icon:'🧩',title:'تحدي الكلمات',desc:'قل كلمة والآخر يكمل بكلمة تبدأ بآخر حرف',steps:['قل كلمة','الآخر لديه ٥ ثوانٍ يكمل','من يفشل يخسر نقطة','يلعبان ١٠ جولات']},
   {id:'g4',cat:'romantic',icon:'🎯',title:'الحقيقة أو التحدي',desc:'سؤال صريح أو تحدٍّ لطيف',steps:['اختر: حقيقة أو تحدٍّ','حقيقة: أجب بصدق','تحدٍّ: نفّذ ما يطلبه الشريك','تناوبا الأدوار']},
-  {id:'g5',cat:'fun',icon:'😂',title:'الممثل الصامت',desc:'مثّل فيلماً بدون كلام والآخر يخمن',steps:['فكّر بفيلم أو مسلسل','مثّله بالحركة فقط','الآخر لديه دقيقة للتخمين','من يخمن أكثر يفوز']},
+  {id:'g5',cat:'fun',icon:'😂',title:'الممثل الصامت',desc:'مثّل فيلماً بدون كلام والآخر يخمن',steps:['فكّر بفيلم','مثّله بالحركة فقط','الآخر لديه دقيقة للتخمين','من يخمن أكثر يفوز']},
   {id:'g6',cat:'mind',icon:'📚',title:'من يعرف الآخر أكثر؟',desc:'أسئلة عن تفضيلات الشريك',steps:['كل واحد يكتب ٥ أسئلة عن نفسه','تبادلا الأسئلة','كل إجابة صحيحة نقطة','من يحصل على أكثر يفوز']},
-  {id:'g7',cat:'adventure',icon:'🗺️',title:'مغامرة التخطيط',desc:'خططوا معاً لرحلة مثالية في ١٠ دقائق',steps:['الميزانية: مليون وهمي','عندكم ١٠ دقائق','خططوا: الوجهة والفندق','عرضوا الخطة']},
-  {id:'g8',cat:'romantic',icon:'⭐',title:'قائمة المحبة',desc:'كل واحد يكتب ٥ أشياء يحبها في الآخر',steps:['اكتب ٥ أشياء تحبها','لا تريا ما يكتبه الآخر','تبادلا القوائم','اقرأها بصوت عالٍ']},
-  {id:'g9',cat:'fun',icon:'🎨',title:'ارسم بعضكم',desc:'ارسم الآخر في ٦٠ ثانية',steps:['خذ ورقة وقلم','عندكم ٦٠ ثانية','ارسم شريكك من الذاكرة','قارنا الرسومات وضحكا']},
+  {id:'g7',cat:'adventure',icon:'🗺️',title:'مغامرة التخطيط',desc:'خططوا معاً لرحلة في ١٠ دقائق',steps:['الميزانية: مليون وهمي','عندكم ١٠ دقائق','خططوا: الوجهة والفندق','عرضوا الخطة']},
+  {id:'g8',cat:'romantic',icon:'⭐',title:'قائمة المحبة',desc:'كل واحد يكتب ٥ أشياء يحبها في الآخر',steps:['اكتب ٥ أشياء تحبها','لا تريا ما يكتبه الآخر','تبادلا القوائم','اقرأها بصوت عالٍ 💕']},
+  {id:'g9',cat:'fun',icon:'🎨',title:'ارسم بعضكم',desc:'ارسم الآخر في ٦٠ ثانية',steps:['خذ ورقة وقلم','عندكم ٦٠ ثانية','ارسم شريكك','قارنا الرسومات وضحكا 😂']},
   {id:'g10',cat:'mind',icon:'🔢',title:'تحدي الأرقام',desc:'فكّر برقم بين ١-١٠٠ والآخر يخمن',steps:['فكّر برقم بين ١ و١٠٠','الآخر يخمن','قل أكبر أو أصغر','يملك ٧ محاولات']},
-  {id:'g11',cat:'romantic',icon:'🌙',title:'أحلامنا المشتركة',desc:'كل واحد يذكر ٣ أحلام للمستقبل',steps:['اكتب ٣ أحلام للمستقبل','بدون أن يرى الآخر','تبادلا القوائم','احتفلوا بكل حلم مشترك']},
-  {id:'g12',cat:'fun',icon:'👻',title:'القصة التعاونية',desc:'كل واحد يضيف جملة',steps:['أحدكم يبدأ بجملة','الآخر يكمل بجملة','تناوبا حتى تنتهي','الأغرب تفوز']},
+  {id:'g11',cat:'romantic',icon:'🌙',title:'أحلامنا المشتركة',desc:'كل واحد يذكر ٣ أحلام للمستقبل',steps:['اكتب ٣ أحلام للمستقبل','بدون أن يرى الآخر','تبادلا القوائم','احتفلوا بكل حلم مشترك 🎉']},
+  {id:'g12',cat:'fun',icon:'👻',title:'القصة التعاونية',desc:'كل واحد يضيف جملة للقصة',steps:['أحدكم يبدأ بجملة','الآخر يكمل بجملة','تناوبا حتى تنتهي','الأغرب تفوز 😂']},
   {id:'g13',cat:'mind',icon:'🎵',title:'خمّن الأغنية',desc:'كلمة واحدة من أغنية يخمنها الآخر',steps:['فكّر بأغنية','اكتب كلمة واحدة منها','الآخر يحاول التخمين','إذا فشل اكشف كلمة ثانية']},
   {id:'g14',cat:'romantic',icon:'💞',title:'ذكرياتنا الحلوة',desc:'صف ذكرى مشتركة دون اسمها',steps:['فكّر بذكرى مشتركة','صفها دون المكان أو الوقت','الآخر يخمن','من يخمن أكثر يفوز']},
-  {id:'g15',cat:'adventure',icon:'🌟',title:'تحدي اليوم',desc:'تحدٍّ صغير تفعلانه قبل نهاية اليوم',steps:['كل واحد يقترح تحدياً','اختارا واحداً','نفّذاه قبل نهاية اليوم','التقطا صورة للتوثيق']},
-  {id:'g16',cat:'fun',icon:'🤣',title:'خمّن التعبير',desc:'صف مشاعرك بإيموجي فقط',steps:['اختر ٣ إيموجي تعبّر عن يومك','الآخر يشرح ما يفهمه','الأقرب للحقيقة يفوز','تناوبا']},
+  {id:'g15',cat:'adventure',icon:'🌟',title:'تحدي اليوم',desc:'تحدٍّ صغير تفعلانه قبل نهاية اليوم',steps:['كل واحد يقترح تحدياً','اختارا واحداً','نفّذاه قبل نهاية اليوم','التقطا صورة 📸']},
+  {id:'g16',cat:'fun',icon:'🤣',title:'خمّن التعبير',desc:'صف مشاعرك بإيموجي فقط',steps:['اختر ٣ إيموجي تعبّر عن يومك','الآخر يشرح','الأقرب للحقيقة يفوز','تناوبا']},
   {id:'g17',cat:'mind',icon:'🧠',title:'اختبار الشريك',desc:'١٠ أسئلة سريعة عن الآخر',steps:['اسأل سؤالاً عن نفسك','الآخر يجيب بسرعة','كل إجابة صحيحة نقطة','من يصل لـ١٠ أولاً يفوز']},
-  {id:'g18',cat:'romantic',icon:'🎁',title:'مفاجأة اليوم',desc:'مفاجأة صغيرة للآخر خلال ٢٤ ساعة',steps:['فكّر بمفاجأة صغيرة','لا تخبر الآخر','نفّذها خلال ٢٤ ساعة','شاركوا ردود الأفعال']},
+  {id:'g18',cat:'romantic',icon:'🎁',title:'مفاجأة اليوم',desc:'مفاجأة صغيرة للآخر خلال ٢٤ ساعة',steps:['فكّر بمفاجأة صغيرة','لا تخبر الآخر','نفّذها خلال ٢٤ ساعة','شاركوا ردود الأفعال 🥰']},
   {id:'g19',cat:'adventure',icon:'🏆',title:'تحدي المعرفة',desc:'ثقافة وجغرافيا وأفلام - من الأذكى؟',steps:['كل واحد يحضر ٥ أسئلة','تناوبا في السؤال والجواب','كل إجابة صحيحة نقطة','تنتهي عند ١٥ نقطة']},
-  {id:'g20',cat:'romantic',icon:'💆',title:'قائمة الدلال',desc:'كل واحد يكتب ٥ طلبات دلال',steps:['اكتب ٥ طلبات بسيطة','تبادلا القوائم','حاولا تنفيذ طلب اليوم','كرروا كل أسبوع']},
+  {id:'g20',cat:'romantic',icon:'💆',title:'قائمة الدلال',desc:'كل واحد يكتب ٥ طلبات دلال',steps:['اكتب ٥ طلبات بسيطة','تبادلا القوائم','نفّذا طلباً اليوم','كرروا كل أسبوع 💛']},
 ];
-
 function renderGames() {
-  const catColors = {romantic:'#f48fb1', fun:'#ffb347', mind:'#ce93d8', adventure:'#4fc3f7'};
-  const catNames = {romantic:'💕 رومانسي', fun:'😂 مرح', mind:'🧠 تحدٍّ', adventure:'🌟 مغامرة'};
-  const filt = curGFilter === 'all' ? games : games.filter(g => g.cat === curGFilter);
-  document.getElementById('gamesList').innerHTML = filt.map(g => `
-    <div class="game-card">
-      <div class="game-bar ${g.cat}"></div>
-      <div class="game-icon">${g.icon}</div>
-      <div class="game-title">${g.title}</div>
-      <div class="game-desc">${g.desc}</div>
-      <div class="game-footer">
-        <span class="game-tag" style="color:${catColors[g.cat]};border-color:${catColors[g.cat]}40;background:${catColors[g.cat]}12">${catNames[g.cat]}</span>
-        <button class="game-play" onclick="startGame('${g.id}')">▶ العب</button>
+  const cc={romantic:'#f48fb1',fun:'#ffb347',mind:'#ce93d8',adventure:'#4fc3f7'};
+  const cn={romantic:'💕 رومانسي',fun:'😂 مرح',mind:'🧠 تحدٍّ',adventure:'🌟 مغامرة'};
+  const flt=curGF==='all'?games:games.filter(g=>g.cat===curGF);
+  document.getElementById('gamesList').innerHTML=flt.map(g=>`
+    <div class="gcard">
+      <div class="gbar ${g.cat}"></div>
+      <div class="gicon">${g.icon}</div>
+      <div class="gtitle">${g.title}</div>
+      <div class="gdesc">${g.desc}</div>
+      <div class="gfoot">
+        <span class="gtag" style="color:${cc[g.cat]};border-color:${cc[g.cat]}40;background:${cc[g.cat]}15">${cn[g.cat]}</span>
+        <button class="gplay" onclick="startG('${g.id}')">▶ العب</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
-window.filterGames = (btn) => {
-  document.querySelectorAll('#gameFilters .pill-btn').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on'); curGFilter = btn.dataset.gf;
-  renderGames();
+window.fGames=(btn)=>{document.querySelectorAll('#gFilters .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curGF=btn.dataset.gf;renderGames();};
+window.startG=(id)=>{
+  activeGame=games.find(g=>g.id===id); gs1=0; gs2=0; gStep=0;
+  document.getElementById('agI').textContent=activeGame.icon;
+  document.getElementById('agT').textContent=activeGame.title;
+  document.getElementById('agC').textContent=activeGame.steps[0];
+  document.getElementById('agS').style.display='flex';
+  document.getElementById('sc1').textContent='0'; document.getElementById('sc2').textContent='0';
+  document.getElementById('agB').innerHTML=`
+    <button class="agbtn p" onclick="addGS(1)">✅ نقطة لي</button>
+    <button class="agbtn" onclick="addGS(2)">✅ نقطة لها</button>
+    <button class="agbtn" onclick="nextGS()">▶ التالي</button>`;
+  document.getElementById('aGame').style.display='block';
+  document.getElementById('aGame').scrollIntoView({behavior:'smooth',block:'nearest'});
 };
-
-window.startGame = (id) => {
-  activeGame = games.find(g => g.id === id);
-  myScore = 0; herScore = 0; gameStep = 0;
-  const ag = document.getElementById('activeGame');
-  document.getElementById('agIcon').textContent = activeGame.icon;
-  document.getElementById('agTitle').textContent = activeGame.title;
-  document.getElementById('agContent').textContent = activeGame.steps[0];
-  document.getElementById('scoreRow').style.display = 'flex';
-  document.getElementById('sc1').textContent = '0';
-  document.getElementById('sc2').textContent = '0';
-  document.getElementById('agBtns').innerHTML = `
-    <button class="ag-btn primary" onclick="addScore(1)">✅ نقطة لي</button>
-    <button class="ag-btn" onclick="addScore(2)">✅ نقطة لها</button>
-    <button class="ag-btn" onclick="nextStep()">▶ التالي</button>
-  `;
-  ag.style.display = 'block';
-  ag.scrollIntoView({behavior:'smooth', block:'nearest'});
-};
-
-window.addScore = (p) => {
-  if (p === 1) { myScore++; document.getElementById('sc1').textContent = myScore; }
-  else { herScore++; document.getElementById('sc2').textContent = herScore; }
-};
-
-window.nextStep = () => {
-  if (!activeGame) return;
-  gameStep++;
-  if (gameStep < activeGame.steps.length) {
-    document.getElementById('agContent').textContent = activeGame.steps[gameStep];
-  } else {
-    const winner = myScore > herScore ? 'فزت أنت! 🥳' : herScore > myScore ? 'فازت شريكتك! 🥳' : 'تعادل! 🤝';
-    document.getElementById('agContent').innerHTML = `<div style="text-align:center"><div style="font-size:40px">🏆</div><div style="font-size:16px;font-weight:700;color:var(--g);margin-top:8px">اللعبة انتهت!</div><div style="font-size:14px;margin-top:4px">${winner}</div></div>`;
-    document.getElementById('agBtns').innerHTML = `<button class="ag-btn primary" onclick="closeGame()">إنهاء اللعبة</button>`;
+window.addGS=(p)=>{if(p===1){gs1++;document.getElementById('sc1').textContent=gs1;}else{gs2++;document.getElementById('sc2').textContent=gs2;}};
+window.nextGS=()=>{
+  if(!activeGame) return; gStep++;
+  if(gStep<activeGame.steps.length){document.getElementById('agC').textContent=activeGame.steps[gStep];}
+  else{
+    const hn=hrNick||pName;
+    const w=gs1>gs2?'فزت أنت! 🥳':gs2>gs1?`فازت ${hn}! 🥳`:'تعادل! 🤝';
+    document.getElementById('agC').innerHTML=`<div style="text-align:center"><div style="font-size:40px">🏆</div><div style="font-size:16px;font-weight:700;color:var(--g);margin-top:8px">اللعبة انتهت!</div><div style="font-size:14px;margin-top:4px">${w}</div></div>`;
+    document.getElementById('agB').innerHTML=`<button class="agbtn p" onclick="closeGame()">إنهاء</button>`;
   }
 };
+window.closeGame=()=>{document.getElementById('aGame').style.display='none';activeGame=null;};
 
-window.closeGame = () => {
-  document.getElementById('activeGame').style.display = 'none';
-  activeGame = null;
-};
-
-// ══ THEMES ══
-const themes = [
-  {id:'golden',name:'ذهبي دافئ',desc:'الكلاسيكي',emoji:'✨',bg:'#0e0d12',acc:'#c9a84c'},
-  {id:'rose',name:'ورد صيفي',desc:'وردي ناعم',emoji:'🌹',bg:'#120a0d',acc:'#e07a8e'},
-  {id:'ocean',name:'بحر هادئ',desc:'أزرق محيطي',emoji:'🌊',bg:'#050e18',acc:'#4fc3f7'},
-  {id:'forest',name:'غابة خضراء',desc:'طبيعة وهدوء',emoji:'🌿',bg:'#071009',acc:'#81c784'},
-  {id:'lavender',name:'بنفسجي',desc:'حالم وعاطفي',emoji:'💜',bg:'#0d0912',acc:'#ce93d8'},
-  {id:'sunset',name:'غروب ذهبي',desc:'دفء وحنان',emoji:'🌅',bg:'#120a02',acc:'#ffb347'},
+// ── THEMES ──
+const themes=[
+  {id:'golden',name:'ذهبي دافئ',desc:'الكلاسيكي',emoji:'✨',bg:'#0e0d12',acc:'#c9a84c',d:'#0e0d12',d2:'#16141c',d3:'#1e1b27',d4:'#272330'},
+  {id:'rose',name:'ورد صيفي',desc:'وردي ناعم',emoji:'🌹',bg:'#120a0d',acc:'#e07a8e',d:'#120a0d',d2:'#1c1014',d3:'#26161b',d4:'#301c22'},
+  {id:'ocean',name:'بحر هادئ',desc:'أزرق محيطي',emoji:'🌊',bg:'#050e18',acc:'#4fc3f7',d:'#050e18',d2:'#0a1525',d3:'#101d30',d4:'#18263b'},
+  {id:'forest',name:'غابة خضراء',desc:'طبيعة وهدوء',emoji:'🌿',bg:'#071009',acc:'#81c784',d:'#071009',d2:'#0d1a0f',d3:'#132216',d4:'#1b2d1e'},
+  {id:'lavender',name:'بنفسجي',desc:'حالم وعاطفي',emoji:'💜',bg:'#0d0912',acc:'#ce93d8',d:'#0d0912',d2:'#150f1c',d3:'#1d1426',d4:'#261a30'},
+  {id:'sunset',name:'غروب ذهبي',desc:'دفء وحنان',emoji:'🌅',bg:'#120a02',acc:'#ffb347',d:'#120a02',d2:'#1c1105',d3:'#261808',d4:'#30200c'},
 ];
-
 function renderThemes() {
-  document.getElementById('themeGrid').innerHTML = themes.map(t => `
-    <div class="theme-card${curTheme===t.id?' sel':''}" onclick="applyTheme('${t.id}')" style="background:${t.bg};border-color:${curTheme===t.id?t.acc:'rgba(255,255,255,0.07)'}">
-      <div class="theme-sel-badge">✓ مفعّل</div>
-      <div class="theme-orb" style="background:${t.acc}22;color:${t.acc}">${t.emoji}</div>
-      <div class="theme-name" style="color:${t.acc}">${t.name}</div>
-      <div class="theme-desc">${t.desc}</div>
-    </div>
-  `).join('');
+  document.getElementById('thGrid').innerHTML=themes.map(t=>`
+    <div class="thcard${curTheme===t.id?' sel':''}" onclick="applyTheme('${t.id}')" style="background:${t.bg};border-color:${curTheme===t.id?t.acc:'rgba(255,255,255,0.07)'}">
+      <div class="thbdg">✓ مفعّل</div>
+      <div class="thorb" style="background:${t.acc}22;color:${t.acc}">${t.emoji}</div>
+      <div class="thname" style="color:${t.acc}">${t.name}</div>
+      <div class="thdesc">${t.desc}</div>
+    </div>`).join('');
 }
-
-window.applyTheme = (id) => {
-  if (isFight) return;
-  curTheme = id;
-  const t = themes.find(x => x.id === id);
-  if (!t) return;
-  // Compute surfaces
-  const s = {
-    golden: {d:'#0e0d12',d2:'#16141c',d3:'#1e1b27',d4:'#272330'},
-    rose:   {d:'#120a0d',d2:'#1c1014',d3:'#26161b',d4:'#301c22'},
-    ocean:  {d:'#050e18',d2:'#0a1525',d3:'#101d30',d4:'#18263b'},
-    forest: {d:'#071009',d2:'#0d1a0f',d3:'#132216',d4:'#1b2d1e'},
-    lavender:{d:'#0d0912',d2:'#150f1c',d3:'#1d1426',d4:'#261a30'},
-    sunset: {d:'#120a02',d2:'#1c1105',d3:'#261808',d4:'#30200c'},
-  }[id];
-  document.body.style.setProperty('--g', t.acc);
-  document.body.style.setProperty('--gl', t.acc + '26');
-  document.body.style.setProperty('--d', s.d);
-  document.body.style.setProperty('--d2', s.d2);
-  document.body.style.setProperty('--d3', s.d3);
-  document.body.style.setProperty('--d4', s.d4);
+window.applyTheme=(id)=>{
+  if(isFight) return;
+  curTheme=id;
+  const t=themes.find(x=>x.id===id); if(!t) return;
+  document.body.style.setProperty('--g',t.acc);
+  document.body.style.setProperty('--gl',t.acc+'26');
+  document.body.style.setProperty('--d',t.d);
+  document.body.style.setProperty('--d2',t.d2);
+  document.body.style.setProperty('--d3',t.d3);
+  document.body.style.setProperty('--d4',t.d4);
   renderThemes();
 };
+function applyTheme(id){window.applyTheme(id);}
 
-function applyTheme(id) { window.applyTheme(id); }
-
-// ══ LOW NET ══
-window.toggleLowNet = () => {
-  isLowNet = !isLowNet;
-  document.getElementById('lnBar').classList.toggle('show', isLowNet);
-  document.getElementById('lnBtn').textContent = isLowNet ? '📵' : '📶';
-  document.getElementById('statusText').textContent = isLowNet ? '📶 نت ضعيف' : 'متصلة الآن';
+// ── LOW NET ──
+window.toggleLN=()=>{
+  isLN=!isLN;
+  document.getElementById('lnBar').classList.toggle('show',isLN);
+  document.getElementById('lnBtn').textContent=isLN?'📵':'📶';
+  document.getElementById('pStatus').textContent=isLN?'📶 نت ضعيف':isFight?'😤 وضع المشاجرة':'متصلة الآن';
 };
 
-// ══ DRAWING ══
-let strokes = [], redoStack = [], curStroke = null, isDrawing = false, isEraser = false;
-let brushColor = '#c9a84c', brushSize = 5;
-const drawColors = ['#c9a84c','#e07a8e','#4fc3f7','#81c784','#ce93d8','#ffb347','#ff6b6b','#f0ece2'];
-
-function initDraw() {
-  const swRow = document.getElementById('swatchRow');
-  swRow.style.display = 'flex'; swRow.style.gap = '7px'; swRow.style.flexWrap = 'wrap';
-  swRow.innerHTML = drawColors.map(c => `<div class="swatch${c===brushColor?' sel':''}" style="background:${c}" onclick="selectColor('${c}',this)"></div>`).join('');
-  updateSizePrev();
-  setTimeout(resizeCanvas, 200);
+// ── DRAWING ──
+let dStrokes=[],dRedo=[],dCurStroke=null,dDrawing=false,dEraser=false,dColor='#c9a84c',dSize=5;
+const dColors=['#c9a84c','#e07a8e','#4fc3f7','#81c784','#ce93d8','#ffb347','#ff6b6b','#f0ece2'];
+function initDraw(){
+  const row=document.getElementById('swRow');
+  row.innerHTML=dColors.map(c=>`<div class="sw${c===dColor?' sel':''}" style="background:${c}" onclick="dSelColor('${c}',this)"></div>`).join('');
+  dUpdPrev(); setTimeout(resizeCanvas,200);
 }
-
-window.selectColor = (c, el) => {
-  brushColor = c; isEraser = false;
-  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
-  el.classList.add('sel');
-  document.getElementById('eraserBtn').classList.remove('on');
-  updateSizePrev();
-};
-
-window.updateBrushSize = (v) => { brushSize = +v; updateSizePrev(); };
-
-function updateSizePrev() {
-  const p = document.getElementById('sizePrev');
-  const sz = Math.max(4, brushSize);
-  p.innerHTML = `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${isEraser?'rgba(201,168,76,.4)':brushColor}"></div>`;
+window.dSelColor=(c,el)=>{dColor=c;dEraser=false;document.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');document.getElementById('dErase').classList.remove('on');dUpdPrev();};
+window.bSz=(v)=>{dSize=+v;dUpdPrev();};
+function dUpdPrev(){const p=document.getElementById('bPrev');const s=Math.max(4,dSize);p.innerHTML=`<div style="width:${s}px;height:${s}px;border-radius:50%;background:${dEraser?'rgba(201,168,76,.4)':dColor}"></div>`;}
+window.dErase=()=>{dEraser=!dEraser;document.getElementById('dErase').classList.toggle('on',dEraser);dUpdPrev();};
+function resizeCanvas(){
+  const c=document.getElementById('dcanvas'); if(!c) return;
+  const w=c.parentElement;
+  const tb=w.querySelector('.dtool'); const dp=w.querySelector('.dpal');
+  c.width=w.offsetWidth;
+  c.height=Math.max(200,w.offsetHeight-(tb?tb.offsetHeight:55)-(dp?dp.offsetHeight:65));
+  dRedraw();
 }
-
-window.toggleEraser = () => {
-  isEraser = !isEraser;
-  document.getElementById('eraserBtn').classList.toggle('on', isEraser);
-  updateSizePrev();
-};
-
-function resizeCanvas() {
-  const canvas = document.getElementById('drawCanvas');
-  const wrap = canvas.parentElement;
-  if (!wrap) return;
-  const toolbar = wrap.querySelector('.draw-toolbar');
-  const palette = wrap.querySelector('.draw-palette');
-  const tbH = toolbar ? toolbar.offsetHeight : 55;
-  const paH = palette ? palette.offsetHeight : 65;
-  canvas.width = wrap.offsetWidth;
-  canvas.height = Math.max(200, wrap.offsetHeight - tbH - paH);
-  redrawCanvas();
+function dRedraw(){
+  const c=document.getElementById('dcanvas'); if(!c) return;
+  const ctx=c.getContext('2d'); ctx.clearRect(0,0,c.width,c.height);
+  [...dStrokes,...(dCurStroke?[dCurStroke]:[])].forEach(s=>dDrawS(ctx,s));
 }
-
-function redrawCanvas() {
-  const canvas = document.getElementById('drawCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  [...strokes, ...(curStroke ? [curStroke] : [])].forEach(s => drawStroke(ctx, s));
+function dDrawS(ctx,s){
+  if(!s||!s.pts.length) return;
+  ctx.save(); ctx.strokeStyle=s.color; ctx.lineWidth=s.size; ctx.lineCap='round'; ctx.lineJoin='round';
+  if(s.pts.length===1){ctx.beginPath();ctx.arc(s.pts[0].x,s.pts[0].y,s.size/2,0,Math.PI*2);ctx.fillStyle=s.color;ctx.fill();ctx.restore();return;}
+  ctx.beginPath(); ctx.moveTo(s.pts[0].x,s.pts[0].y);
+  for(let i=1;i<s.pts.length-1;i++){const mx=(s.pts[i].x+s.pts[i+1].x)/2,my=(s.pts[i].y+s.pts[i+1].y)/2;ctx.quadraticCurveTo(s.pts[i].x,s.pts[i].y,mx,my);}
+  ctx.lineTo(s.pts[s.pts.length-1].x,s.pts[s.pts.length-1].y); ctx.stroke(); ctx.restore();
 }
-
-function drawStroke(ctx, s) {
-  if (!s || !s.pts.length) return;
-  ctx.save();
-  ctx.strokeStyle = s.color; ctx.lineWidth = s.size;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  if (s.pts.length === 1) {
-    ctx.beginPath();
-    ctx.arc(s.pts[0].x, s.pts[0].y, s.size/2, 0, Math.PI*2);
-    ctx.fillStyle = s.color; ctx.fill();
-    ctx.restore(); return;
-  }
-  ctx.beginPath(); ctx.moveTo(s.pts[0].x, s.pts[0].y);
-  for (let i = 1; i < s.pts.length - 1; i++) {
-    const mx = (s.pts[i].x + s.pts[i+1].x) / 2;
-    const my = (s.pts[i].y + s.pts[i+1].y) / 2;
-    ctx.quadraticCurveTo(s.pts[i].x, s.pts[i].y, mx, my);
-  }
-  ctx.lineTo(s.pts[s.pts.length-1].x, s.pts[s.pts.length-1].y);
-  ctx.stroke(); ctx.restore();
-}
-
-function getCanvasPos(e) {
-  const canvas = document.getElementById('drawCanvas');
-  const r = canvas.getBoundingClientRect();
-  const src = e.touches ? e.touches[0] : e;
-  return {x: src.clientX - r.left, y: src.clientY - r.top};
-}
-
-const canvas = document.getElementById('drawCanvas');
-canvas.addEventListener('mousedown', e => { isDrawing = true; curStroke = {color: isEraser ? '#1a1726' : brushColor, size: isEraser ? brushSize*3 : brushSize, pts: [getCanvasPos(e)]}; redoStack = []; document.getElementById('undoBtn').disabled = false; document.getElementById('clearBtn').disabled = false; });
-canvas.addEventListener('mousemove', e => { if (!isDrawing || !curStroke) return; curStroke.pts.push(getCanvasPos(e)); redrawCanvas(); });
-canvas.addEventListener('mouseup', () => { if (curStroke) strokes.push(curStroke); curStroke = null; isDrawing = false; });
-canvas.addEventListener('mouseleave', () => { if (isDrawing && curStroke) { strokes.push(curStroke); curStroke = null; isDrawing = false; } });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); isDrawing = true; curStroke = {color: isEraser ? '#1a1726' : brushColor, size: isEraser ? brushSize*3 : brushSize, pts: [getCanvasPos(e)]}; redoStack = []; }, {passive:false});
-canvas.addEventListener('touchmove', e => { e.preventDefault(); if (!isDrawing || !curStroke) return; curStroke.pts.push(getCanvasPos(e)); redrawCanvas(); }, {passive:false});
-canvas.addEventListener('touchend', () => { if (curStroke) strokes.push(curStroke); curStroke = null; isDrawing = false; });
-
-window.undoDraw = () => { if (strokes.length) { redoStack.push(strokes.pop()); redrawCanvas(); } document.getElementById('redoBtn') && (document.getElementById('undoBtn').disabled = !strokes.length); };
-window.clearDraw = () => { strokes = []; redoStack = []; redrawCanvas(); document.getElementById('undoBtn').disabled = true; document.getElementById('clearBtn').disabled = true; };
-
-window.sendDrawing = async () => {
-  if (!strokes.length || !partnerId) return;
-  const canvas = document.getElementById('drawCanvas');
-  const dataUrl = canvas.toDataURL('image/png');
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: '🎨 أرسل لك رسمة! [رسم يدوي]', senderId: myUid, type: 'text',
-    reactions: [], sentAt: serverTimestamp()
-  });
-  clearDraw();
-  switchTab('chat');
+function dPos(e){const c=document.getElementById('dcanvas');const r=c.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:src.clientX-r.left,y:src.clientY-r.top};}
+const dc=document.getElementById('dcanvas');
+dc.addEventListener('mousedown',e=>{dDrawing=true;dCurStroke={color:dEraser?'#1a1726':dColor,size:dEraser?dSize*3:dSize,pts:[dPos(e)]};dRedo=[];document.getElementById('dUndo').disabled=false;document.getElementById('dClear').disabled=false;});
+dc.addEventListener('mousemove',e=>{if(!dDrawing||!dCurStroke)return;dCurStroke.pts.push(dPos(e));dRedraw();});
+dc.addEventListener('mouseup',()=>{if(dCurStroke)dStrokes.push(dCurStroke);dCurStroke=null;dDrawing=false;});
+dc.addEventListener('mouseleave',()=>{if(dDrawing&&dCurStroke){dStrokes.push(dCurStroke);dCurStroke=null;dDrawing=false;}});
+dc.addEventListener('touchstart',e=>{e.preventDefault();dDrawing=true;dCurStroke={color:dEraser?'#1a1726':dColor,size:dEraser?dSize*3:dSize,pts:[dPos(e)]};dRedo=[];},{passive:false});
+dc.addEventListener('touchmove',e=>{e.preventDefault();if(!dDrawing||!dCurStroke)return;dCurStroke.pts.push(dPos(e));dRedraw();},{passive:false});
+dc.addEventListener('touchend',()=>{if(dCurStroke)dStrokes.push(dCurStroke);dCurStroke=null;dDrawing=false;});
+window.dUndo=()=>{if(dStrokes.length){dRedo.push(dStrokes.pop());dRedraw();}document.getElementById('dUndo').disabled=!dStrokes.length;};
+window.dClear=()=>{dStrokes=[];dRedo=[];dRedraw();document.getElementById('dUndo').disabled=true;document.getElementById('dClear').disabled=true;};
+window.dSend=async()=>{
+  if(!dStrokes.length||!pId) return;
+  const c=document.getElementById('dcanvas');
+  const dataUrl=c.toDataURL('image/png');
+  await addDoc(collection(db,'chats',cid(),'messages'),{content:dataUrl,senderId:uid,type:'img_sticker',reactions:[],sentAt:serverTimestamp()});
+  dClear(); swTab('chat');
 };
+window.addEventListener('resize',resizeCanvas);
 
-// ══ MODAL HELPERS ══
-window.closeModal = (id) => { document.getElementById(id).classList.remove('show'); };
-window.openMoodModal = () => { document.getElementById('moodModal').classList.add('show'); };
-
-window.addEventListener('resize', resizeCanvas);
-
-// ══ PROFILE ══
-window.showProfile = () => {
-  const bar = document.getElementById('profileBar');
-  const user = auth.currentUser;
-  if (user) {
-    document.getElementById('myEmailShow').textContent = user.email;
-    bar.style.display = 'flex';
-  }
-};
-
-// ══ STICKER IMPORT ══
-let customStickersList = JSON.parse(localStorage.getItem('customStickers') || '[]');
-
-function renderCustomStickers() {
-  const container = document.getElementById('customStickers');
-  if (!container) return;
-  container.innerHTML = customStickersList.map((src, i) => `
-    <div style="position:relative;display:inline-block">
-      <img src="${src}" style="width:48px;height:48px;object-fit:contain;cursor:pointer;border-radius:8px" onclick="sendStickerImg('${src}')">
-      <button onclick="removeSticker(${i})" style="position:absolute;top:-4px;right:-4px;background:#e05555;border:none;border-radius:50%;width:16px;height:16px;color:white;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0">×</button>
-    </div>
-  `).join('');
-}
-
-window.importStickers = (input) => {
-  const files = Array.from(input.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      customStickersList.push(e.target.result);
-      localStorage.setItem('customStickers', JSON.stringify(customStickersList));
-      renderCustomStickers();
-    };
-    reader.readAsDataURL(file);
-  });
-  input.value = '';
-};
-
-window.removeSticker = (i) => {
-  customStickersList.splice(i, 1);
-  localStorage.setItem('customStickers', JSON.stringify(customStickersList));
-  renderCustomStickers();
-};
-
-window.sendStickerImg = async (src) => {
-  if (!partnerId) return;
-  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
-    content: src, senderId: myUid, type: 'sticker',
-    reactions: [], sentAt: serverTimestamp()
-  });
-  document.getElementById('stickersPanel').classList.remove('show');
-};
-
-// Init custom stickers on load
-setTimeout(renderCustomStickers, 1000);
-
+// ── MODALS ──
+window.showModal=(id)=>document.getElementById(id).classList.add('show');
+window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
+document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');}));
 </script>
 </body>
 </html>
