@@ -342,6 +342,12 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 <!-- ══ MAIN APP ══ -->
 <div id="appScreen">
 
+  <!-- Profile bar -->
+  <div id="profileBar" style="display:none;background:rgba(201,168,76,0.08);border-bottom:1px solid rgba(201,168,76,.1);padding:6px 16px;flex-shrink:0;align-items:center;gap:10px">
+    <div style="font-size:13px;color:var(--tm)">📧 حسابك: <span id="myEmailShow" style="color:var(--g);font-weight:600"></span></div>
+    <button onclick="document.getElementById('profileBar').style.display='none'" style="background:none;border:none;color:var(--tm);cursor:pointer;margin-right:auto">✕</button>
+  </div>
+
   <!-- Low net banner -->
   <div class="ln-bar" id="lnBar">
     <div class="lni" style="font-size:16px">📶</div>
@@ -369,6 +375,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
     <div class="top-actions">
       <button class="top-btn" id="lnBtn" onclick="toggleLowNet()" title="نت ضعيف">📶</button>
       <button class="top-btn" id="fightBtn" onclick="toggleFightMode()" title="مشاجرة">😤</button>
+      <button class="top-btn" onclick="showProfile()" title="حسابي">👤</button>
       <button class="top-btn" onclick="doLogout()" title="خروج">🚪</button>
     </div>
   </div>
@@ -416,16 +423,33 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
   <div class="panel on" id="panel-chat" style="overflow:hidden">
     <div class="msgs-area" id="msgsArea"></div>
     <div class="stickers-panel" id="stickersPanel">
-      <span class="sticker" onclick="sendSticker('🌹')">🌹</span>
-      <span class="sticker" onclick="sendSticker('💛')">💛</span>
-      <span class="sticker" onclick="sendSticker('😍')">😍</span>
-      <span class="sticker" onclick="sendSticker('🥰')">🥰</span>
-      <span class="sticker" onclick="sendSticker('💋')">💋</span>
-      <span class="sticker" onclick="sendSticker('✨')">✨</span>
-      <span class="sticker" onclick="sendSticker('🌙')">🌙</span>
-      <span class="sticker" onclick="sendSticker('💎')">💎</span>
-      <span class="sticker" onclick="sendSticker('🔥')">🔥</span>
-      <span class="sticker" onclick="sendSticker('🎉')">🎉</span>
+      <div style="width:100%;display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--tm)">الملصقات:</span>
+        <label style="padding:4px 10px;border-radius:20px;background:var(--gl);color:var(--g);font-size:11px;cursor:pointer;border:1px solid rgba(201,168,76,.3)">
+          📥 استيراد صور
+          <input type="file" id="stickerImport" accept="image/*,image/webp" multiple style="display:none" onchange="importStickers(this)">
+        </label>
+        <button onclick="document.getElementById('stickersPanel').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;margin-right:auto;font-size:16px">✕</button>
+      </div>
+      <div id="stickersList" style="display:flex;flex-wrap:wrap;gap:8px;width:100%">
+        <span class="sticker" onclick="sendSticker('🌹')">🌹</span>
+        <span class="sticker" onclick="sendSticker('💛')">💛</span>
+        <span class="sticker" onclick="sendSticker('😍')">😍</span>
+        <span class="sticker" onclick="sendSticker('🥰')">🥰</span>
+        <span class="sticker" onclick="sendSticker('💋')">💋</span>
+        <span class="sticker" onclick="sendSticker('✨')">✨</span>
+        <span class="sticker" onclick="sendSticker('🌙')">🌙</span>
+        <span class="sticker" onclick="sendSticker('💎')">💎</span>
+        <span class="sticker" onclick="sendSticker('🔥')">🔥</span>
+        <span class="sticker" onclick="sendSticker('🎉')">🎉</span>
+        <span class="sticker" onclick="sendSticker('💐')">💐</span>
+        <span class="sticker" onclick="sendSticker('🫶')">🫶</span>
+        <span class="sticker" onclick="sendSticker('😘')">😘</span>
+        <span class="sticker" onclick="sendSticker('🥺')">🥺</span>
+        <span class="sticker" onclick="sendSticker('💪')">💪</span>
+        <span class="sticker" onclick="sendSticker('🌺')">🌺</span>
+      </div>
+      <div id="customStickers" style="display:flex;flex-wrap:wrap;gap:8px;width:100%;margin-top:4px"></div>
     </div>
     <div class="input-area">
       <div class="input-row">
@@ -1023,7 +1047,7 @@ function renderMsg(id, data) {
   if (data.type === 'system') {
     const bub = document.createElement('div');
     bub.className = 'bubble system';
-    bub.textContent = data.content;
+    bub.textContent = String(data.content || '');
     area.appendChild(bub);
     return;
   }
@@ -1043,10 +1067,20 @@ function renderMsg(id, data) {
       };
     }
     msgWrap.appendChild(bub);
+  } else if (data.type === 'sticker' && data.content && data.content.startsWith('data:')) {
+    const bub = document.createElement('div');
+    bub.style.background = 'transparent';
+    bub.style.border = 'none';
+    bub.style.padding = '0';
+    const img = document.createElement('img');
+    img.src = data.content;
+    img.style.cssText = 'width:80px;height:80px;object-fit:contain;border-radius:10px';
+    bub.appendChild(img);
+    msgWrap.appendChild(bub);
   } else {
     const bub = document.createElement('div');
     bub.className = 'bubble ' + (isMe ? 'me' : 'her');
-    bub.textContent = data.content;
+    bub.textContent = String(data.content || '');
 
     // Long press to delete
     if (isMe) {
@@ -1695,6 +1729,62 @@ window.closeModal = (id) => { document.getElementById(id).classList.remove('show
 window.openMoodModal = () => { document.getElementById('moodModal').classList.add('show'); };
 
 window.addEventListener('resize', resizeCanvas);
+
+// ══ PROFILE ══
+window.showProfile = () => {
+  const bar = document.getElementById('profileBar');
+  const user = auth.currentUser;
+  if (user) {
+    document.getElementById('myEmailShow').textContent = user.email;
+    bar.style.display = 'flex';
+  }
+};
+
+// ══ STICKER IMPORT ══
+let customStickersList = JSON.parse(localStorage.getItem('customStickers') || '[]');
+
+function renderCustomStickers() {
+  const container = document.getElementById('customStickers');
+  if (!container) return;
+  container.innerHTML = customStickersList.map((src, i) => `
+    <div style="position:relative;display:inline-block">
+      <img src="${src}" style="width:48px;height:48px;object-fit:contain;cursor:pointer;border-radius:8px" onclick="sendStickerImg('${src}')">
+      <button onclick="removeSticker(${i})" style="position:absolute;top:-4px;right:-4px;background:#e05555;border:none;border-radius:50%;width:16px;height:16px;color:white;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0">×</button>
+    </div>
+  `).join('');
+}
+
+window.importStickers = (input) => {
+  const files = Array.from(input.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      customStickersList.push(e.target.result);
+      localStorage.setItem('customStickers', JSON.stringify(customStickersList));
+      renderCustomStickers();
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+};
+
+window.removeSticker = (i) => {
+  customStickersList.splice(i, 1);
+  localStorage.setItem('customStickers', JSON.stringify(customStickersList));
+  renderCustomStickers();
+};
+
+window.sendStickerImg = async (src) => {
+  if (!partnerId) return;
+  await addDoc(collection(db, 'chats', chatId(), 'messages'), {
+    content: src, senderId: myUid, type: 'sticker',
+    reactions: [], sentAt: serverTimestamp()
+  });
+  document.getElementById('stickersPanel').classList.remove('show');
+};
+
+// Init custom stickers on load
+setTimeout(renderCustomStickers, 1000);
 
 </script>
 </body>
