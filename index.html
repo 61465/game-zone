@@ -274,6 +274,20 @@ textarea.field{resize:none}
 .mcx{background:var(--d3);border:1px solid rgba(201,168,76,.1);color:var(--tm);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px}
 .msv{background:linear-gradient(135deg,var(--g),#9a6e2a);border:none;color:var(--d);padding:8px 16px;border-radius:9px;cursor:pointer;font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700}
 
+/* RECORDER */
+.rec-active{background:rgba(224,85,85,.2)!important;border-color:#e05555!important;color:#ff8080!important;animation:rpulse 1s infinite}
+@keyframes rpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+.voice-bub{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:17px;min-width:180px}
+.play-btn{width:32px;height:32px;border-radius:50%;background:var(--g);border:none;cursor:pointer;color:var(--d);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.waveform{display:flex;align-items:center;gap:2px;height:24px;flex:1}
+.wbar{width:3px;border-radius:2px;background:rgba(201,168,76,.35);flex-shrink:0}
+/* LOTTERY */
+.lottery-paper{background:var(--d2);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:5px 10px;font-size:12px;display:inline-flex;align-items:center;gap:5px;cursor:default}
+.lottery-paper-del{background:none;border:none;color:var(--tm);cursor:pointer;font-size:12px;padding:0 2px}
+.lottery-paper-del:hover{color:#ff6b6b}
+@keyframes shake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
+.lottery-shake{animation:shake 0.15s 6}
+
 /* NICKNAME */
 .nk-section{background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;margin-top:4px}
 .nk-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -400,6 +414,7 @@ textarea.field{resize:none}
     <button class="tab" onclick="swTab('todo')">📋 أهداف</button>
     <button class="tab" onclick="swTab('draw')">🎨 رسم</button>
     <button class="tab" onclick="swTab('nick')">🏷️ كنيات</button>
+    <button class="tab" onclick="swTab('lottery')">🎲 القرعة</button>
     <button class="tab" onclick="swTab('memories')">✨ ذكريات</button>
     <button class="tab" onclick="swTab('themes')">🎨 سمات</button>
   </div>
@@ -411,8 +426,8 @@ textarea.field{resize:none}
       <div class="sp-header">
         <span class="sp-label">الملصقات</span>
         <label class="sp-import">
-          📥 استيراد صور
-          <input type="file" id="stickerFile" accept="image/*" multiple style="display:none" onchange="importStickers(this)">
+          📥 استيراد صور/ستيكر
+          <input type="file" id="stickerFile" accept="image/*,image/webp,.webp" multiple style="display:none" onchange="importStickers(this)">
         </label>
         <button onclick="document.getElementById('stickerPanel').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;margin-right:auto">✕</button>
       </div>
@@ -440,6 +455,7 @@ textarea.field{resize:none}
       <div class="irow">
         <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show')">😊</button>
         <textarea class="minput" id="msgInput" placeholder="اكتب رسالتك..." rows="1" onkeydown="onKey(event)" oninput="aR(this)"></textarea>
+        <button class="ibtn" id="recBtn" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()" title="اضغط مطولاً للتسجيل" style="flex-shrink:0">🎙️</button>
         <button class="sbtn" onclick="sendMsg()">➤</button>
       </div>
       <div class="hints">
@@ -579,7 +595,17 @@ textarea.field{resize:none}
   <div class="panel" id="panel-disc">
     <div class="pi">
       <div class="ptitle">🗣️ وقت النقاش</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px" id="dMoods">
+
+      <!-- User topic -->
+      <div class="card" style="margin-bottom:4px">
+        <div class="ctitle">✍️ اكتب موضوع النقاش</div>
+        <textarea class="field" id="discTopic" placeholder="اكتب عن ماذا تريد أن تتناقشا... مثل: خطط الإجازة القادمة، أو تربية الأطفال، أو حلم مشترك..." rows="3" style="margin-bottom:8px"></textarea>
+        <button class="pbtn" onclick="sendDiscTopic()">📤 أرسل موضوع النقاش</button>
+      </div>
+
+      <!-- Suggested questions -->
+      <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:8px">أو اختر من الأسئلة المقترحة:</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px" id="dMoods">
         <button class="pill on" data-dm="romantic" onclick="setDM(this)">💕 رومانسي</button>
         <button class="pill" data-dm="fun" onclick="setDM(this)">😂 مرح</button>
         <button class="pill" data-dm="deep" onclick="setDM(this)">🌙 عميق</button>
@@ -622,9 +648,14 @@ textarea.field{resize:none}
       <div class="ptitle">📋 أهدافنا</div>
       <div class="anniv">
         <div style="font-size:34px">💍</div>
-        <div class="adays" id="aD">47</div>
-        <div class="albl">يوماً على عيد زواجكما</div>
-        <div class="aev">١ مايو ٢٠٢٦ · الذكرى الثالثة</div>
+        <div class="adays" id="aD">--</div>
+        <div class="albl" id="aDLbl">أدخل تاريخ الزواج</div>
+        <div class="aev" id="aDEv" style="margin-top:8px"></div>
+        <div style="display:flex;gap:8px;margin-top:12px;justify-content:center;align-items:center;flex-wrap:wrap">
+          <input type="date" class="field" id="annivInput" style="max-width:180px;text-align:center;font-size:13px" placeholder="تاريخ الزواج">
+          <button onclick="saveAnniv()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--g);color:var(--d);font-family:'Tajawal',sans-serif;font-size:13px;font-weight:700;cursor:pointer">💾 حفظ</button>
+        </div>
+        <div style="font-size:11px;color:var(--tm);margin-top:4px" id="annivDateDisp"></div>
       </div>
       <div style="font-size:13px;font-weight:600;color:var(--tm);margin-bottom:8px">🛒 القائمة المشتركة</div>
       <div id="todoList"></div>
@@ -709,6 +740,41 @@ textarea.field{resize:none}
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ LOTTERY ══ -->
+  <div class="panel" id="panel-lottery">
+    <div class="pi">
+      <div class="ptitle">🎲 صندوق القرعة</div>
+      <div style="font-size:13px;color:var(--tm);margin-bottom:12px">اكتب الاقتراحات، ثم اضغط الصندوق ليختار لكما عشوائياً!</div>
+
+      <!-- Box visual -->
+      <div id="lotteryBox" onclick="drawLottery()" style="cursor:pointer;background:linear-gradient(135deg,var(--d3),var(--d4));border:2px solid var(--g);border-radius:20px;padding:28px 20px;text-align:center;margin-bottom:14px;transition:all .3s;position:relative;overflow:hidden">
+        <div style="font-size:52px;margin-bottom:8px" id="lBoxIcon">🎁</div>
+        <div style="font-size:15px;font-weight:700;color:var(--g)" id="lBoxTitle">اضغط للسحب!</div>
+        <div style="font-size:12px;color:var(--tm);margin-top:4px" id="lBoxSub">سيختار واحداً من الأوراق عشوائياً</div>
+        <div id="lotteryPapers" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="lotteryResult" style="display:none;background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(224,122,142,.1));border:2px solid var(--g);border-radius:16px;padding:18px;text-align:center;margin-bottom:14px;animation:popIn .4s ease">
+        <div style="font-size:13px;color:var(--tm);margin-bottom:6px">🎉 الاختيار هو...</div>
+        <div style="font-size:22px;font-weight:700;color:var(--g)" id="lResultText"></div>
+        <button onclick="clearLotteryResult()" style="margin-top:10px;padding:6px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.3);background:transparent;color:var(--tm);font-family:'Tajawal',sans-serif;font-size:12px;cursor:pointer">إعادة السحب 🔄</button>
+      </div>
+
+      <!-- Add paper -->
+      <div class="card">
+        <div class="ctitle">➕ أضف ورقة للصندوق</div>
+        <div style="display:flex;gap:8px">
+          <input class="field" id="lotteryInput" placeholder="اكتب الاقتراح هنا..." style="flex:1" onkeydown="if(event.key==='Enter')addLotteryItem()">
+          <button onclick="addLotteryItem()" style="padding:10px 16px;border-radius:11px;border:none;background:var(--g);color:var(--d);font-family:'Tajawal',sans-serif;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">+</button>
+        </div>
+      </div>
+
+      <!-- Items list -->
+      <div id="lotteryItemsList" style="display:flex;flex-direction:column;gap:7px;margin-top:4px"></div>
     </div>
   </div>
 
@@ -1025,11 +1091,18 @@ onAuthStateChanged(auth, async (user) => {
       if(ps.exists()&&ps.data().mood){hrMood=ps.data().mood;updateMoodUI();}
     });
 
-    // Listen shared (fight)
+    // Listen shared (fight + theme + anniversary + lottery)
     const unsub3=onSnapshot(doc(db,'shared',cid()),(ss)=>{
       if(!ss.exists())return;
       const sd=ss.data();
       if(sd.fightMode!==undefined){isFight=sd.fightMode;updateFightUI();}
+      if(sd.theme && sd.theme!==curTheme){window.applyTheme(sd.theme,true);}
+      if(sd.anniversary){
+        document.getElementById('annivDateDisp').textContent=sd.anniversary;
+        calcAnniv(sd.anniversary);
+      }
+      if(sd.lotteryItems!==undefined){renderLotteryItems(sd.lotteryItems||[]);}
+      if(sd.lotteryResult!==undefined && sd.lotteryResult){showLotteryResult(sd.lotteryResult);}
     });
 
     // Listen messages
@@ -1059,7 +1132,7 @@ window.swTab = (n) => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const p=document.getElementById('panel-'+n);
   if(p){p.style.display='flex';p.classList.add('on');}
-  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,memories:10,themes:11};
+  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12};
   const tabs=document.querySelectorAll('.tab');
   if(tabs[map[n]])tabs[map[n]].classList.add('on');
   if(n==='draw')setTimeout(resizeCanvas,100);
@@ -1126,6 +1199,36 @@ function renderMsg(id, data) {
     if(!locked&&!data.isOpened){
       bub.onclick=()=>updateDoc(doc(db,'chats',cid(),'messages',id),{isOpened:true});
     }
+    wrap.appendChild(bub);
+  } else if(data.type==='voice') {
+    const bub=document.createElement('div');
+    bub.className='voice-bub';
+    const audio=document.createElement('audio');
+    audio.src=content;
+    audio.preload='metadata';
+    const playBtn=document.createElement('button');
+    playBtn.className='play-btn';
+    playBtn.textContent='▶';
+    playBtn.onclick=()=>{
+      if(audio.paused){audio.play();playBtn.textContent='⏸';}
+      else{audio.pause();playBtn.textContent='▶';}
+    };
+    audio.onended=()=>playBtn.textContent='▶';
+    const wave=document.createElement('div');
+    wave.className='waveform';
+    [10,16,8,20,12,18,6,14,18,10,16,8,20,14,10].forEach(h=>{
+      const b=document.createElement('div');
+      b.className='wbar';b.style.height=h+'px';
+      wave.appendChild(b);
+    });
+    const dur=document.createElement('span');
+    dur.style.cssText='font-size:11px;color:var(--tm)';
+    dur.textContent='🎙️';
+    audio.onloadedmetadata=()=>{
+      const s=Math.floor(audio.duration);
+      dur.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+    };
+    bub.appendChild(playBtn); bub.appendChild(wave); bub.appendChild(dur);
     wrap.appendChild(bub);
   } else if(data.type==='img_sticker') {
     const bub=document.createElement('div');
@@ -1548,7 +1651,7 @@ function renderThemes() {
       <div class="thdesc">${t.desc}</div>
     </div>`).join('');
 }
-window.applyTheme=(id)=>{
+window.applyTheme=async(id,skipSave)=>{
   if(isFight) return;
   curTheme=id;
   const t=themes.find(x=>x.id===id); if(!t) return;
@@ -1559,6 +1662,9 @@ window.applyTheme=(id)=>{
   document.body.style.setProperty('--d3',t.d3);
   document.body.style.setProperty('--d4',t.d4);
   renderThemes();
+  if(!skipSave && pId) {
+    await setDoc(doc(db,'shared',cid()),{theme:id},{merge:true});
+  }
 };
 function applyTheme(id){window.applyTheme(id);}
 
@@ -1622,6 +1728,154 @@ window.dSend=async()=>{
   dClear(); swTab('chat');
 };
 window.addEventListener('resize',resizeCanvas);
+
+// ── ANNIVERSARY ──
+window.saveAnniv = async () => {
+  const v = document.getElementById('annivInput').value;
+  if(!v || !pId) return;
+  await setDoc(doc(db,'shared',cid()),{anniversary:v},{merge:true});
+};
+function calcAnniv(dateStr) {
+  if(!dateStr) return;
+  const wed = new Date(dateStr);
+  const now = new Date();
+  const diff = Math.ceil((wed - now) / 86400000);
+  const el = document.getElementById('aD');
+  const lbl = document.getElementById('aDLbl');
+  const ev = document.getElementById('aDEv');
+  if(diff > 0) {
+    el.textContent = diff;
+    lbl.textContent = 'يوم حتى عيد الزواج 💍';
+  } else if(diff === 0) {
+    el.textContent = '🎉';
+    lbl.textContent = 'عيد الزواج اليوم! 💍';
+  } else {
+    el.textContent = Math.abs(diff);
+    lbl.textContent = 'يوم منذ الزواج 💍';
+  }
+  ev.textContent = '📅 ' + wed.toLocaleDateString('ar');
+  document.getElementById('annivDateDisp').textContent = dateStr;
+  document.getElementById('annivInput').value = dateStr;
+}
+
+// ── DISCUSSION TOPIC ──
+window.sendDiscTopic = async () => {
+  const topic = (document.getElementById('discTopic').value||'').trim();
+  if(!topic || !pId) return;
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:'🗣️ موضوع النقاش الجديد:
+' + topic,
+    senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+  });
+  document.getElementById('discTopic').value = '';
+  swTab('chat');
+};
+
+// ── LOTTERY ──
+let lotteryItems = [];
+window.addLotteryItem = async () => {
+  const val = (document.getElementById('lotteryInput').value||'').trim();
+  if(!val || !pId) return;
+  lotteryItems.push(val);
+  document.getElementById('lotteryInput').value = '';
+  await setDoc(doc(db,'shared',cid()),{lotteryItems,lotteryResult:''},{merge:true});
+};
+window.delLotteryItem = async (i) => {
+  lotteryItems.splice(i,1);
+  await setDoc(doc(db,'shared',cid()),{lotteryItems},{merge:true});
+};
+window.drawLottery = async () => {
+  if(lotteryItems.length === 0) {
+    const box = document.getElementById('lotteryBox');
+    box.classList.add('lottery-shake');
+    document.getElementById('lBoxTitle').textContent = 'أضف أوراقاً أولاً!';
+    setTimeout(()=>{box.classList.remove('lottery-shake');document.getElementById('lBoxTitle').textContent='اضغط للسحب!';},1500);
+    return;
+  }
+  // Animate
+  const box = document.getElementById('lotteryBox');
+  box.classList.add('lottery-shake');
+  document.getElementById('lBoxIcon').textContent = '🎲';
+  document.getElementById('lBoxTitle').textContent = 'جاري السحب...';
+  setTimeout(async()=>{
+    box.classList.remove('lottery-shake');
+    const result = lotteryItems[Math.floor(Math.random()*lotteryItems.length)];
+    document.getElementById('lBoxIcon').textContent = '🎁';
+    document.getElementById('lBoxTitle').textContent = 'اضغط للسحب!';
+    await setDoc(doc(db,'shared',cid()),{lotteryResult:result},{merge:true});
+  }, 900);
+};
+window.clearLotteryResult = async () => {
+  await setDoc(doc(db,'shared',cid()),{lotteryResult:''},{merge:true});
+};
+function renderLotteryItems(items) {
+  lotteryItems = items;
+  // Papers in box
+  document.getElementById('lotteryPapers').innerHTML = items.map((_,i)=>
+    `<div style="width:28px;height:36px;background:#f0ece2;border-radius:4px;transform:rotate(${(Math.random()*20-10).toFixed(1)}deg);opacity:.7;box-shadow:1px 2px 4px rgba(0,0,0,.4)"></div>`
+  ).join('');
+  document.getElementById('lBoxSub').textContent = items.length > 0
+    ? `${items.length} ورقة في الصندوق`
+    : 'سيختار واحداً من الأوراق عشوائياً';
+  // List
+  document.getElementById('lotteryItemsList').innerHTML = items.map((it,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:11px">
+      <div style="font-size:14px;flex:1">📄 ${it}</div>
+      <button onclick="delLotteryItem(${i})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)">🗑️</button>
+    </div>`).join('');
+}
+function showLotteryResult(result) {
+  const el = document.getElementById('lotteryResult');
+  if(result) {
+    document.getElementById('lResultText').textContent = result;
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ── VOICE RECORDER ──
+let mediaRec = null, audioChunks = [], isRec = false;
+
+window.startRec = async () => {
+  if(isRec) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRec = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRec.ondataavailable = e => audioChunks.push(e.data);
+    mediaRec.onstop = async () => {
+      const blob = new Blob(audioChunks, {type:'audio/webm'});
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const dataUrl = e.target.result;
+        if(pId) {
+          await addDoc(collection(db,'chats',cid(),'messages'),{
+            content:dataUrl, senderId:uid, type:'voice',
+            reactions:[], sentAt:serverTimestamp()
+          });
+        }
+      };
+      reader.readAsDataURL(blob);
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    mediaRec.start();
+    isRec = true;
+    const btn = document.getElementById('recBtn');
+    btn.classList.add('rec-active');
+    btn.textContent = '⏹️';
+  } catch(e) {
+    alert('يرجى السماح بالوصول للميكروفون');
+  }
+};
+
+window.stopRec = () => {
+  if(!isRec || !mediaRec) return;
+  mediaRec.stop(); isRec = false;
+  const btn = document.getElementById('recBtn');
+  btn.classList.remove('rec-active');
+  btn.textContent = '🎙️';
+};
 
 // ── MEMORIES ──
 let memEmoji = '🌅';
