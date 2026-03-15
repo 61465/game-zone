@@ -1,41 +1,48 @@
-plugins {
-    id "com.android.application"
-    id "kotlin-android"
-    id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"
-}
 
-android {
-    namespace "com.example.alamna"
-    compileSdk 35
-    ndkVersion "27.0.12077973"
+FAILURE: Build failed with an exception.
 
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
-    }
+* Where:
+Build file '/Users/builder/clone/android/build.gradle' line: 25
 
-    kotlinOptions {
-        jvmTarget = "11"
-    }
+* What went wrong:
+A problem occurred evaluating root project 'android'.
+> A problem occurred configuring project ':app'.
+   > Removing unused resources requires unused code shrinking to be turned on. See http://d.android.com/r/tools/shrink-resources.html for more information.
 
-    defaultConfig {
-        applicationId "com.example.alamna"
-        minSdk 21
-        targetSdk 35
-        versionCode 1
-        versionName "1.0.0"
-    }
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
 
-    buildTypes {
-        debug { minifyEnabled false }
-        release {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-        }
-    }
-}
+BUILD FAILED in 1m 11s
+Running Gradle task 'assembleDebug'...                             72.2s
+Gradle task assembleDebug failed with exit code 1
 
-flutter {
-    source "../.."
-}
+
+Build failed :|
+Step 4 script `Build APK` exited with status code 1
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file '/Users/builder/clone/android/build.gradle' line: 25
+
+* What went wrong:
+A problem occurred evaluating root project 'android'.
+> A problem occurred configuring project ':app'.
+   > Removing unused resources requires unused code shrinking to be turned on. See http://d.android.com/r/tools/shrink-resources.html for more information.
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 1m 11s
+Running Gradle task 'assembleDebug'...                             72.2s
+Gradle task assembleDebug failed with exit code 1
+
+
+Build failed :|
+Step 4 script `Build APK` exited with status code 1
