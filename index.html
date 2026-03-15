@@ -1195,7 +1195,13 @@ function renderMsg(id, data) {
     const bub=document.createElement('div');
     bub.className='bub ltr';
     const locked=data.openAt && !data.isOpened && data.openAt.toDate()>new Date();
-    bub.innerHTML=`<div style="font-size:14px">${data.isOpened?'💌':'🔒'}</div><div class="ltr-title">${data.letterTitle||'رسالة مؤجلة 💌'}</div><div class="ltr-time">${locked?'تُفتح: '+fmtD(data.openAt)+' ⏰':''}</div><div class="ltr-body${data.isOpened?' open':''}">${content}</div>`;
+    const lockIcon = data.isOpened ? '💌' : '🔒';
+    const ltrTime = locked ? 'تُفتح: '+fmtD(data.openAt)+' ⏰' : '';
+    const openCls = data.isOpened ? ' open' : '';
+    bub.innerHTML = '<div style="font-size:14px">'+lockIcon+'</div>'
+      + '<div class="ltr-title">'+(data.letterTitle||'رسالة مؤجلة 💌')+'</div>'
+      + '<div class="ltr-time">'+ltrTime+'</div>'
+      + '<div class="ltr-body'+openCls+'">'+content+'</div>';
     if(!locked&&!data.isOpened){
       bub.onclick=()=>updateDoc(doc(db,'chats',cid(),'messages',id),{isOpened:true});
     }
@@ -1247,13 +1253,17 @@ function renderMsg(id, data) {
     if(isMe) {
       const menu=document.createElement('div');
       menu.className='msg-menu';
-      menu.innerHTML=`
-        <button class="mmbtn" onclick="delMsg('${id}')">🗑️</button>
-        <button class="mmbtn" onclick="addRxn('${id}','❤️')">❤️</button>
-        <button class="mmbtn" onclick="addRxn('${id}','🌹')">🌹</button>
-        <button class="mmbtn" onclick="addRxn('${id}','😂')">😂</button>`;
-      wrap.appendChild(menu);
-    }
+      ['🗑️','❤️','🌹','😂'].forEach(function(emoji,idx){
+        const btn=document.createElement('button');
+        btn.className='mmbtn';
+        btn.textContent=emoji;
+        btn.onclick=function(){
+          if(idx===0) delMsg(id);
+          else addRxn(id,emoji);
+        };
+        menu.appendChild(btn);
+      });
+      wrap.appendChild(menu);    }
     wrap.appendChild(bub);
   }
 
@@ -1323,11 +1333,19 @@ let customStk = JSON.parse(localStorage.getItem('cstk')||'[]');
 function renderCustomStickers() {
   const grid=document.getElementById('customSGrid');
   if(!grid) return;
-  grid.innerHTML=customStk.map((src,i)=>`
-    <div class="stk-wrap">
-      <img class="stk-img" src="${src}" onclick="sendCustomStk('${i}')">
-      <button class="stk-del" onclick="delCustomStk(${i})">×</button>
-    </div>`).join('');
+  grid.innerHTML='';
+  customStk.forEach(function(src,i){
+    const wrap=document.createElement('div');
+    wrap.className='stk-wrap';
+    const img=document.createElement('img');
+    img.className='stk-img'; img.src=src;
+    img.onclick=function(){sendCustomStk(i);};
+    const del=document.createElement('button');
+    del.className='stk-del'; del.textContent='×';
+    del.onclick=function(){delCustomStk(i);};
+    wrap.appendChild(img); wrap.appendChild(del);
+    grid.appendChild(wrap);
+  });
 }
 
 window.importStickers = (inp) => {
@@ -1481,19 +1499,21 @@ function renderIdeas(all) {
   document.getElementById('iCount').textContent=all.length+' أفكار';
   const cc={travel:'#4fc3f7',home:'#81c784',date:'#f48fb1',dream:'#ce93d8',other:'#c9a84c'};
   const cn={travel:'✈️ سفر',home:'🏠 البيت',date:'💕 لقاء',dream:'🌙 حلم',other:'💛 أخرى'};
-  document.getElementById('ideasList').innerHTML=flt.map(i=>`
-    <div class="icard">
-      <div class="ibar ${i.category||'other'}"></div>
-      <div class="ititle">${i.title||''}</div>
-      <div class="idesc">${i.description||''}</div>
-      <div class="ifooter">
-        <span class="itag" style="color:${cc[i.category]||'#c9a84c'};border-color:${cc[i.category]||'#c9a84c'}40;background:${cc[i.category]||'#c9a84c'}15">${cn[i.category]||'أخرى'}</span>
-        <span class="iwho">💬 ${i.byName||'أنت'}</span>
-        <button class="ilbtn" onclick="likeI('${i.id}',${(i.likedBy||[]).includes(uid)})">${(i.likedBy||[]).includes(uid)?'❤️':'🤍'}</button>
-        <span style="font-size:11px;color:var(--tm)">${i.likes||0}</span>
-        <button class="idbtn" onclick="delI('${i.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
+  document.getElementById('ideasList').innerHTML=flt.map(i=>{
+    const col=cc[i.category]||'#c9a84c';
+    const liked=(i.likedBy||[]).includes(uid);
+    return '<div class="icard">'
+      +'<div class="ibar '+(i.category||'other')+'"></div>'
+      +'<div class="ititle">'+(i.title||'')+'</div>'
+      +'<div class="idesc">'+(i.description||'')+'</div>'
+      +'<div class="ifooter">'
+      +'<span class="itag" style="color:'+col+';border-color:'+col+'40;background:'+col+'15">'+(cn[i.category]||'أخرى')+'</span>'
+      +'<span class="iwho">💬 '+(i.byName||'أنت')+'</span>'
+      +'<button class="ilbtn" onclick="likeI(''+i.id+'','+liked+')">'+( liked?'❤️':'🤍')+'</button>'
+      +'<span style="font-size:11px;color:var(--tm)">'+(i.likes||0)+'</span>'
+      +'<button class="idbtn" onclick="delI(''+i.id+'')">🗑️</button>'
+      +'</div></div>';
+  }).join('');
 }
 window.fIdeas=(btn)=>{document.querySelectorAll('#iFilters .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curIF=btn.dataset.f;};
 window.selCat=(btn)=>{document.querySelectorAll('#iCats .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');selIdeaCat=btn.dataset.cat;};
@@ -1522,13 +1542,14 @@ function listenTodos() {
   });
 }
 function renderTodos(all) {
-  document.getElementById('todoList').innerHTML=all.map(t=>`
-    <div class="titem${t.isDone?' done':''}" onclick="togT('${t.id}',${t.isDone})">
-      <div class="tcheck">${t.isDone?'✓':''}</div>
-      <div class="ttxt">${t.title||''}</div>
-      <span class="twho">${t.byName||'أنت'}</span>
-      <button class="idbtn" onclick="event.stopPropagation();delT('${t.id}')">🗑️</button>
-    </div>`).join('');
+  document.getElementById('todoList').innerHTML=all.map(t=>{
+    return '<div class="titem'+(t.isDone?' done':'')+'" onclick="togT(''+t.id+'','+t.isDone+')">'
+      +'<div class="tcheck">'+(t.isDone?'✓':'')+'</div>'
+      +'<div class="ttxt">'+(t.title||'')+'</div>'
+      +'<span class="twho">'+(t.byName||'أنت')+'</span>'
+      +'<button class="idbtn" onclick="event.stopPropagation();delT(''+t.id+'')">🗑️</button>'
+      +'</div>';
+  }).join('');
 }
 window.addTodo=async()=>{
   const t=(document.getElementById('newTodo').value||'').trim();
@@ -1581,17 +1602,18 @@ function renderGames() {
   const cc={romantic:'#f48fb1',fun:'#ffb347',mind:'#ce93d8',adventure:'#4fc3f7'};
   const cn={romantic:'💕 رومانسي',fun:'😂 مرح',mind:'🧠 تحدٍّ',adventure:'🌟 مغامرة'};
   const flt=curGF==='all'?games:games.filter(g=>g.cat===curGF);
-  document.getElementById('gamesList').innerHTML=flt.map(g=>`
-    <div class="gcard">
-      <div class="gbar ${g.cat}"></div>
-      <div class="gicon">${g.icon}</div>
-      <div class="gtitle">${g.title}</div>
-      <div class="gdesc">${g.desc}</div>
-      <div class="gfoot">
-        <span class="gtag" style="color:${cc[g.cat]};border-color:${cc[g.cat]}40;background:${cc[g.cat]}15">${cn[g.cat]}</span>
-        <button class="gplay" onclick="startG('${g.id}')">▶ العب</button>
-      </div>
-    </div>`).join('');
+  document.getElementById('gamesList').innerHTML=flt.map(g=>{
+    const col=cc[g.cat];
+    return '<div class="gcard">'
+      +'<div class="gbar '+g.cat+'"></div>'
+      +'<div class="gicon">'+g.icon+'</div>'
+      +'<div class="gtitle">'+g.title+'</div>'
+      +'<div class="gdesc">'+g.desc+'</div>'
+      +'<div class="gfoot">'
+      +'<span class="gtag" style="color:'+col+';border-color:'+col+'40;background:'+col+'15">'+cn[g.cat]+'</span>'
+      +'<button class="gplay" onclick="startG(''+g.id+'')">▶ العب</button>'
+      +'</div></div>';
+  }).join('');
 }
 window.fGames=(btn)=>{document.querySelectorAll('#gFilters .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curGF=btn.dataset.gf;renderGames();};
 window.startG=(id)=>{
@@ -1601,10 +1623,10 @@ window.startG=(id)=>{
   document.getElementById('agC').textContent=activeGame.steps[0];
   document.getElementById('agS').style.display='flex';
   document.getElementById('sc1').textContent='0'; document.getElementById('sc2').textContent='0';
-  document.getElementById('agB').innerHTML=`
-    <button class="agbtn p" onclick="addGS(1)">✅ نقطة لي</button>
-    <button class="agbtn" onclick="addGS(2)">✅ نقطة لها</button>
-    <button class="agbtn" onclick="nextGS()">▶ التالي</button>`;
+  document.getElementById('agB').innerHTML=''
+    +'<button class="agbtn p" onclick="addGS(1)">✅ نقطة لي</button>'
+    +'<button class="agbtn" onclick="addGS(2)">✅ نقطة لها</button>'
+    +'<button class="agbtn" onclick="nextGS()">▶ التالي</button>';
   document.getElementById('aGame').style.display='block';
   document.getElementById('aGame').scrollIntoView({behavior:'smooth',block:'nearest'});
 };
@@ -1615,8 +1637,8 @@ window.nextGS=()=>{
   else{
     const hn=hrNick||pName;
     const w=gs1>gs2?'فزت أنت! 🥳':gs2>gs1?`فازت ${hn}! 🥳`:'تعادل! 🤝';
-    document.getElementById('agC').innerHTML=`<div style="text-align:center"><div style="font-size:40px">🏆</div><div style="font-size:16px;font-weight:700;color:var(--g);margin-top:8px">اللعبة انتهت!</div><div style="font-size:14px;margin-top:4px">${w}</div></div>`;
-    document.getElementById('agB').innerHTML=`<button class="agbtn p" onclick="closeGame()">إنهاء</button>`;
+    document.getElementById('agC').innerHTML='<div style="text-align:center"><div style="font-size:40px">🏆</div><div style="font-size:16px;font-weight:700;color:var(--g);margin-top:8px">اللعبة انتهت!</div><div style="font-size:14px;margin-top:4px">'+w+'</div></div>';
+    document.getElementById('agB').innerHTML='<button class="agbtn p" onclick="closeGame()">إنهاء</button>';
   }
 };
 window.closeGame=()=>{document.getElementById('aGame').style.display='none';activeGame=null;};
@@ -1643,13 +1665,21 @@ const themes=[
   {id:'dusk',     name:'غسق الليل',    desc:'بنفسجي وأزرق ليلي',       emoji:'🌆', bg:'#07050f',acc:'#9b8fd4',d:'#07050f',d2:'#0e0b1c',d3:'#151228',d4:'#1c1934'},
 ];
 function renderThemes() {
-  document.getElementById('thGrid').innerHTML=themes.map(t=>`
-    <div class="thcard${curTheme===t.id?' sel':''}" onclick="applyTheme('${t.id}')" style="background:${t.bg};border-color:${curTheme===t.id?t.acc:'rgba(255,255,255,0.07)'}">
-      <div class="thbdg">✓ مفعّل</div>
-      <div class="thorb" style="background:${t.acc}22;color:${t.acc}">${t.emoji}</div>
-      <div class="thname" style="color:${t.acc}">${t.name}</div>
-      <div class="thdesc">${t.desc}</div>
-    </div>`).join('');
+  const thEl=document.getElementById('thGrid');
+  thEl.innerHTML='';
+  themes.forEach(function(t){
+    const sel=curTheme===t.id;
+    const div=document.createElement('div');
+    div.className='thcard'+(sel?' sel':'');
+    div.style.background=t.bg;
+    div.style.borderColor=sel?t.acc:'rgba(255,255,255,0.07)';
+    div.innerHTML='<div class="thbdg">✓ مفعّل</div>'
+      +'<div class="thorb" style="background:'+t.acc+'22;color:'+t.acc+'">'+t.emoji+'</div>'
+      +'<div class="thname" style="color:'+t.acc+'">'+t.name+'</div>'
+      +'<div class="thdesc">'+t.desc+'</div>';
+    div.onclick=function(){window.applyTheme(t.id);};
+    thEl.appendChild(div);
+  });
 }
 window.applyTheme=async(id,skipSave)=>{
   if(isFight) return;
@@ -1681,7 +1711,14 @@ let dStrokes=[],dRedo=[],dCurStroke=null,dDrawing=false,dEraser=false,dColor='#c
 const dColors=['#c9a84c','#e07a8e','#4fc3f7','#81c784','#ce93d8','#ffb347','#ff6b6b','#f0ece2'];
 function initDraw(){
   const row=document.getElementById('swRow');
-  row.innerHTML=dColors.map(c=>`<div class="sw${c===dColor?' sel':''}" style="background:${c}" onclick="dSelColor('${c}',this)"></div>`).join('');
+  row.innerHTML='';
+  dColors.forEach(function(col){
+    const sw=document.createElement('div');
+    sw.className='sw'+(col===dColor?' sel':'');
+    sw.style.background=col;
+    sw.onclick=function(){dSelColor(col,sw);};
+    row.appendChild(sw);
+  });
   dUpdPrev(); setTimeout(resizeCanvas,200);
 }
 window.dSelColor=(c,el)=>{dColor=c;dEraser=false;document.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');document.getElementById('dErase').classList.remove('on');dUpdPrev();};
@@ -1739,23 +1776,65 @@ function calcAnniv(dateStr) {
   if(!dateStr) return;
   const wed = new Date(dateStr);
   const now = new Date();
-  const diff = Math.ceil((wed - now) / 86400000);
   const el = document.getElementById('aD');
   const lbl = document.getElementById('aDLbl');
   const ev = document.getElementById('aDEv');
-  if(diff > 0) {
-    el.textContent = diff;
-    lbl.textContent = 'يوم حتى عيد الزواج 💍';
-  } else if(diff === 0) {
-    el.textContent = '🎉';
-    lbl.textContent = 'عيد الزواج اليوم! 💍';
-  } else {
-    el.textContent = Math.abs(diff);
-    lbl.textContent = 'يوم منذ الزواج 💍';
-  }
-  ev.textContent = '📅 ' + wed.toLocaleDateString('ar');
   document.getElementById('annivDateDisp').textContent = dateStr;
   document.getElementById('annivInput').value = dateStr;
+
+  if(wed > now) {
+    // Future wedding
+    const diff = Math.ceil((wed - now) / 86400000);
+    el.textContent = diff;
+    lbl.textContent = 'يوم حتى الزواج 💍';
+    ev.textContent = '📅 ' + wed.toLocaleDateString('ar-SA');
+    return;
+  }
+
+  // ── Calculate total days together ──
+  const totalMs = now - wed;
+  const totalDays = Math.floor(totalMs / 86400000);
+
+  // ── Calculate years + remaining months + days ──
+  let years = now.getFullYear() - wed.getFullYear();
+  let months = now.getMonth() - wed.getMonth();
+  let days = now.getDate() - wed.getDate();
+
+  if(days < 0) {
+    months--;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if(months < 0) {
+    years--;
+    months += 12;
+  }
+
+  // ── Next anniversary ──
+  const nextAnniv = new Date(now.getFullYear(), wed.getMonth(), wed.getDate());
+  if(nextAnniv <= now) nextAnniv.setFullYear(now.getFullYear() + 1);
+  const daysToAnniv = Math.ceil((nextAnniv - now) / 86400000);
+  const nextYr = nextAnniv.getFullYear() - wed.getFullYear();
+
+  // ── Build display ──
+  el.textContent = totalDays.toLocaleString('ar-SA');
+  lbl.textContent = 'يوم معاً 💞';
+
+  let detailParts = [];
+  if(years > 0) detailParts.push(years + ' سنة');
+  if(months > 0) detailParts.push(months + ' شهر');
+  if(days > 0 || detailParts.length === 0) detailParts.push(days + ' يوم');
+
+  ev.innerHTML =
+    '<div style="font-size:13px;color:var(--tx);font-weight:600;margin-bottom:4px">' +
+      '🎊 ' + detailParts.join(' و ') +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--tm)">' +
+      '💍 الذكرى ' + nextYr + ' بعد ' + daysToAnniv + ' يوم' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--tm);margin-top:2px">' +
+      '📅 من ' + wed.toLocaleDateString('ar-SA') +
+    '</div>';
 }
 
 // ── DISCUSSION TOPIC ──
@@ -1799,7 +1878,8 @@ window.drawLottery = async () => {
   document.getElementById('lBoxTitle').textContent = 'جاري السحب...';
   setTimeout(async()=>{
     box.classList.remove('lottery-shake');
-    const result = lotteryItems[Math.floor(Math.random()*lotteryItems.length)];
+    const rIdx = Math.floor(Math.random()*lotteryItems.length);
+    const result = lotteryItems[rIdx];
     document.getElementById('lBoxIcon').textContent = '🎁';
     document.getElementById('lBoxTitle').textContent = 'اضغط للسحب!';
     await setDoc(doc(db,'shared',cid()),{lotteryResult:result},{merge:true});
@@ -1811,18 +1891,30 @@ window.clearLotteryResult = async () => {
 function renderLotteryItems(items) {
   lotteryItems = items;
   // Papers in box
-  document.getElementById('lotteryPapers').innerHTML = items.map((_,i)=>
-    `<div style="width:28px;height:36px;background:#f0ece2;border-radius:4px;transform:rotate(${(Math.random()*20-10).toFixed(1)}deg);opacity:.7;box-shadow:1px 2px 4px rgba(0,0,0,.4)"></div>`
-  ).join('');
+  const angles=[-8,-5,3,7,-3,6,-9,4,-6,8,2,-7,5,-4,9];
+  document.getElementById('lotteryPapers').innerHTML = items.map((_,i)=>{
+    const a=angles[i%angles.length];
+    return '<div style="width:28px;height:36px;background:#f0ece2;border-radius:4px;transform:rotate('+a+'deg);opacity:.7;box-shadow:1px 2px 4px rgba(0,0,0,.4)"></div>';
+  }).join('');
   document.getElementById('lBoxSub').textContent = items.length > 0
     ? `${items.length} ورقة في الصندوق`
     : 'سيختار واحداً من الأوراق عشوائياً';
   // List
-  document.getElementById('lotteryItemsList').innerHTML = items.map((it,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:11px">
-      <div style="font-size:14px;flex:1">📄 ${it}</div>
-      <button onclick="delLotteryItem(${i})" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)">🗑️</button>
-    </div>`).join('');
+  const lotEl=document.getElementById('lotteryItemsList');
+  lotEl.innerHTML='';
+  items.forEach(function(it,i){
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:11px';
+    const txt=document.createElement('div');
+    txt.style.cssText='font-size:14px;flex:1';
+    txt.textContent='📄 '+it;
+    const btn=document.createElement('button');
+    btn.textContent='🗑️';
+    btn.style.cssText='background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)';
+    btn.onclick=function(){delLotteryItem(i);};
+    div.appendChild(txt); div.appendChild(btn);
+    lotEl.appendChild(div);
+  });
 }
 function showLotteryResult(result) {
   const el = document.getElementById('lotteryResult');
@@ -1901,23 +1993,29 @@ function renderMemories(all) {
     container.innerHTML = '<div style="text-align:center;color:var(--tm);font-size:13px;padding:20px">لا توجد ذكريات بعد... أضف أولى ذكرياتكما! 🌹</div>';
     return;
   }
-  container.innerHTML = all.map(m => {
-    const byMe = m.by === uid;
+  container.innerHTML='';
+  all.forEach(function(mem){
+    const byMe = mem.by === uid;
     const byName = byMe ? (myNick||myName) : (hrNick||pName);
-    const dateStr = m.date || '';
-    return `<div style="background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;position:relative;overflow:hidden">
-      <div style="position:absolute;right:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--g),var(--pk))"></div>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <div style="font-size:32px;flex-shrink:0">${m.emoji||'✨'}</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700">${m.title||''}</div>
-          <div style="font-size:11px;color:var(--tm);margin-top:2px">${dateStr?'📅 '+dateStr:''} · 💬 ${byName}</div>
-        </div>
-        ${byMe ? `<button onclick="delMemory('${m.id}')" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)">🗑️</button>` : ''}
-      </div>
-      ${m.description ? `<div style="font-size:13px;color:var(--tm);line-height:1.6">${m.description}</div>` : ''}
-    </div>`;
-  }).join('');
+    const dateStr = mem.date || '';
+    const div=document.createElement('div');
+    div.style.cssText='background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;position:relative;overflow:hidden';
+    let inner='<div style="position:absolute;right:0;top:0;bottom:0;width:3px;background:linear-gradient(to bottom,var(--g),var(--pk))"></div>'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+      +'<div style="font-size:32px;flex-shrink:0">'+(mem.emoji||'✨')+'</div>'
+      +'<div style="flex:1">'
+      +'<div style="font-size:14px;font-weight:700">'+(mem.title||'')+'</div>'
+      +'<div style="font-size:11px;color:var(--tm);margin-top:2px">'+(dateStr?'📅 '+dateStr+' · ':'')+'💬 '+byName+'</div>'
+      +'</div>'
+      +(byMe?'<button class="mem-del-btn" style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--tm)">🗑️</button>':'')
+      +'</div>'
+      +(mem.description?'<div style="font-size:13px;color:var(--tm);line-height:1.6">'+mem.description+'</div>':'');
+    div.innerHTML=inner;
+    if(byMe){
+      div.querySelector('.mem-del-btn').onclick=function(){delMemory(mem.id);};
+    }
+    container.appendChild(div);
+  });
 }
 
 window.addMemory = async () => {
