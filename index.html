@@ -1037,7 +1037,14 @@ textarea.field{resize:none}
     <!-- Chat bubbles overlay -->
     <div class="cinema-chat" id="cinemaBubbles"></div>
     <!-- Sync indicator -->
-    <div id="cinemaSyncBadge" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(74,222,128,.4);border-radius:20px;padding:4px 10px;font-size:11px;color:#4ade80;display:none">🔴 بث مباشر مشترك</div>
+    <div id="cinemaSyncBadge" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(74,222,128,.4);border-radius:20px;padding:4px 10px;font-size:11px;color:#4ade80;display:none">🔴 بث مباشر</div>
+    <!-- Waiting for partner overlay -->
+    <div id="cinemaPartnerWait" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.75);flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(4px)">
+      <div style="font-size:48px;animation:pulse 1.5s infinite">⏳</div>
+      <div style="font-size:16px;font-weight:700;color:var(--g)">بانتظار انضمام الشريك</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.6);text-align:center;max-width:260px">سيبدأ التشغيل تلقائياً عندما ينضم <strong style="color:var(--pk)" id="cinemaWaitName">شريكتك</strong></div>
+      <div style="font-size:12px;color:rgba(255,255,255,.4)">تم إرسال دعوة المشاهدة 📨</div>
+    </div>
     <!-- Partner action popup -->
     <div id="cinemaPartnerAct" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);border:1px solid rgba(201,168,76,.4);border-radius:14px;padding:14px 20px;font-size:14px;color:white;display:none;text-align:center;backdrop-filter:blur(10px)"></div>
   </div>
@@ -1211,6 +1218,8 @@ function applyNicks() {
 
   const sc2L = document.getElementById('sc2L');
   if(sc2L) sc2L.textContent = hn;
+  const cwn = document.getElementById('cinemaWaitName');
+  if(cwn) cwn.textContent = hn;
 }
 
 window.saveMyNick = () => {
@@ -1333,32 +1342,7 @@ onAuthStateChanged(auth, async (user) => {
         calcAnniv(sd.anniversary);
       }
       if(sd.lotteryItems!==undefined){renderLotteryItems(sd.lotteryItems||[]);}
-      if(sd.cinema && sd.cinema.by !== uid) {
-        if(sd.cinema.action === 'load_url' && sd.cinema.url) {
-          // Partner started streaming a URL - offer to join
-          const statusEl = document.getElementById('cinemaStatusTxt');
-          if(statusEl) {
-            window._pendingCinemaUrl = sd.cinema.url;
-            statusEl.innerHTML = '🎬 <strong style="color:var(--g)">'+(hrNick||pName)+'</strong> تشاهد الآن!';
-            const joinBtn = document.createElement('button');
-            joinBtn.textContent = '▶ انضم';
-            joinBtn.style.cssText = 'padding:4px 12px;border-radius:20px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-right:8px';
-            joinBtn.onclick = () => joinCinema(window._pendingCinemaUrl);
-            statusEl.appendChild(joinBtn);
-          }
-        }
-        if(sd.cinema.action === 'close') {
-          const overlay = document.getElementById('cinemaOverlay');
-          if(overlay.classList.contains('show')) {
-            const video = document.getElementById('cinemaVideo');
-            video.pause(); video.src = '';
-            overlay.classList.remove('show');
-            document.getElementById('cinemaIntro').classList.remove('fade');
-            document.getElementById('cinemaIntro').style.display = '';
-            document.getElementById('cinemaBubbles').innerHTML = '';
-          }
-        }
-      }
+      // Cinema and novel sync are handled inside setupCinemaListener and handleNovelSync
       if(sd.lotteryResult!==undefined && sd.lotteryResult){showLotteryResult(sd.lotteryResult);}
     });
 
@@ -2581,133 +2565,206 @@ window.confirmSendMedia = async (dataUrl, type) => {
 
 
 // ── CINEMA ──
-let cinemaVideoSrc = '';
-let cinemaListenUnsub = null;
 let cinemaIsSyncing = false;
-let cinemaBubbleTimer = null;
+let cinemaLocalUrl = ''; // local blob URL (own file upload)
 
 window.loadCinemaFile = (inp) => {
   if(!inp.files.length) return;
   const file = inp.files[0];
-  const url = URL.createObjectURL(file);
-  openCinema(url, file.name);
+  cinemaLocalUrl = URL.createObjectURL(file);
+  // Local file: open directly, no partner sync possible for file content
+  // But we announce we're in cinema so partner can join (they need their own copy)
+  openCinemaRoom(cinemaLocalUrl, file.name, true);
 };
 
 window.openCinemaFromUrl = async () => {
   const url = (document.getElementById('cinemaUrl').value||'').trim();
   if(!url) return;
-  // Broadcast URL to partner
-  if(pId) await setDoc(doc(db,'shared',cid()),{cinema:{action:'load_url',url,by:uid,at:Date.now()}},{merge:true});
-  openCinema(url, 'فيديو مشترك');
+  // Save session to Firebase so partner can join with same URL
+  if(pId) {
+    await setDoc(doc(db,'shared',cid()),{
+      cinemaSession:{
+        url, title:'فيديو مشترك', by:uid,
+        status:'waiting', startedAt:Date.now()
+      }
+    },{merge:true});
+  }
+  openCinemaRoom(url, 'فيديو مشترك', false);
 };
 
-function openCinema(src, title) {
-  cinemaVideoSrc = src;
+window.joinCinema = async (url, title) => {
+  // Partner joins the active session
+  await setDoc(doc(db,'shared',cid()),{
+    cinemaSession:{url, title, by:uid, status:'joined', joinedAt:Date.now()}
+  },{merge:true});
+  openCinemaRoom(url, title, false);
+};
+
+function openCinemaRoom(src, title, isLocal) {
   const overlay = document.getElementById('cinemaOverlay');
-  const intro = document.getElementById('cinemaIntro');
-  const video = document.getElementById('cinemaVideo');
+  const intro   = document.getElementById('cinemaIntro');
+  const video   = document.getElementById('cinemaVideo');
+
   overlay.classList.add('show');
   document.getElementById('cinemaIntroSub').textContent = '🎬 ' + title;
 
-  // Intro animation
   setTimeout(() => {
     intro.classList.add('fade');
     video.src = src;
-    document.getElementById('cinemaSyncBadge').style.display = 'flex';
-    setupCinemaSync();
-  }, 2200);
-  setTimeout(() => { intro.style.display = 'none'; }, 3000);
+    video.load();
+    // Don't autoplay — wait for both to be ready
+    updateCinemaWaitUI(isLocal);
+    setupCinemaListener(isLocal);
+  }, 2000);
+  setTimeout(() => { intro.style.display = 'none'; }, 2800);
 }
 
-function setupCinemaSync() {
-  if(!pId) return;
-  // Listen for sync commands from partner
-  if(cinemaListenUnsub) cinemaListenUnsub();
-  cinemaListenUnsub = onSnapshot(doc(db,'shared',cid()), (snap) => {
-    if(!snap.exists()) return;
-    const sd = snap.data();
-    if(!sd.cinema) return;
-    const video = document.getElementById('cinemaVideo');
-    const cmd = sd.cinema;
-    // Only respond to commands from partner
-    if(cmd.by === uid) return;
-    cinemaIsSyncing = true;
-    if(cmd.action === 'play') {
-      if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
-      video.play().catch(()=>{});
-      document.getElementById('cinemaPlayBtn').textContent = '⏸';
-      showPartnerAct((hrNick||pName) + ' ▶ شغّل');
-    } else if(cmd.action === 'pause') {
-      video.pause();
-      if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
-      document.getElementById('cinemaPlayBtn').textContent = '▶';
-      showPartnerAct((hrNick||pName) + ' ⏸ أوقف');
-    } else if(cmd.action === 'seek') {
-      video.currentTime = cmd.time;
-      showPartnerAct((hrNick||pName) + ' ⏩ تقديم/تأخير');
-    } else if(cmd.action === 'msg') {
-      addCinemaBubble(cmd.msg, false);
-    }
-    setTimeout(() => cinemaIsSyncing = false, 300);
-  });
+function updateCinemaWaitUI(isLocal) {
+  const badge = document.getElementById('cinemaSyncBadge');
+  const partnerWait = document.getElementById('cinemaPartnerWait');
+  if(isLocal) {
+    // Local file — can play solo
+    badge.style.display = 'flex';
+    badge.textContent = '📁 ملف محلي — تشغيل منفرد';
+    if(partnerWait) partnerWait.style.display = 'none';
+    document.getElementById('cinemaPlayBtn').disabled = false;
+  } else {
+    badge.style.display = 'flex';
+    badge.textContent = '⏳ بانتظار انضمام الشريك...';
+    if(partnerWait) partnerWait.style.display = 'flex';
+    document.getElementById('cinemaPlayBtn').disabled = true;
+  }
+}
 
-  // Video event listeners
+function enableCinemaPlayback() {
+  const badge = document.getElementById('cinemaSyncBadge');
+  badge.style.display = 'flex';
+  badge.textContent = '🔴 بث مشترك مباشر';
+  const partnerWait = document.getElementById('cinemaPartnerWait');
+  if(partnerWait) partnerWait.style.display = 'none';
+  document.getElementById('cinemaPlayBtn').disabled = false;
+  showPartnerAct('🎬 ' + (hrNick||pName) + ' انضم! ابدأ المشاهدة');
+}
+
+function setupCinemaListener(isLocal) {
   const video = document.getElementById('cinemaVideo');
+
+  // Progress bar update
   video.ontimeupdate = () => {
     const prog = video.duration ? (video.currentTime/video.duration*100) : 0;
     document.getElementById('cinemaProgFill').style.width = prog + '%';
-    const cur = fmtSec(video.currentTime);
-    const dur = fmtSec(video.duration||0);
-    document.getElementById('cinemaTimeDisp').textContent = cur + ' / ' + dur;
+    document.getElementById('cinemaTimeDisp').textContent =
+      fmtSec(video.currentTime) + ' / ' + fmtSec(video.duration||0);
   };
+
+  if(isLocal || !pId) return; // no Firebase sync for local files
+
+  // Listen for cinema commands
+  onSnapshot(doc(db,'shared',cid()), (snap) => {
+    if(!snap.exists()) return;
+    const sd = snap.data();
+
+    // Check if partner joined our session
+    if(sd.cinemaSession && sd.cinemaSession.by !== uid &&
+       sd.cinemaSession.status === 'joined') {
+      enableCinemaPlayback();
+    }
+
+    // Check if we were waiting and host confirmed both ready
+    if(sd.cinemaCmd && sd.cinemaCmd.by !== uid) {
+      const cmd = sd.cinemaCmd;
+      cinemaIsSyncing = true;
+      if(cmd.action === 'play') {
+        if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
+        video.play().catch(()=>{});
+        document.getElementById('cinemaPlayBtn').textContent = '⏸';
+        document.getElementById('cinemaPlayBtn').disabled = false;
+        showPartnerAct((hrNick||pName) + ' ▶ شغّل');
+      } else if(cmd.action === 'pause') {
+        video.pause();
+        if(Math.abs(video.currentTime - cmd.time) > 1.5) video.currentTime = cmd.time;
+        document.getElementById('cinemaPlayBtn').textContent = '▶';
+        showPartnerAct((hrNick||pName) + ' ⏸ أوقف');
+      } else if(cmd.action === 'seek') {
+        video.currentTime = cmd.time;
+        showPartnerAct((hrNick||pName) + ' ⏩ تقديم/تأخير');
+      } else if(cmd.action === 'msg') {
+        addCinemaBubble(cmd.msg, false);
+      } else if(cmd.action === 'close') {
+        closeCinemaLocal();
+      }
+      setTimeout(() => cinemaIsSyncing = false, 300);
+    }
+
+    // Partner started a session while we are on cinema page — offer to join
+    if(sd.cinemaSession && sd.cinemaSession.by !== uid &&
+       sd.cinemaSession.status === 'waiting' &&
+       sd.cinemaSession.url) {
+      const statusEl = document.getElementById('cinemaStatusTxt');
+      if(statusEl && !document.getElementById('cinemaOverlay').classList.contains('show')) {
+        window._pendingCinemaUrl   = sd.cinemaSession.url;
+        window._pendingCinemaTitle = sd.cinemaSession.title || 'فيديو مشترك';
+        statusEl.innerHTML = '';
+        const info = document.createElement('div');
+        info.style.cssText = 'font-size:13px;color:var(--tx);margin-bottom:10px';
+        info.innerHTML = '🎬 <strong style="color:var(--g)">' + (hrNick||pName) + '</strong> يدعوك لمشاهدة فيديو معاً!';
+        const joinBtn = document.createElement('button');
+        joinBtn.className = 'pbtn';
+        joinBtn.textContent = '▶ انضم للمشاهدة';
+        joinBtn.onclick = () => joinCinema(window._pendingCinemaUrl, window._pendingCinemaTitle);
+        statusEl.appendChild(info);
+        statusEl.appendChild(joinBtn);
+      }
+    }
+  });
 }
 
 function fmtSec(s) {
-  if(isNaN(s)) return '0:00';
+  if(!s || isNaN(s)) return '0:00';
   const m = Math.floor(s/60), sec = Math.floor(s%60);
   return m + ':' + String(sec).padStart(2,'0');
 }
 
-async function broadcastCinema(action, extra) {
+async function broadcastCinemaCmd(action, extra) {
   if(!pId || cinemaIsSyncing) return;
   const video = document.getElementById('cinemaVideo');
-  await setDoc(doc(db,'shared',cid()), {
-    cinema: { action, time: video.currentTime, by: uid, at: Date.now(), ...extra }
-  }, {merge:true});
+  await setDoc(doc(db,'shared',cid()),{
+    cinemaCmd:{ action, time: video.currentTime, by:uid, at:Date.now(), ...(extra||{}) }
+  },{merge:true});
 }
 
 window.cinemaPlayPause = async () => {
   const video = document.getElementById('cinemaVideo');
-  const btn = document.getElementById('cinemaPlayBtn');
+  const btn   = document.getElementById('cinemaPlayBtn');
   if(video.paused) {
     await video.play();
     btn.textContent = '⏸';
-    await broadcastCinema('play');
+    await broadcastCinemaCmd('play');
   } else {
     video.pause();
     btn.textContent = '▶';
-    await broadcastCinema('pause');
+    await broadcastCinemaCmd('pause');
   }
 };
 
 window.cinemaRewind = async () => {
   const video = document.getElementById('cinemaVideo');
   video.currentTime = Math.max(0, video.currentTime - 10);
-  await broadcastCinema('seek');
+  await broadcastCinemaCmd('seek');
 };
 
 window.cinemaForward = async () => {
   const video = document.getElementById('cinemaVideo');
   video.currentTime = Math.min(video.duration||0, video.currentTime + 10);
-  await broadcastCinema('seek');
+  await broadcastCinemaCmd('seek');
 };
 
 window.cinemaSeek = async (e) => {
-  const video = document.getElementById('cinemaVideo');
-  const bar = document.getElementById('cinemaProgress');
-  const ratio = e.offsetX / bar.offsetWidth;
+  const video   = document.getElementById('cinemaVideo');
+  const bar     = document.getElementById('cinemaProgress');
+  const ratio   = e.offsetX / bar.offsetWidth;
   video.currentTime = ratio * (video.duration||0);
-  await broadcastCinema('seek');
+  await broadcastCinemaCmd('seek');
 };
 
 window.toggleCinemaMute = () => {
@@ -2722,15 +2779,28 @@ window.toggleCinemaFs = () => {
   else document.exitFullscreen();
 };
 
-window.closeCinema = async () => {
+function closeCinemaLocal() {
   const video = document.getElementById('cinemaVideo');
   video.pause(); video.src = '';
-  document.getElementById('cinemaOverlay').classList.remove('show');
-  document.getElementById('cinemaIntro').classList.remove('fade');
-  document.getElementById('cinemaIntro').style.display = '';
+  const overlay = document.getElementById('cinemaOverlay');
+  overlay.classList.remove('show');
+  const intro = document.getElementById('cinemaIntro');
+  intro.classList.remove('fade');
+  intro.style.display = '';
   document.getElementById('cinemaBubbles').innerHTML = '';
-  if(cinemaListenUnsub) { cinemaListenUnsub(); cinemaListenUnsub = null; }
-  await setDoc(doc(db,'shared',cid()),{cinema:{action:'close',by:uid}},{merge:true});
+  document.getElementById('cinemaPlayBtn').disabled = false;
+  document.getElementById('cinemaPlayBtn').textContent = '▶';
+  // Reset status area
+  const st = document.getElementById('cinemaStatusTxt');
+  if(st) st.textContent = 'لا يوجد بث نشط حالياً';
+}
+
+window.closeCinema = async () => {
+  closeCinemaLocal();
+  if(pId) {
+    await broadcastCinemaCmd('close');
+    await setDoc(doc(db,'shared',cid()),{cinemaSession:null, cinemaCmd:null},{merge:true});
+  }
 };
 
 window.sendCinemaMsg = async () => {
@@ -2739,8 +2809,7 @@ window.sendCinemaMsg = async () => {
   if(!msg || !pId) return;
   inp.value = '';
   addCinemaBubble(msg, true);
-  await broadcastCinema('msg', {msg});
-  // Also save to regular chat
+  await broadcastCinemaCmd('msg', {msg});
   await addDoc(collection(db,'chats',cid(),'messages'),{
     content:'🎬 '+msg, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
   });
@@ -2752,66 +2821,22 @@ function addCinemaBubble(msg, isMe) {
   bub.className = 'cinema-bubble' + (isMe ? ' me' : '');
   bub.textContent = (isMe ? '' : (hrNick||pName) + ': ') + msg;
   container.appendChild(bub);
-  // Keep only last 5 bubbles
   while(container.children.length > 5) container.removeChild(container.firstChild);
-  // Auto remove after 5s
   setTimeout(() => bub.remove(), 5000);
 }
 
 function showPartnerAct(msg) {
   const el = document.getElementById('cinemaPartnerAct');
-  el.textContent = msg; el.style.display = 'block';
-  setTimeout(() => el.style.display = 'none', 2500);
-}
-
-
-// ── EMOJI PICKER ──
-window.toggleEmojiPicker = () => {
-  const ep = document.getElementById('emojiPickerPanel');
-  const sp = document.getElementById('stickerPanel');
-  const isOpen = ep.style.display === 'flex';
-  ep.style.display = isOpen ? 'none' : 'flex';
-  if(!isOpen) sp.classList.remove('show');
-};
-window.insertEmoji = (e) => {
-  const inp = document.getElementById('msgInput');
-  const pos = inp.selectionStart || inp.value.length;
-  inp.value = inp.value.slice(0,pos) + e + inp.value.slice(pos);
-  inp.focus();
-  aR(inp);
-};
-
-// ── STICKER CATEGORIES ──
-const stkData = {
-  love:['🌹','💛','😍','🥰','💋','💕','💞','💓','💗','💝','💘','🎀','👫','🫶','😘','💍','💒','🥂','🌷','💌'],
-  fun:['😂','🤣','🙈','🙉','🙊','😜','🤪','😝','🤡','👻','😈','🤓','🥸','🫠','🤯','🥴','😵','🤠','👽','🫣'],
-  nature:['🌺','✨','🌙','💎','🔥','🌸','🌼','🌻','🍀','🦋','🐚','🌊','🏔️','🌅','🌈','⭐','🌟','💫','🍃','🌿'],
-  mood:['😴','😔','😢','😭','🥺','😤','😠','🙄','😒','🫤','😑','🤗','🫂','🥹','😶','🤭','🫡','🤫','😌','😏'],
-  celeb:['🎉','🎊','🎈','🎁','🏆','🥇','👑','🎂','🍰','🎆','🎇','🪅','🎯','🎮','🎴','🀄','🎲','🎪','🪩','💃'],
-  food:['🍕','🍔','🌮','🍜','🍣','🍩','🍪','🎂','🧁','🍦','🧋','☕','🍵','🫖','🥤','🍷','🍹','🍸','🥂','🧃']
-};
-let curStkCat = 'love';
-window.stkCat = (btn, cat) => {
-  document.querySelectorAll('#stkCatTabs .pill').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  curStkCat = cat;
-  renderStkGrid();
-};
-function renderStkGrid() {
-  const grid = document.getElementById('stickerGrid');
-  if(!grid) return;
-  grid.innerHTML = '';
-  (stkData[curStkCat]||stkData.love).forEach(e=>{
-    const span = document.createElement('span');
-    span.className = 'stk';
-    span.textContent = e;
-    span.onclick = ()=>sendStk(e);
-    grid.appendChild(span);
-  });
+  if(!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.display = 'none', 2500);
 }
 
 // ── NOVEL READER ──
 let novelPages = [], novelCurPage = 0, novelFontSz = 15, novelTitle = '';
+let novelIsOwner = false; // true if I uploaded the novel
 const NOVEL_CHARS = 1800;
 
 window.loadNovelFile = (inp) => {
@@ -2829,31 +2854,50 @@ window.loadNovelText = () => {
   initNovel(txt, 'الرواية');
 };
 
-function initNovel(text, title) {
-  novelTitle = title;
-  novelPages = [];
+function splitNovelToPages(text) {
   const clean = text.split('\r\n').join('\n').split('\r').join('\n');
-  // Split into pages by char count, respecting paragraph breaks
   const NL2 = '\n\n';
   const paras = clean.split(NL2);
+  const pages = [];
   let page = '';
   for(const para of paras) {
     if((page + para).length > NOVEL_CHARS && page.length > 0) {
-      novelPages.push(page.trim());
+      pages.push(page.trim());
       page = para + NL2;
     } else {
       page += para + NL2;
     }
   }
-  if(page.trim()) novelPages.push(page.trim());
+  if(page.trim()) pages.push(page.trim());
+  return pages;
+}
+
+async function initNovel(text, title) {
+  novelIsOwner = true;
+  novelTitle = title;
+  novelPages = splitNovelToPages(text);
   novelCurPage = 0;
+  // Save to Firebase so partner receives it
+  if(pId) {
+    await setDoc(doc(db,'shared',cid()),{
+      novelSession:{
+        text, title,
+        currentPage: 0,
+        by: uid,
+        startedAt: Date.now()
+      }
+    },{merge:true});
+  }
+  showNovelReader();
   showNovelPage();
+}
+
+function showNovelReader() {
   document.getElementById('novelUploadSection').style.display = 'none';
   document.getElementById('novelReaderSection').style.display = 'flex';
   document.getElementById('novelTitle').textContent = '📖 ' + novelTitle;
-  // Sync with partner
-  syncNovelPage();
 }
+
 function showNovelPage() {
   const el = document.getElementById('novelPageContent');
   if(!el || !novelPages.length) return;
@@ -2870,7 +2914,12 @@ window.novelChangePage = async (dir) => {
   if(next < 0 || next >= novelPages.length) return;
   novelCurPage = next;
   showNovelPage();
-  await syncNovelPage();
+  // Sync page to Firebase so partner follows
+  if(pId) {
+    await setDoc(doc(db,'shared',cid()),{
+      novelSession:{ currentPage: novelCurPage, pageBy: uid, at: Date.now() }
+    },{merge:true});
+  }
 };
 
 window.novelFontSize = (dir) => {
@@ -2879,33 +2928,54 @@ window.novelFontSize = (dir) => {
 };
 
 window.closeNovel = async () => {
-  novelPages = []; novelCurPage = 0;
+  novelPages = []; novelCurPage = 0; novelIsOwner = false;
   document.getElementById('novelUploadSection').style.display = '';
   document.getElementById('novelReaderSection').style.display = 'none';
   document.getElementById('novelPasteArea').value = '';
-  if(pId) await setDoc(doc(db,'shared',cid()),{novel:{page:-1,title:'',by:uid}},{merge:true});
+  if(pId) await setDoc(doc(db,'shared',cid()),{novelSession:null},{merge:true});
 };
 
-async function syncNovelPage() {
-  if(!pId) return;
-  await setDoc(doc(db,'shared',cid()),{
-    novel:{page:novelCurPage, title:novelTitle, by:uid, at:Date.now()}
-  },{merge:true});
-}
-
-// Listen for partner page in shared listener (added below)
+// Called from the shared Firestore listener
 function handleNovelSync(sd) {
-  if(!sd.novel) return;
-  const nv = sd.novel;
-  if(nv.by === uid) return; // own change
-  const badge = document.getElementById('partnerPageBadge');
-  const txt = document.getElementById('partnerPageTxt');
-  if(!badge || !txt) return;
-  if(nv.page >= 0) {
-    badge.style.display = 'flex';
-    txt.textContent = (hrNick||pName) + ' في صفحة ' + (nv.page+1);
-  } else {
-    badge.style.display = 'none';
+  if(!sd.novelSession) {
+    // Novel was closed by partner
+    if(novelPages.length > 0 && !novelIsOwner) {
+      novelPages = []; novelCurPage = 0;
+      document.getElementById('novelUploadSection').style.display = '';
+      document.getElementById('novelReaderSection').style.display = 'none';
+    }
+    return;
+  }
+  const nv = sd.novelSession;
+
+  // If novel has full text and I haven't loaded it yet → load it (I'm the partner)
+  if(nv.text && nv.by !== uid && novelPages.length === 0) {
+    novelIsOwner = false;
+    novelTitle = nv.title || 'الرواية';
+    novelPages = splitNovelToPages(nv.text);
+    novelCurPage = nv.currentPage || 0;
+    showNovelReader();
+    showNovelPage();
+    // Switch to novel tab automatically
+    swTab('novel');
+    return;
+  }
+
+  // Page sync — partner changed page
+  if(nv.pageBy !== undefined && nv.pageBy !== uid) {
+    const newPage = nv.currentPage || 0;
+    if(newPage !== novelCurPage && novelPages.length > 0) {
+      novelCurPage = newPage;
+      showNovelPage();
+      // Show badge
+      const badge = document.getElementById('partnerPageBadge');
+      const txt   = document.getElementById('partnerPageTxt');
+      if(badge && txt) {
+        badge.style.display = 'flex';
+        txt.textContent = (hrNick||pName) + ' انتقل لصفحة ' + (novelCurPage+1);
+        setTimeout(() => badge.style.display = 'none', 3000);
+      }
+    }
   }
 }
 
