@@ -288,6 +288,14 @@ textarea.field{resize:none}
 @keyframes shake{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-8deg)}75%{transform:rotate(8deg)}}
 .lottery-shake{animation:shake 0.15s 6}
 
+/* NOVEL */
+.novel-page{background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:20px;font-size:15px;line-height:2;color:var(--tx);direction:rtl;text-align:right;white-space:pre-wrap;word-break:break-word;flex:1;overflow-y:auto;max-height:55vh;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.2) transparent}
+.novel-ctrl{display:flex;align-items:center;gap:8px;padding:10px 0;flex-wrap:wrap}
+.novel-btn{padding:7px 14px;border-radius:10px;border:1px solid rgba(201,168,76,.25);background:var(--d3);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.novel-btn:hover,.novel-btn.on{background:var(--gl);border-color:var(--g)}
+.novel-btn:disabled{opacity:.4;cursor:not-allowed}
+.partner-page-badge{background:rgba(224,122,142,.15);border:1px solid rgba(224,122,142,.3);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--pk);display:flex;align-items:center;gap:5px}
+
 /* CINEMA */
 .cinema-overlay{position:fixed;inset:0;background:#000;z-index:500;display:none;flex-direction:column}
 .cinema-overlay.show{display:flex}
@@ -315,6 +323,9 @@ textarea.field{resize:none}
 .film-curtain{position:absolute;inset:0;background:linear-gradient(to bottom,#1a0a00,#000);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
 .film-strip{display:flex;gap:4px;margin-bottom:8px}
 .film-hole{width:16px;height:20px;background:rgba(255,255,255,.08);border-radius:3px}
+/* RPS ARENA */
+#rpsModal .mbg{background:rgba(0,0,0,.92)!important}
+@keyframes rpsReveal{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
 /* STARRED */
 .starred-msg{background:rgba(201,168,76,.08)!important;border-color:rgba(201,168,76,.4)!important}
 .star-badge{position:absolute;top:-6px;left:-6px;font-size:12px}
@@ -451,12 +462,78 @@ textarea.field{resize:none}
     <button class="tab" onclick="swTab('memories')">✨ ذكريات</button>
     <button class="tab" onclick="swTab('themes')">🎨 سمات</button>
     <button class="tab" onclick="swTab('cinema')">🎬 سينما</button>
+    <button class="tab" onclick="swTab('novel')">📖 رواية</button>
   </div>
 
   <!-- ══ CHAT ══ -->
   <div class="panel on" id="panel-chat" style="overflow:hidden">
     <div class="msgs" id="msgsArea"></div>
-    <div class="sp" id="stickerPanel">
+    <!-- Quick emoji picker -->
+<div id="emojiPickerPanel" style="display:none;flex-direction:column;background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:8px 12px;flex-shrink:0">
+  <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:120px;overflow-y:auto">
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('❤️')">❤️</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🧡')">🧡</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💛')">💛</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💚')">💚</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💙')">💙</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💜')">💜</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🖤')">🖤</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🤍')">🤍</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💕')">💕</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💞')">💞</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💓')">💓</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💗')">💗</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💝')">💝</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💘')">💘</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🎀')">🎀</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😊')">😊</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😍')">😍</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🥰')">🥰</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😘')">😘</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🥺')">🥺</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😂')">😂</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🤣')">🤣</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😭')">😭</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🙈')">🙈</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🙉')">🙉</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🙊')">🙊</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🤗')">🤗</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🫂')">🫂</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🫶')">🫶</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('👏')">👏</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🙏')">🙏</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('✨')">✨</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌟')">🌟</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('⭐')">⭐</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🔥')">🔥</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌹')">🌹</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌺')">🌺</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌸')">🌸</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💐')">💐</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌷')">🌷</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌻')">🌻</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌙')">🌙</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('☀️')">☀️</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🌈')">🌈</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🎉')">🎉</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🎊')">🎊</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🎁')">🎁</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('💎')">💎</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('👑')">👑</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🏆')">🏆</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🍕')">🍕</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🍰')">🍰</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('☕')">☕</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🍫')">🍫</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🫖')">🫖</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😴')">😴</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😤')">😤</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😔')">😔</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('🤔')">🤔</span>
+    <span style="cursor:pointer;font-size:20px;padding:2px" onclick="insertEmoji('😎')">😎</span>
+  </div>
+</div>
+<div class="sp" id="stickerPanel">
       <div class="sp-header">
         <span class="sp-label">الملصقات</span>
         <label class="sp-import">
@@ -465,29 +542,22 @@ textarea.field{resize:none}
         </label>
         <button onclick="document.getElementById('stickerPanel').classList.remove('show')" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;margin-right:auto">✕</button>
       </div>
-      <div class="sp-grid" id="stickerGrid">
-        <span class="stk" onclick="sendStk('🌹')">🌹</span>
-        <span class="stk" onclick="sendStk('💛')">💛</span>
-        <span class="stk" onclick="sendStk('😍')">😍</span>
-        <span class="stk" onclick="sendStk('🥰')">🥰</span>
-        <span class="stk" onclick="sendStk('💋')">💋</span>
-        <span class="stk" onclick="sendStk('✨')">✨</span>
-        <span class="stk" onclick="sendStk('🌙')">🌙</span>
-        <span class="stk" onclick="sendStk('💎')">💎</span>
-        <span class="stk" onclick="sendStk('🔥')">🔥</span>
-        <span class="stk" onclick="sendStk('🎉')">🎉</span>
-        <span class="stk" onclick="sendStk('💐')">💐</span>
-        <span class="stk" onclick="sendStk('🫶')">🫶</span>
-        <span class="stk" onclick="sendStk('😘')">😘</span>
-        <span class="stk" onclick="sendStk('🥺')">🥺</span>
-        <span class="stk" onclick="sendStk('🌺')">🌺</span>
-        <span class="stk" onclick="sendStk('💍')">💍</span>
+      <!-- Sticker category tabs -->
+      <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px" id="stkCatTabs">
+        <button class="pill on" style="font-size:11px;padding:3px 9px" data-cat="love" onclick="stkCat(this,'love')">💕 حب</button>
+        <button class="pill" style="font-size:11px;padding:3px 9px" data-cat="fun" onclick="stkCat(this,'fun')">😂 مرح</button>
+        <button class="pill" style="font-size:11px;padding:3px 9px" data-cat="nature" onclick="stkCat(this,'nature')">🌿 طبيعة</button>
+        <button class="pill" style="font-size:11px;padding:3px 9px" data-cat="mood" onclick="stkCat(this,'mood')">😴 مزاج</button>
+        <button class="pill" style="font-size:11px;padding:3px 9px" data-cat="celeb" onclick="stkCat(this,'celeb')">🎊 احتفال</button>
+        <button class="pill" style="font-size:11px;padding:3px 9px" data-cat="food" onclick="stkCat(this,'food')">🍕 طعام</button>
       </div>
+      <div class="sp-grid" id="stickerGrid"></div>
       <div class="sp-grid" id="customSGrid"></div>
     </div>
     <div class="iarea">
       <div class="irow">
-        <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show')">😊</button>
+        <button class="ibtn" id="emojiPickerBtn" onclick="toggleEmojiPicker()" title="إيموجي">😊</button>
+        <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show');document.getElementById('emojiPickerPanel').style.display='none'" title="ستيكرات">🎭</button>
         <label class="ibtn" title="صورة/فيديو" style="cursor:pointer">📎<input type="file" id="mediaFile" accept="image/*,video/*" style="display:none" onchange="sendMedia(this)"></label>
         <textarea class="minput" id="msgInput" placeholder="اكتب رسالتك..." rows="1" onkeydown="onKey(event)" oninput="aR(this)"></textarea>
         <button class="ibtn" id="recBtn" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()" title="اضغط مطولاً للتسجيل" style="flex-shrink:0">🎙️</button>
@@ -854,6 +924,8 @@ textarea.field{resize:none}
       <div class="ptitle">🎨 سمات التطبيق</div>
       <div style="font-size:13px;color:var(--tm);margin-bottom:10px">اختر سمة تناسب مزاجكما اليوم</div>
       <div class="tgrid" id="thGrid"></div>
+    </div>
+  </div>
 
   <!-- ══ CINEMA ══ -->
   <div class="panel" id="panel-cinema">
@@ -878,6 +950,54 @@ textarea.field{resize:none}
       </div>
     </div>
   </div>
+
+  <!-- ══ NOVEL ══ -->
+  <div class="panel" id="panel-novel">
+    <div class="pi">
+      <div class="ptitle">📖 قراءة رواية معاً</div>
+      <!-- Upload section (shown when no novel loaded) -->
+      <div id="novelUploadSection">
+        <div class="card" style="text-align:center">
+          <div style="font-size:48px;margin-bottom:8px">📚</div>
+          <div style="font-size:15px;font-weight:700;color:var(--g);margin-bottom:6px">اقرأا رواية معاً</div>
+          <div style="font-size:13px;color:var(--tm);margin-bottom:16px;line-height:1.6">ارفع ملف نصي (.txt) للرواية وستظهر عند الطرفين مع مزامنة الصفحة</div>
+          <label style="display:inline-flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px 30px;cursor:pointer;background:var(--d4);width:100%">
+            <span style="font-size:32px">📄</span>
+            <span style="font-size:13px;color:var(--tm)">اضغط لرفع ملف .txt</span>
+            <input type="file" id="novelFile" accept=".txt,text/plain" style="display:none" onchange="loadNovelFile(this)">
+          </label>
+          <div style="margin-top:12px;font-size:12px;color:var(--tm)">أو أدخل نص الرواية مباشرة:</div>
+          <textarea class="field" id="novelPasteArea" placeholder="الصق نص الرواية هنا..." rows="4" style="margin-top:8px;margin-bottom:8px"></textarea>
+          <button class="pbtn" onclick="loadNovelText()">📖 ابدأ القراءة</button>
+        </div>
+      </div>
+      <!-- Reader section (shown when novel loaded) -->
+      <div id="novelReaderSection" style="display:none;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <div style="font-size:14px;font-weight:700;color:var(--g)" id="novelTitle">الرواية</div>
+          <div class="partner-page-badge" id="partnerPageBadge" style="display:none">
+            <span>👁️</span><span id="partnerPageTxt">شريكتك في صفحة 1</span>
+          </div>
+        </div>
+        <!-- Page display -->
+        <div class="novel-page" id="novelPageContent"></div>
+        <!-- Controls -->
+        <div class="novel-ctrl">
+          <button class="novel-btn" id="novelPrevBtn" onclick="novelChangePage(-1)" disabled>→ السابقة</button>
+          <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">صفحة <span id="novelCurPage">1</span> من <span id="novelTotalPages">1</span></div>
+          <button class="novel-btn" id="novelNextBtn" onclick="novelChangePage(1)">التالية ←</button>
+        </div>
+        <!-- Font size & close -->
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:12px;color:var(--tm)">حجم الخط:</span>
+          <button class="novel-btn" onclick="novelFontSize(-1)">أ-</button>
+          <button class="novel-btn" onclick="novelFontSize(1)">أ+</button>
+          <button class="novel-btn" style="margin-right:auto;color:#ff8080;border-color:rgba(224,85,85,.3)" onclick="closeNovel()">✕ إغلاق الرواية</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
 </div>
 
@@ -1205,6 +1325,19 @@ onAuthStateChanged(auth, async (user) => {
       }
       if(sd.lotteryItems!==undefined){renderLotteryItems(sd.lotteryItems||[]);}
       if(sd.cinema && sd.cinema.by !== uid) {
+        if(sd.cinema.action === 'load_url' && sd.cinema.url) {
+          // Partner started streaming a URL - offer to join
+          const statusEl = document.getElementById('cinemaStatusTxt');
+          if(statusEl) {
+            window._pendingCinemaUrl = sd.cinema.url;
+            statusEl.innerHTML = '🎬 <strong style="color:var(--g)">'+(hrNick||pName)+'</strong> تشاهد الآن!';
+            const joinBtn = document.createElement('button');
+            joinBtn.textContent = '▶ انضم';
+            joinBtn.style.cssText = 'padding:4px 12px;border-radius:20px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-right:8px';
+            joinBtn.onclick = () => joinCinema(window._pendingCinemaUrl);
+            statusEl.appendChild(joinBtn);
+          }
+        }
         if(sd.cinema.action === 'close') {
           const overlay = document.getElementById('cinemaOverlay');
           if(overlay.classList.contains('show')) {
@@ -1227,7 +1360,7 @@ onAuthStateChanged(auth, async (user) => {
 
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
-    renderCustomStickers();
+    renderCustomStickers(); renderStkGrid();
   });
 });
 
@@ -1243,7 +1376,7 @@ window.swTab = (n) => {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   const p=document.getElementById('panel-'+n);
   if(p){p.style.display='flex';p.classList.add('on');}
-  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13};
+  const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14};
   const tabs=document.querySelectorAll('.tab');
   if(tabs[map[n]])tabs[map[n]].classList.add('on');
   if(n==='draw')setTimeout(resizeCanvas,100);
@@ -1399,7 +1532,7 @@ function renderMsg(id, data) {
     starBtn.className='mmbtn'; starBtn.textContent='⭐';
     starBtn.onclick=()=>toggleStar(id);
     menu.appendChild(starBtn);
-    ['❤️','🌹','😂'].forEach(function(emoji){
+    ['❤️','🌹','😂','🎀','😭','🥺'].forEach(function(emoji){
       const btn=document.createElement('button');
       btn.className='mmbtn'; btn.textContent=emoji;
       btn.onclick=function(){ addRxn(id,emoji); };
@@ -1739,23 +1872,38 @@ const games=[
   {id:'g18',cat:'romantic',icon:'🎁',title:'مفاجأة اليوم',desc:'مفاجأة صغيرة للآخر خلال ٢٤ ساعة',steps:['فكّر بمفاجأة صغيرة','لا تخبر الآخر','نفّذها خلال ٢٤ ساعة','شاركوا ردود الأفعال 🥰']},
   {id:'g19',cat:'adventure',icon:'🏆',title:'تحدي المعرفة',desc:'ثقافة وجغرافيا وأفلام - من الأذكى؟',steps:['كل واحد يحضر ٥ أسئلة','تناوبا في السؤال والجواب','كل إجابة صحيحة نقطة','تنتهي عند ١٥ نقطة']},
   {id:'g20',cat:'romantic',icon:'💆',title:'قائمة الدلال',desc:'كل واحد يكتب ٥ طلبات دلال',steps:['اكتب ٥ طلبات بسيطة','تبادلا القوائم','نفّذا طلباً اليوم','كرروا كل أسبوع 💛']},
+  {id:'rps',cat:'fun',icon:'✊',title:'حجرة ورقة مقص',desc:'العبا معاً في الوقت الحقيقي! اختر سلاحك والنتيجة تظهر للطرفين فوراً',steps:['اختر حجرة أو ورقة أو مقص','ستُرسل اختيارك للشريك','تظهر النتيجة للطرفين','أكثر انتصار يفوز 🏆'],special:'rps'},
 ];
 function renderGames() {
   const cc={romantic:'#f48fb1',fun:'#ffb347',mind:'#ce93d8',adventure:'#4fc3f7'};
   const cn={romantic:'💕 رومانسي',fun:'😂 مرح',mind:'🧠 تحدٍّ',adventure:'🌟 مغامرة'};
   const flt=curGF==='all'?games:games.filter(g=>g.cat===curGF);
-  document.getElementById('gamesList').innerHTML=flt.map(g=>{
-    const col=cc[g.cat];
-    return '<div class="gcard">'
-      +'<div class="gbar '+g.cat+'"></div>'
+  const el=document.getElementById('gamesList');
+  el.innerHTML='';
+  flt.forEach(function(g){
+    const col=cc[g.cat]||'#c9a84c';
+    const div=document.createElement('div');
+    div.className='gcard';
+    const playBtn=document.createElement('button');
+    playBtn.className='gplay';
+    if(g.special==='rps'){
+      playBtn.textContent='⚔️ ابدأ المعركة';
+      playBtn.style.cssText='background:linear-gradient(135deg,rgba(201,168,76,.3),rgba(224,85,85,.2));color:white';
+      playBtn.onclick=function(){openRPS();};
+    } else {
+      playBtn.textContent='▶ العب';
+      playBtn.onclick=(function(gid){return function(){startG(gid);};})(g.id);
+    }
+    div.innerHTML='<div class="gbar '+g.cat+'"></div>'
       +'<div class="gicon">'+g.icon+'</div>'
       +'<div class="gtitle">'+g.title+'</div>'
       +'<div class="gdesc">'+g.desc+'</div>'
       +'<div class="gfoot">'
       +'<span class="gtag" style="color:'+col+';border-color:'+col+'40;background:'+col+'15">'+cn[g.cat]+'</span>'
-      +'<button class="gplay" onclick="startG(\''+g.id+'\')">▶ العب</button>'
-      +'</div></div>';
-  }).join('');
+      +'</div>';
+    div.querySelector('.gfoot').appendChild(playBtn);
+    el.appendChild(div);
+  });
 }
 window.fGames=(btn)=>{document.querySelectorAll('#gFilters .pill').forEach(b=>b.classList.remove('on'));btn.classList.add('on');curGF=btn.dataset.gf;renderGames();};
 window.startG=(id)=>{
@@ -2223,9 +2371,11 @@ window.loadCinemaFile = (inp) => {
   openCinema(url, file.name);
 };
 
-window.openCinemaFromUrl = () => {
+window.openCinemaFromUrl = async () => {
   const url = (document.getElementById('cinemaUrl').value||'').trim();
   if(!url) return;
+  // Broadcast URL to partner
+  if(pId) await setDoc(doc(db,'shared',cid()),{cinema:{action:'load_url',url,by:uid,at:Date.now()}},{merge:true});
   openCinema(url, 'فيديو مشترك');
 };
 
@@ -2392,6 +2542,315 @@ function showPartnerAct(msg) {
   setTimeout(() => el.style.display = 'none', 2500);
 }
 
+
+// ── EMOJI PICKER ──
+window.toggleEmojiPicker = () => {
+  const ep = document.getElementById('emojiPickerPanel');
+  const sp = document.getElementById('stickerPanel');
+  const isOpen = ep.style.display === 'flex';
+  ep.style.display = isOpen ? 'none' : 'flex';
+  if(!isOpen) sp.classList.remove('show');
+};
+window.insertEmoji = (e) => {
+  const inp = document.getElementById('msgInput');
+  const pos = inp.selectionStart || inp.value.length;
+  inp.value = inp.value.slice(0,pos) + e + inp.value.slice(pos);
+  inp.focus();
+  aR(inp);
+};
+
+// ── STICKER CATEGORIES ──
+const stkData = {
+  love:['🌹','💛','😍','🥰','💋','💕','💞','💓','💗','💝','💘','🎀','👫','🫶','😘','💍','💒','🥂','🌷','💌'],
+  fun:['😂','🤣','🙈','🙉','🙊','😜','🤪','😝','🤡','👻','😈','🤓','🥸','🫠','🤯','🥴','😵','🤠','👽','🫣'],
+  nature:['🌺','✨','🌙','💎','🔥','🌸','🌼','🌻','🍀','🦋','🐚','🌊','🏔️','🌅','🌈','⭐','🌟','💫','🍃','🌿'],
+  mood:['😴','😔','😢','😭','🥺','😤','😠','🙄','😒','🫤','😑','🤗','🫂','🥹','😶','🤭','🫡','🤫','😌','😏'],
+  celeb:['🎉','🎊','🎈','🎁','🏆','🥇','👑','🎂','🍰','🎆','🎇','🪅','🎯','🎮','🎴','🀄','🎲','🎪','🪩','💃'],
+  food:['🍕','🍔','🌮','🍜','🍣','🍩','🍪','🎂','🧁','🍦','🧋','☕','🍵','🫖','🥤','🍷','🍹','🍸','🥂','🧃']
+};
+let curStkCat = 'love';
+window.stkCat = (btn, cat) => {
+  document.querySelectorAll('#stkCatTabs .pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  curStkCat = cat;
+  renderStkGrid();
+};
+function renderStkGrid() {
+  const grid = document.getElementById('stickerGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  (stkData[curStkCat]||stkData.love).forEach(e=>{
+    const span = document.createElement('span');
+    span.className = 'stk';
+    span.textContent = e;
+    span.onclick = ()=>sendStk(e);
+    grid.appendChild(span);
+  });
+}
+
+// ── NOVEL READER ──
+let novelPages = [], novelCurPage = 0, novelFontSz = 15, novelTitle = '';
+const NOVEL_CHARS = 1800;
+
+window.loadNovelFile = (inp) => {
+  if(!inp.files.length) return;
+  const file = inp.files[0];
+  novelTitle = file.name.replace('.txt','');
+  const reader = new FileReader();
+  reader.onload = e => initNovel(e.target.result, novelTitle);
+  reader.readAsText(file, 'UTF-8');
+};
+
+window.loadNovelText = () => {
+  const txt = (document.getElementById('novelPasteArea').value||'').trim();
+  if(!txt) return;
+  initNovel(txt, 'الرواية');
+};
+
+function initNovel(text, title) {
+  novelTitle = title;
+  novelPages = [];
+  const clean = text.split('\r\n').join('\n').split('\r').join('\n');
+  // Split into pages by char count, respecting paragraph breaks
+  const NL2 = '\n\n';
+  const paras = clean.split(NL2);
+  let page = '';
+  for(const para of paras) {
+    if((page + para).length > NOVEL_CHARS && page.length > 0) {
+      novelPages.push(page.trim());
+      page = para + NL2;
+    } else {
+      page += para + NL2;
+    }
+  }
+  if(page.trim()) novelPages.push(page.trim());
+  novelCurPage = 0;
+  showNovelPage();
+  document.getElementById('novelUploadSection').style.display = 'none';
+  document.getElementById('novelReaderSection').style.display = 'flex';
+  document.getElementById('novelTitle').textContent = '📖 ' + novelTitle;
+  // Sync with partner
+  syncNovelPage();
+}
+function showNovelPage() {
+  const el = document.getElementById('novelPageContent');
+  if(!el || !novelPages.length) return;
+  el.style.fontSize = novelFontSz + 'px';
+  el.textContent = novelPages[novelCurPage] || '';
+  document.getElementById('novelCurPage').textContent = novelCurPage + 1;
+  document.getElementById('novelTotalPages').textContent = novelPages.length;
+  document.getElementById('novelPrevBtn').disabled = novelCurPage === 0;
+  document.getElementById('novelNextBtn').disabled = novelCurPage >= novelPages.length - 1;
+}
+
+window.novelChangePage = async (dir) => {
+  const next = novelCurPage + dir;
+  if(next < 0 || next >= novelPages.length) return;
+  novelCurPage = next;
+  showNovelPage();
+  await syncNovelPage();
+};
+
+window.novelFontSize = (dir) => {
+  novelFontSz = Math.max(12, Math.min(22, novelFontSz + dir * 2));
+  showNovelPage();
+};
+
+window.closeNovel = async () => {
+  novelPages = []; novelCurPage = 0;
+  document.getElementById('novelUploadSection').style.display = '';
+  document.getElementById('novelReaderSection').style.display = 'none';
+  document.getElementById('novelPasteArea').value = '';
+  if(pId) await setDoc(doc(db,'shared',cid()),{novel:{page:-1,title:'',by:uid}},{merge:true});
+};
+
+async function syncNovelPage() {
+  if(!pId) return;
+  await setDoc(doc(db,'shared',cid()),{
+    novel:{page:novelCurPage, title:novelTitle, by:uid, at:Date.now()}
+  },{merge:true});
+}
+
+// Listen for partner page in shared listener (added below)
+function handleNovelSync(sd) {
+  if(!sd.novel) return;
+  const nv = sd.novel;
+  if(nv.by === uid) return; // own change
+  const badge = document.getElementById('partnerPageBadge');
+  const txt = document.getElementById('partnerPageTxt');
+  if(!badge || !txt) return;
+  if(nv.page >= 0) {
+    badge.style.display = 'flex';
+    txt.textContent = (hrNick||pName) + ' في صفحة ' + (nv.page+1);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── ROCK PAPER SCISSORS ──
+let rpsState = {myChoice:null, partnerChoice:null, myScore:0, partnerScore:0, round:0};
+
+window.openRPS = () => {
+  if(!pId) { alert('يجب ربط الحسابين أولاً'); return; }
+  rpsState = {myChoice:null, partnerChoice:null, myScore:0, partnerScore:0, round:1};
+  // Send system message to chat that RPS started
+  addDoc(collection(db,'chats',cid(),'messages'),{
+    content:'⚔️ بدأت لعبة حجرة ورقة مقص! من يفوز؟ 🏆',
+    senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
+  });
+  showRPSModal();
+  // sync via shared
+  setDoc(doc(db,'shared',cid()),{rps:{state:'waiting',round:1,by:uid,at:Date.now()}},{merge:true});
+};
+
+function showRPSModal() {
+  let modal = document.getElementById('rpsModal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'rpsModal';
+    modal.className = 'mbg show';
+    document.body.appendChild(modal);
+  }
+  modal.className = 'mbg show';
+  renderRPS();
+}
+
+function renderRPS() {
+  const modal = document.getElementById('rpsModal');
+  if(!modal) return;
+  const hn = hrNick||pName;
+  const waiting = rpsState.myChoice !== null && rpsState.partnerChoice === null;
+  const bothChose = rpsState.myChoice !== null && rpsState.partnerChoice !== null;
+  const result = bothChose ? getRPSResult(rpsState.myChoice, rpsState.partnerChoice) : null;
+
+  modal.innerHTML = `
+  <div style="background:linear-gradient(135deg,#0e0d12,#1a0a1a);border:2px solid rgba(201,168,76,.4);border-radius:22px;padding:22px;width:100%;max-width:380px;text-align:center">
+    <div style="font-size:28px;margin-bottom:4px">⚔️</div>
+    <div style="font-size:18px;font-weight:700;color:var(--g);margin-bottom:2px">حجرة ورقة مقص</div>
+    <div style="font-size:12px;color:var(--tm);margin-bottom:14px">جولة ${rpsState.round}</div>
+    
+    <!-- Scores -->
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <div style="flex:1;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:10px">
+        <div style="font-size:11px;color:var(--tm)">أنت</div>
+        <div style="font-size:28px;font-weight:700;color:var(--g)">${rpsState.myScore}</div>
+      </div>
+      <div style="flex:1;background:rgba(224,122,142,.1);border:1px solid rgba(224,122,142,.25);border-radius:12px;padding:10px">
+        <div style="font-size:11px;color:var(--tm)">${hn}</div>
+        <div style="font-size:28px;font-weight:700;color:var(--pk)">${rpsState.partnerScore}</div>
+      </div>
+    </div>
+
+    ${bothChose ? `
+    <!-- Result display -->
+    <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:14px;background:rgba(255,255,255,.04);border-radius:14px;padding:16px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-size:42px">${getRPSEmoji(rpsState.myChoice)}</div>
+        <div style="font-size:11px;color:var(--tm)">أنت</div>
+      </div>
+      <div style="font-size:22px;color:var(--g)">VS</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div style="font-size:42px">${getRPSEmoji(rpsState.partnerChoice)}</div>
+        <div style="font-size:11px;color:var(--tm)">${hn}</div>
+      </div>
+    </div>
+    <div style="font-size:17px;font-weight:700;color:${result==='win'?'#4ade80':result==='lose'?'#ff8080':'#ffb347'};margin-bottom:14px">
+      ${result==='win'?'🎉 فزت!':result==='lose'?'😔 خسرت!':'🤝 تعادل!'}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="nextRPSRound()" style="padding:10px 20px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">جولة جديدة 🔄</button>
+      <button onclick="closeRPS()" style="padding:10px 16px;border-radius:12px;border:1px solid rgba(201,168,76,.3);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">إنهاء</button>
+    </div>
+    ` : `
+    <!-- Choices -->
+    ${waiting ? `<div style="font-size:13px;color:var(--tm);margin-bottom:14px;padding:10px;background:rgba(201,168,76,.08);border-radius:10px">✅ اخترت! بانتظار ${hn}...</div>` : `<div style="font-size:13px;color:var(--tm);margin-bottom:12px">اختر سلاحك:</div>`}
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:16px">
+      ${['rock','paper','scissors'].map(c=>`
+        <button onclick="chooseRPS('${c}')" 
+          style="width:72px;height:72px;border-radius:50%;border:2px solid ${rpsState.myChoice===c?'var(--g)':'rgba(255,255,255,.15)'};background:${rpsState.myChoice===c?'rgba(201,168,76,.2)':'rgba(255,255,255,.05)'};font-size:32px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center"
+          ${rpsState.myChoice!==null?'disabled':''}>
+          ${getRPSEmoji(c)}
+        </button>`).join('')}
+    </div>
+    <div style="display:flex;justify-content:center;gap:20px;font-size:11px;color:var(--tm);margin-bottom:14px">
+      <span>حجرة</span><span>ورقة</span><span>مقص</span>
+    </div>
+    <button onclick="closeRPS()" style="padding:8px 18px;border-radius:10px;border:1px solid rgba(201,168,76,.2);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">إنهاء اللعبة</button>
+    `}
+  </div>`;
+}
+
+function getRPSEmoji(c) {
+  return c==='rock'?'✊':c==='paper'?'🖐️':c==='scissors'?'✌️':'❓';
+}
+function getRPSResult(mine, theirs) {
+  if(mine===theirs) return 'draw';
+  if((mine==='rock'&&theirs==='scissors')||(mine==='paper'&&theirs==='rock')||(mine==='scissors'&&theirs==='paper')) return 'win';
+  return 'lose';
+}
+
+window.chooseRPS = async (choice) => {
+  if(rpsState.myChoice) return;
+  rpsState.myChoice = choice;
+  renderRPS();
+  await setDoc(doc(db,'shared',cid()),{
+    rps:{state:'chose', choice, by:uid, round:rpsState.round, at:Date.now()}
+  },{merge:true});
+};
+
+window.nextRPSRound = async () => {
+  rpsState.myChoice = null;
+  rpsState.partnerChoice = null;
+  rpsState.round++;
+  renderRPS();
+  await setDoc(doc(db,'shared',cid()),{
+    rps:{state:'waiting', round:rpsState.round, by:uid, at:Date.now()}
+  },{merge:true});
+};
+
+window.closeRPS = async () => {
+  const modal = document.getElementById('rpsModal');
+  if(modal) modal.remove();
+  await setDoc(doc(db,'shared',cid()),{rps:{state:'closed',by:uid}},{merge:true});
+};
+
+// Handle incoming RPS from partner
+function handleRPSSync(sd) {
+  if(!sd.rps) return;
+  const r = sd.rps;
+  if(r.by === uid) return;
+  if(r.state === 'chose' && r.round === rpsState.round) {
+    rpsState.partnerChoice = r.choice;
+    // Calculate scores
+    const res = getRPSResult(rpsState.myChoice, rpsState.partnerChoice);
+    if(res==='win') rpsState.myScore++;
+    else if(res==='lose') rpsState.partnerScore++;
+    // Send result to chat
+    const hn = hrNick||pName;
+    const msg = res==='win'?'🎉 فزت في الجولة '+rpsState.round+'!':res==='lose'?'😔 '+hn+' فازت في الجولة '+rpsState.round:'🤝 تعادل في الجولة '+rpsState.round;
+    addDoc(collection(db,'chats',cid(),'messages'),{content:msg,senderId:uid,type:'system',reactions:[],sentAt:serverTimestamp()});
+    showRPSModal();
+  } else if(r.state === 'waiting') {
+    rpsState.myChoice = null;
+    rpsState.partnerChoice = null;
+    rpsState.round = r.round;
+    if(document.getElementById('rpsModal')) renderRPS();
+  } else if(r.state === 'closed') {
+    const modal = document.getElementById('rpsModal');
+    if(modal) modal.remove();
+  } else if(!document.getElementById('rpsModal') && (r.state==='waiting'||r.state==='chose')) {
+    // Partner started RPS or sent a move without us having modal open
+    rpsState = {myChoice:null, partnerChoice:null, myScore:0, partnerScore:0, round:r.round||1};
+    showRPSModal();
+    // If they already chose, mark it
+    if(r.state==='chose'){ rpsState.partnerChoice = r.choice; renderRPS(); }
+  }
+}
+
+
+window.joinCinema = (url) => {
+  openCinema(url, 'مشاهدة مشتركة 🎬');
+};
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
 window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
