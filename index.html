@@ -2653,16 +2653,17 @@ window.confirmSendMedia = async (dataUrl, type) => {
 
 // ── CINEMA ──
 let cinemaIsSyncing = false;
-let screenShareStream = null;   // MediaStream from getDisplayMedia
-let screenSharePeer   = null;   // RTCPeerConnection (host)
-let guestPeer         = null;   // RTCPeerConnection (guest)
-let cinemaSessionId   = null;
+let cinemaUploadAbort = false;
 
-// ── HOST: user loads a video, then clicks share ──
+// ─── HOST: load local file → chunk upload to Firestore ───
 window.loadCinemaFile = (inp) => {
   if(!inp.files.length) return;
   const file = inp.files[0];
-  const url  = URL.createObjectURL(file);
+  // Check size — warn if > 150MB (too slow)
+  if(file.size > 150 * 1024 * 1024) {
+    if(!confirm('الفيديو كبير (' + (file.size/1024/1024).toFixed(0) + 'MB). قد يستغرق وقتاً للرفع. هل تريد المتابعة؟')) return;
+  }
+  const url = URL.createObjectURL(file);
   openCinemaRoom(url, file.name, true);
 };
 
@@ -2681,11 +2682,8 @@ function openCinemaRoom(src, title, isLocal) {
   const video   = document.getElementById('cinemaVideo');
   overlay.classList.add('show');
   document.getElementById('cinemaIntroSub').textContent = '🎬 ' + title;
-
-  // Show share-screen button for local files only
   const shareBtn = document.getElementById('cinemaShareBtn');
   if(shareBtn) shareBtn.style.display = isLocal ? 'flex' : 'none';
-
   setTimeout(() => {
     intro.classList.add('fade');
     video.src = src;
@@ -2698,400 +2696,316 @@ function openCinemaRoom(src, title, isLocal) {
 
 function updateCinemaWaitUI(isLocal) {
   const badge = document.getElementById('cinemaSyncBadge');
-  const partnerWait = document.getElementById('cinemaPartnerWait');
+  const wait  = document.getElementById('cinemaPartnerWait');
   if(isLocal) {
-    if(badge) { badge.style.display='flex'; badge.textContent='📁 ملف محلي'; }
-    if(partnerWait) partnerWait.style.display = 'none';
+    if(badge){badge.style.display='flex';badge.textContent='📁 ملف محلي';}
+    if(wait) wait.style.display='none';
     document.getElementById('cinemaPlayBtn').disabled = false;
   } else {
-    if(badge) { badge.style.display='flex'; badge.textContent='⏳ بانتظار الشريك...'; }
-    if(partnerWait) partnerWait.style.display = 'flex';
+    if(badge){badge.style.display='flex';badge.textContent='⏳ بانتظار الشريك...';}
+    if(wait) wait.style.display='flex';
     document.getElementById('cinemaPlayBtn').disabled = true;
   }
 }
 
 function enableCinemaPlayback() {
   const badge = document.getElementById('cinemaSyncBadge');
-  if(badge) { badge.style.display='flex'; badge.textContent='🔴 بث مباشر'; }
-  const partnerWait = document.getElementById('cinemaPartnerWait');
-  if(partnerWait) partnerWait.style.display = 'none';
+  if(badge){badge.style.display='flex';badge.textContent='🔴 بث مباشر';}
+  const wait = document.getElementById('cinemaPartnerWait');
+  if(wait) wait.style.display='none';
   document.getElementById('cinemaPlayBtn').disabled = false;
   showPartnerAct('🎬 ' + (hrNick||pName) + ' انضم!');
 }
 
-// ── SCREEN SHARE (host) ──
+// ─── SHARE: convert blob URL → base64 → chunks → Firestore ───
 window.startScreenShare = async () => {
-  if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
+  if(!pId){ showToast('يجب ربط الحسابين أولاً'); return; }
+  const video = document.getElementById('cinemaVideo');
+  if(!video.src && !video.currentSrc){ showToast('ارفع فيديو أولاً'); return; }
+
+  const shareBtn = document.getElementById('cinemaShareBtn');
+  const badge    = document.getElementById('cinemaSyncBadge');
+
+  // Fetch the video blob from the object URL
+  showCinemaProgress('⬆️ جاري تحضير الفيديو للمشاركة...', 0);
   try {
-    // Pause cinema video first
-    document.getElementById('cinemaVideo').pause();
+    const resp = await fetch(video.src || video.currentSrc);
+    const blob = await resp.blob();
+    const mimeType = blob.type || 'video/mp4';
+    const totalBytes = blob.size;
 
-    // Get screen stream
-    screenShareStream = await navigator.mediaDevices.getDisplayMedia({
-      video:{ frameRate:30 }, audio:true
-    });
+    // Convert to base64 in chunks of 700KB (fits Firestore 1MB limit)
+    const CHUNK = 700 * 1024; // bytes per chunk
+    const totalChunks = Math.ceil(totalBytes / CHUNK);
 
-    // Show stream in cinema for host too
-    const hostVid = document.getElementById('cinemaVideo');
-    hostVid.srcObject = screenShareStream;
-    hostVid.play().catch(()=>{});
-
-    const shareBtn = document.getElementById('cinemaShareBtn');
-    if(shareBtn) {
-      shareBtn.textContent = '⏹ إيقاف المشاركة';
-      shareBtn.style.background = 'rgba(224,85,85,.7)';
-      shareBtn.onclick = stopScreenShare;
-    }
-
-    // Update badge
-    const badge = document.getElementById('cinemaSyncBadge');
-    if(badge) { badge.style.display='flex'; badge.textContent='📡 جاري مشاركة الشاشة...'; }
-
-    // Create WebRTC peer connection
-    cinemaSessionId = 'rtc_' + Date.now();
-    screenSharePeer = new RTCPeerConnection({
-      iceServers:[
-        {urls:'stun:stun.l.google.com:19302'},
-        {urls:'stun:stun1.l.google.com:19302'}
-      ]
-    });
-
-    // Add all tracks from screen stream
-    screenShareStream.getTracks().forEach(track =>
-      screenSharePeer.addTrack(track, screenShareStream)
-    );
-
-    // Collect ICE candidates
-    const iceCandidates = [];
-    screenSharePeer.onicecandidate = e => {
-      if(e.candidate) iceCandidates.push(JSON.stringify(e.candidate.toJSON()));
-    };
-
-    // Create offer
-    const offer = await screenSharePeer.createOffer();
-    await screenSharePeer.setLocalDescription(offer);
-
-    // Wait for ICE gathering
-    await new Promise(res => {
-      if(screenSharePeer.iceGatheringState === 'complete') { res(); return; }
-      screenSharePeer.onicegatheringstatechange = () => {
-        if(screenSharePeer.iceGatheringState === 'complete') res();
-      };
-      setTimeout(res, 4000);
-    });
-
-    // Save offer to Firestore
+    // Save session metadata
+    const sessionId = 'cine_' + Date.now();
     await setDoc(doc(db,'shared',cid()),{
-      cinemaRTC:{
-        state: 'offer',
-        sessionId: cinemaSessionId,
-        by: uid,
-        sdp: JSON.stringify(screenSharePeer.localDescription),
-        ice: iceCandidates,
-        at: Date.now()
+      cinemaShare:{
+        sessionId, by:uid, mimeType,
+        totalChunks, totalBytes,
+        status:'uploading', startedAt:Date.now()
       }
     },{merge:true});
 
     // Send invite to chat
     await addDoc(collection(db,'chats',cid(),'messages'),{
-      content: JSON.stringify({
-        type:'cinema_invite',
-        sessionId: cinemaSessionId,
-        title:'مشاركة شاشة السينما 🎬'
-      }),
+      content: JSON.stringify({type:'cinema_invite', sessionId, title:'فيديو مشترك 🎬'}),
       senderId:uid, type:'cinema_invite', reactions:[], sentAt:serverTimestamp()
     });
 
-    // Listen for guest answer
-    const unsub = onSnapshot(doc(db,'shared',cid()), async snap => {
-      if(!snap.exists()) return;
-      const rtc = snap.data().cinemaRTC;
-      if(!rtc || rtc.by===uid || rtc.state!=='answer') return;
-      if(rtc.sessionId !== cinemaSessionId) return;
-      unsub();
-      await screenSharePeer.setRemoteDescription(
-        new RTCSessionDescription(JSON.parse(rtc.sdp))
-      );
-      (rtc.ice||[]).forEach(c =>
-        screenSharePeer.addIceCandidate(new RTCIceCandidate(JSON.parse(c))).catch(()=>{})
-      );
-      enableCinemaPlayback();
-    });
+    cinemaUploadAbort = false;
+    if(shareBtn){ shareBtn.textContent='⏹ إلغاء المشاركة'; shareBtn.onclick=()=>{cinemaUploadAbort=true;}; }
 
-    // Handle stream end (user stops sharing)
-    screenShareStream.getVideoTracks()[0].onended = () => stopScreenShare();
+    // Upload chunks
+    for(let i=0; i<totalChunks; i++){
+      if(cinemaUploadAbort){ showToast('تم إلغاء المشاركة'); hideCinemaProgress(); return; }
+      const start = i * CHUNK;
+      const end   = Math.min(start + CHUNK, totalBytes);
+      const chunkBlob = blob.slice(start, end);
 
-    showToast('📡 تم بدء مشاركة الشاشة! بانتظار الشريك...');
+      // Convert chunk to base64
+      const b64 = await new Promise((res,rej)=>{
+        const r = new FileReader();
+        r.onload  = e => res(e.target.result.split(',')[1]);
+        r.onerror = rej;
+        r.readAsDataURL(chunkBlob);
+      });
+
+      // Save chunk to Firestore
+      await setDoc(doc(db,'cinemaChunks',cid()+'_'+sessionId+'_'+i),{
+        data:b64, idx:i, sessionId, coupId:cid()
+      });
+
+      const pct = Math.round((i+1)/totalChunks*100);
+      showCinemaProgress('⬆️ جاري المشاركة... ' + pct + '% (' + (i+1) + '/' + totalChunks + ')', pct);
+    }
+
+    // Mark complete
+    await setDoc(doc(db,'shared',cid()),{
+      cinemaShare:{
+        sessionId, by:uid, mimeType,
+        totalChunks, totalBytes,
+        status:'ready', readyAt:Date.now()
+      }
+    },{merge:true});
+
+    hideCinemaProgress();
+    if(badge){badge.style.display='flex';badge.textContent='📡 مشاركة نشطة';}
+    if(shareBtn){ shareBtn.textContent='⏹ إيقاف المشاركة'; shareBtn.onclick=stopScreenShare; }
+    showToast('✅ تم المشاركة! بانتظار انضمام الشريك...');
 
   } catch(err) {
-    if(err.name !== 'NotAllowedError') showToast('خطأ: ' + err.message);
+    hideCinemaProgress();
+    showToast('خطأ: ' + err.message);
   }
 };
 
 window.stopScreenShare = async () => {
-  if(screenShareStream) {
-    screenShareStream.getTracks().forEach(t => t.stop());
-    screenShareStream = null;
-  }
-  if(screenSharePeer) { screenSharePeer.close(); screenSharePeer = null; }
-
-  // Restore file video
-  const vid = document.getElementById('cinemaVideo');
-  vid.srcObject = null;
-
+  cinemaUploadAbort = true;
+  await setDoc(doc(db,'shared',cid()),{cinemaShare:{status:'stopped',by:uid}},{merge:true});
   const shareBtn = document.getElementById('cinemaShareBtn');
-  if(shareBtn) {
-    shareBtn.textContent = '📡 شارك الشاشة مع شريكك';
-    shareBtn.style.background = 'rgba(201,168,76,.2)';
-    shareBtn.onclick = startScreenShare;
-  }
-
-  await setDoc(doc(db,'shared',cid()),{cinemaRTC:{state:'stopped',by:uid}},{merge:true});
-  showToast('تم إيقاف مشاركة الشاشة');
+  if(shareBtn){ shareBtn.textContent='📡 شارك الشاشة مع شريكك'; shareBtn.onclick=startScreenShare; }
+  showToast('تم إيقاف المشاركة');
 };
 
-// ── GUEST: partner joins screen share ──
+// ─── GUEST: receives invite → downloads chunks → plays ───
 window.joinCinema = async (url, title, sessionId) => {
   if(sessionId) {
-    await joinScreenShare(sessionId);
+    await guestDownloadAndPlay(sessionId);
   } else if(url) {
     await setDoc(doc(db,'shared',cid()),{
       cinemaSession:{url,title,by:uid,status:'joined',joinedAt:Date.now()}
     },{merge:true});
-    openCinemaRoom(url, title, false);
+    openCinemaRoom(url, title||'فيديو مشترك', false);
   }
 };
 
-async function joinScreenShare(sessionId) {
-  // Get offer from Firestore
+async function guestDownloadAndPlay(sessionId) {
+  // Wait for host to mark status:'ready' or use current state
   const snap = await getDoc(doc(db,'shared',cid()));
-  if(!snap.exists()) { showToast('⚠️ لم تُوجد جلسة نشطة'); return; }
-  const rtcData = snap.data().cinemaRTC;
-  if(!rtcData || rtcData.state !== 'offer' || rtcData.sessionId !== sessionId) {
-    showToast('⚠️ انتهت الجلسة أو لم تبدأ بعد'); return;
+  if(!snap.exists()){ showToast('⚠️ لم تُوجد جلسة'); return; }
+  const share = snap.data().cinemaShare;
+  if(!share || share.sessionId !== sessionId){
+    // Session changed or waiting — listen for ready
+    showToast('⏳ الملف لا يزال يُرفع، انتظر...');
+    const unsub = onSnapshot(doc(db,'shared',cid()), async (s)=>{
+      if(!s.exists()) return;
+      const sh = s.data().cinemaShare;
+      if(sh && sh.sessionId===sessionId && sh.status==='ready'){
+        unsub();
+        await downloadChunksAndPlay(sessionId, sh.mimeType, sh.totalChunks);
+      }
+    });
+    return;
   }
+  if(share.status === 'uploading'){
+    showToast('⏳ الملف لا يزال يُرفع، سيبدأ تلقائياً...');
+    const unsub = onSnapshot(doc(db,'shared',cid()), async (s)=>{
+      if(!s.exists()) return;
+      const sh = s.data().cinemaShare;
+      if(sh && sh.sessionId===sessionId && sh.status==='ready'){
+        unsub();
+        await downloadChunksAndPlay(sessionId, sh.mimeType, sh.totalChunks);
+      }
+    });
+    return;
+  }
+  if(share.status === 'ready'){
+    await downloadChunksAndPlay(sessionId, share.mimeType, share.totalChunks);
+  }
+}
 
-  // Open cinema UI first
+async function downloadChunksAndPlay(sessionId, mimeType, totalChunks) {
+  // Open cinema overlay
   const overlay = document.getElementById('cinemaOverlay');
   const intro   = document.getElementById('cinemaIntro');
   overlay.classList.add('show');
-  document.getElementById('cinemaIntroSub').textContent = '🎬 مشاهدة مشتركة';
-  setTimeout(() => { intro.classList.add('fade'); }, 2000);
-  setTimeout(() => { intro.style.display = 'none'; }, 2800);
-
-  const badge = document.getElementById('cinemaSyncBadge');
-  if(badge) { badge.style.display='flex'; badge.textContent='🔗 جاري الاتصال...'; }
+  document.getElementById('cinemaIntroSub').textContent = '🎬 جاري التحميل...';
   const shareBtn = document.getElementById('cinemaShareBtn');
   if(shareBtn) shareBtn.style.display = 'none';
+  showCinemaProgress('⬇️ جاري تحميل الفيديو... 0%', 0);
 
-  guestPeer = new RTCPeerConnection({
-    iceServers:[
-      {urls:'stun:stun.l.google.com:19302'},
-      {urls:'stun:stun1.l.google.com:19302'}
-    ]
-  });
-
-  // Receive stream from host → show in cinema
-  guestPeer.ontrack = e => {
-    const vid = document.getElementById('cinemaVideo');
-    if(!vid.srcObject) {
-      vid.srcObject = e.streams[0];
-      vid.play().catch(()=>{});
-      if(badge) { badge.style.display='flex'; badge.textContent='🔴 بث مباشر'; }
-      const partnerWait = document.getElementById('cinemaPartnerWait');
-      if(partnerWait) partnerWait.style.display = 'none';
-      document.getElementById('cinemaPlayBtn').disabled = true; // guest can't control
-      showToast('✅ بدأت المشاهدة المشتركة!');
+  try {
+    const chunks = [];
+    for(let i=0; i<totalChunks; i++){
+      const docSnap = await getDoc(doc(db,'cinemaChunks', cid()+'_'+sessionId+'_'+i));
+      if(!docSnap.exists()) throw new Error('chunk '+i+' missing');
+      chunks.push(docSnap.data().data); // base64 string
+      const pct = Math.round((i+1)/totalChunks*100);
+      showCinemaProgress('⬇️ جاري التحميل... '+pct+'%', pct);
     }
-  };
 
-  // Collect ICE
-  const iceCandidates = [];
-  guestPeer.onicecandidate = e => {
-    if(e.candidate) iceCandidates.push(JSON.stringify(e.candidate.toJSON()));
-  };
+    // Assemble base64 → Blob → Object URL
+    const fullBase64 = chunks.join('');
+    const byteArr = Uint8Array.from(atob(fullBase64), c=>c.charCodeAt(0));
+    const videoBlob = new Blob([byteArr], {type: mimeType||'video/mp4'});
+    const videoUrl  = URL.createObjectURL(videoBlob);
 
-  // Set remote offer
-  await guestPeer.setRemoteDescription(
-    new RTCSessionDescription(JSON.parse(rtcData.sdp))
-  );
-  // Add host's ICE candidates
-  (rtcData.ice||[]).forEach(c =>
-    guestPeer.addIceCandidate(new RTCIceCandidate(JSON.parse(c))).catch(()=>{})
-  );
+    hideCinemaProgress();
 
-  // Create answer
-  const answer = await guestPeer.createAnswer();
-  await guestPeer.setLocalDescription(answer);
+    // Play in cinema
+    setTimeout(()=>{ intro.classList.add('fade'); }, 200);
+    setTimeout(()=>{ intro.style.display='none'; }, 1000);
 
-  // Wait for ICE
-  await new Promise(res => {
-    if(guestPeer.iceGatheringState==='complete'){res();return;}
-    guestPeer.onicegatheringstatechange = () => {
-      if(guestPeer.iceGatheringState==='complete') res();
-    };
-    setTimeout(res, 4000);
-  });
+    const video = document.getElementById('cinemaVideo');
+    video.src = videoUrl;
+    video.load();
 
-  // Save answer to Firestore
-  await setDoc(doc(db,'shared',cid()),{
-    cinemaRTC:{
-      state:'answer',
-      sessionId,
-      by: uid,
-      sdp: JSON.stringify(guestPeer.localDescription),
-      ice: iceCandidates,
-      at: Date.now()
-    }
-  },{merge:true});
+    const badge = document.getElementById('cinemaSyncBadge');
+    if(badge){badge.style.display='flex';badge.textContent='🔴 مشاهدة مشتركة';}
+    const wait = document.getElementById('cinemaPartnerWait');
+    if(wait) wait.style.display='none';
+    document.getElementById('cinemaPlayBtn').disabled = false;
 
-  // Listen for stop
-  onSnapshot(doc(db,'shared',cid()), snap => {
-    if(!snap.exists()) return;
-    const rtc = snap.data().cinemaRTC;
-    if(rtc && rtc.state==='stopped' && rtc.by!==uid) {
-      const vid = document.getElementById('cinemaVideo');
-      vid.srcObject = null;
-      if(badge) { badge.style.display='flex'; badge.textContent='⏸ انتهت المشاركة'; }
-      showToast('انتهت مشاركة الشاشة من الطرف الآخر');
-    }
-  });
+    showToast('✅ جاهز! يمكنك البدء الآن');
+    setupCinemaListener();
+
+    // Notify host
+    await setDoc(doc(db,'shared',cid()),{
+      cinemaSession:{by:uid, status:'joined', joinedAt:Date.now()}
+    },{merge:true});
+
+  } catch(err) {
+    hideCinemaProgress();
+    overlay.classList.remove('show');
+    showToast('خطأ في التحميل: '+err.message);
+  }
 }
 
+// ─── Progress overlay ───
+function showCinemaProgress(msg, pct) {
+  let el = document.getElementById('cinemaProgressOverlay');
+  if(!el) {
+    el = document.createElement('div');
+    el.id = 'cinemaProgressOverlay';
+    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px';
+    el.innerHTML = '<div style="font-size:36px" id="cpIcon">⬆️</div>'
+      + '<div style="font-size:15px;font-weight:700;color:var(--g)" id="cpMsg">جاري...</div>'
+      + '<div style="width:280px;height:8px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden">'
+      +   '<div id="cpBar" style="height:100%;width:0%;background:var(--g);border-radius:8px;transition:width .4s"></div>'
+      + '</div>'
+      + '<div id="cpPct" style="font-size:13px;color:rgba(255,255,255,.5)">0%</div>';
+    document.body.appendChild(el);
+  }
+  el.style.display = 'flex';
+  document.getElementById('cpMsg').textContent = msg;
+  document.getElementById('cpBar').style.width = pct + '%';
+  document.getElementById('cpPct').textContent = pct + '%';
+}
+
+function hideCinemaProgress() {
+  const el = document.getElementById('cinemaProgressOverlay');
+  if(el) el.style.display = 'none';
+}
+
+// ─── Sync controls (URL-based sessions) ───
 function setupCinemaListener() {
   if(!pId) return;
   const video = document.getElementById('cinemaVideo');
   video.ontimeupdate = () => {
-    const prog = video.duration ? (video.currentTime/video.duration*100) : 0;
-    document.getElementById('cinemaProgFill').style.width = prog + '%';
-    document.getElementById('cinemaTimeDisp').textContent =
-      fmtSec(video.currentTime) + ' / ' + fmtSec(video.duration||0);
+    const p = video.duration?(video.currentTime/video.duration*100):0;
+    document.getElementById('cinemaProgFill').style.width = p+'%';
+    document.getElementById('cinemaTimeDisp').textContent = fmtSec(video.currentTime)+' / '+fmtSec(video.duration||0);
   };
-
   onSnapshot(doc(db,'shared',cid()), snap => {
     if(!snap.exists()) return;
     const sd = snap.data();
-    if(sd.cinemaSession && sd.cinemaSession.by!==uid && sd.cinemaSession.status==='joined')
-      enableCinemaPlayback();
+    if(sd.cinemaSession && sd.cinemaSession.by!==uid && sd.cinemaSession.status==='joined') enableCinemaPlayback();
     if(sd.cinemaCmd && sd.cinemaCmd.by!==uid) {
-      const cmd = sd.cinemaCmd;
-      cinemaIsSyncing = true;
-      if(cmd.action==='play'){
-        if(Math.abs(video.currentTime-cmd.time)>1.5) video.currentTime=cmd.time;
-        video.play().catch(()=>{});
-        document.getElementById('cinemaPlayBtn').textContent='⏸';
-        showPartnerAct((hrNick||pName)+' ▶ شغّل');
-      } else if(cmd.action==='pause'){
-        video.pause();
-        if(Math.abs(video.currentTime-cmd.time)>1.5) video.currentTime=cmd.time;
-        document.getElementById('cinemaPlayBtn').textContent='▶';
-        showPartnerAct((hrNick||pName)+' ⏸ أوقف');
-      } else if(cmd.action==='seek'){
-        video.currentTime=cmd.time;
-        showPartnerAct((hrNick||pName)+' ⏩');
-      } else if(cmd.action==='msg'){
-        addCinemaBubble(cmd.msg, false);
-      } else if(cmd.action==='close'){
-        closeCinemaLocal();
-      }
-      setTimeout(()=>cinemaIsSyncing=false, 300);
+      const cmd=sd.cinemaCmd; cinemaIsSyncing=true;
+      if(cmd.action==='play'){if(Math.abs(video.currentTime-cmd.time)>1.5)video.currentTime=cmd.time;video.play().catch(()=>{});document.getElementById('cinemaPlayBtn').textContent='⏸';showPartnerAct((hrNick||pName)+' ▶');}
+      else if(cmd.action==='pause'){video.pause();if(Math.abs(video.currentTime-cmd.time)>1.5)video.currentTime=cmd.time;document.getElementById('cinemaPlayBtn').textContent='▶';showPartnerAct((hrNick||pName)+' ⏸');}
+      else if(cmd.action==='seek'){video.currentTime=cmd.time;showPartnerAct((hrNick||pName)+' ⏩');}
+      else if(cmd.action==='msg'){addCinemaBubble(cmd.msg,false);}
+      else if(cmd.action==='close'){closeCinemaLocal();}
+      setTimeout(()=>cinemaIsSyncing=false,300);
     }
     if(sd.cinemaSession && sd.cinemaSession.by!==uid && sd.cinemaSession.status==='waiting' && sd.cinemaSession.url){
-      const statusEl = document.getElementById('cinemaStatusTxt');
-      if(statusEl && !document.getElementById('cinemaOverlay').classList.contains('show')) {
-        window._pendingCinemaUrl = sd.cinemaSession.url;
+      const statusEl=document.getElementById('cinemaStatusTxt');
+      if(statusEl&&!document.getElementById('cinemaOverlay').classList.contains('show')){
+        window._pendingCinemaUrl=sd.cinemaSession.url;
         statusEl.innerHTML='';
-        const info=document.createElement('div');
-        info.style.cssText='font-size:13px;color:var(--tx);margin-bottom:10px';
-        info.innerHTML='🎬 <strong style="color:var(--g)">'+(hrNick||pName)+'</strong> يدعوك لمشاهدة فيديو!';
-        const jBtn=document.createElement('button');
-        jBtn.className='pbtn'; jBtn.textContent='▶ انضم';
+        const info=document.createElement('div');info.style.cssText='font-size:13px;color:var(--tx);margin-bottom:10px';
+        info.innerHTML='🎬 <strong style="color:var(--g)">'+(hrNick||pName)+'</strong> يدعوك للمشاهدة!';
+        const jBtn=document.createElement('button');jBtn.className='pbtn';jBtn.textContent='▶ انضم';
         jBtn.onclick=()=>joinCinema(window._pendingCinemaUrl,'فيديو مشترك',null);
-        statusEl.appendChild(info); statusEl.appendChild(jBtn);
+        statusEl.appendChild(info);statusEl.appendChild(jBtn);
       }
     }
   });
 }
 
-function fmtSec(s) {
-  if(!s||isNaN(s)) return '0:00';
-  return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
-}
+function fmtSec(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+async function broadcastCinemaCmd(action,extra){if(!pId||cinemaIsSyncing)return;const v=document.getElementById('cinemaVideo');await setDoc(doc(db,'shared',cid()),{cinemaCmd:{action,time:v.currentTime,by:uid,at:Date.now(),...(extra||{})}},{merge:true});}
 
-async function broadcastCinemaCmd(action, extra) {
-  if(!pId||cinemaIsSyncing) return;
-  const video = document.getElementById('cinemaVideo');
-  await setDoc(doc(db,'shared',cid()),{
-    cinemaCmd:{action, time:video.currentTime, by:uid, at:Date.now(), ...(extra||{})}
-  },{merge:true});
-}
+window.cinemaPlayPause=async()=>{const v=document.getElementById('cinemaVideo'),b=document.getElementById('cinemaPlayBtn');if(v.paused){await v.play();b.textContent='⏸';await broadcastCinemaCmd('play');}else{v.pause();b.textContent='▶';await broadcastCinemaCmd('pause');}};
+window.cinemaRewind=async()=>{const v=document.getElementById('cinemaVideo');v.currentTime=Math.max(0,v.currentTime-10);await broadcastCinemaCmd('seek');};
+window.cinemaForward=async()=>{const v=document.getElementById('cinemaVideo');v.currentTime=Math.min(v.duration||0,v.currentTime+10);await broadcastCinemaCmd('seek');};
+window.cinemaSeek=async(e)=>{const v=document.getElementById('cinemaVideo'),b=document.getElementById('cinemaProgress');v.currentTime=(e.offsetX/b.offsetWidth)*(v.duration||0);await broadcastCinemaCmd('seek');};
+window.toggleCinemaMute=()=>{const v=document.getElementById('cinemaVideo');v.muted=!v.muted;document.getElementById('cinemaMuteBtn').textContent=v.muted?'🔇':'🔊';};
+window.toggleCinemaFs=()=>{const el=document.getElementById('cinemaOverlay');if(!document.fullscreenElement)el.requestFullscreen().catch(()=>{});else document.exitFullscreen();};
 
-window.cinemaPlayPause = async () => {
-  const video=document.getElementById('cinemaVideo');
-  const btn=document.getElementById('cinemaPlayBtn');
-  if(video.paused){ await video.play(); btn.textContent='⏸'; await broadcastCinemaCmd('play'); }
-  else { video.pause(); btn.textContent='▶'; await broadcastCinemaCmd('pause'); }
-};
-window.cinemaRewind  = async () => { const v=document.getElementById('cinemaVideo'); v.currentTime=Math.max(0,v.currentTime-10); await broadcastCinemaCmd('seek'); };
-window.cinemaForward = async () => { const v=document.getElementById('cinemaVideo'); v.currentTime=Math.min(v.duration||0,v.currentTime+10); await broadcastCinemaCmd('seek'); };
-window.cinemaSeek    = async (e) => { const v=document.getElementById('cinemaVideo'),b=document.getElementById('cinemaProgress'); v.currentTime=(e.offsetX/b.offsetWidth)*(v.duration||0); await broadcastCinemaCmd('seek'); };
-window.toggleCinemaMute = () => { const v=document.getElementById('cinemaVideo'); v.muted=!v.muted; document.getElementById('cinemaMuteBtn').textContent=v.muted?'🔇':'🔊'; };
-window.toggleCinemaFs   = () => { const el=document.getElementById('cinemaOverlay'); if(!document.fullscreenElement) el.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); };
-
-function closeCinemaLocal() {
-  const vid=document.getElementById('cinemaVideo');
-  vid.pause(); vid.srcObject=null; vid.src='';
-  if(screenShareStream){ screenShareStream.getTracks().forEach(t=>t.stop()); screenShareStream=null; }
-  if(screenSharePeer){ screenSharePeer.close(); screenSharePeer=null; }
-  if(guestPeer){ guestPeer.close(); guestPeer=null; }
+function closeCinemaLocal(){
+  const v=document.getElementById('cinemaVideo');v.pause();v.srcObject=null;v.src='';
   document.getElementById('cinemaOverlay').classList.remove('show');
   document.getElementById('cinemaIntro').classList.remove('fade');
   document.getElementById('cinemaIntro').style.display='';
   document.getElementById('cinemaBubbles').innerHTML='';
   document.getElementById('cinemaPlayBtn').disabled=false;
   document.getElementById('cinemaPlayBtn').textContent='▶';
-  const shareBtn=document.getElementById('cinemaShareBtn');
-  if(shareBtn){ shareBtn.textContent='📡 شارك الشاشة مع شريكك'; shareBtn.style.background='rgba(201,168,76,.2)'; shareBtn.onclick=startScreenShare; }
-  const st=document.getElementById('cinemaStatusTxt');
-  if(st) st.textContent='لا يوجد بث نشط حالياً';
+  const sb=document.getElementById('cinemaShareBtn');
+  if(sb){sb.textContent='📡 شارك الشاشة مع شريكك';sb.style.background='rgba(201,168,76,.2)';sb.onclick=startScreenShare;}
+  const st=document.getElementById('cinemaStatusTxt');if(st)st.textContent='لا يوجد بث نشط حالياً';
 }
-
-window.closeCinema = async () => {
-  closeCinemaLocal();
-  if(pId){ await broadcastCinemaCmd('close'); await setDoc(doc(db,'shared',cid()),{cinemaRTC:null,cinemaCmd:null,cinemaSession:null},{merge:true}); }
+window.closeCinema=async()=>{
+  closeCinemaLocal();cinemaUploadAbort=true;
+  if(pId){await broadcastCinemaCmd('close');await setDoc(doc(db,'shared',cid()),{cinemaShare:null,cinemaCmd:null,cinemaSession:null},{merge:true});}
 };
-
-window.sendCinemaMsg = async () => {
-  const inp=document.getElementById('cinemaMsgInput');
-  const msg=(inp.value||'').trim();
-  if(!msg||!pId) return;
-  inp.value='';
-  addCinemaBubble(msg,true);
-  await broadcastCinemaCmd('msg',{msg});
-  await addDoc(collection(db,'chats',cid(),'messages'),{content:'🎬 '+msg,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});
-};
-
-function addCinemaBubble(msg,isMe){
-  const c=document.getElementById('cinemaBubbles');
-  const b=document.createElement('div');
-  b.className='cinema-bubble'+(isMe?' me':'');
-  b.textContent=(isMe?'':((hrNick||pName)+': '))+msg;
-  c.appendChild(b);
-  while(c.children.length>5) c.removeChild(c.firstChild);
-  setTimeout(()=>b.remove(),5000);
-}
-
-function showPartnerAct(msg){
-  const el=document.getElementById('cinemaPartnerAct');
-  if(!el) return;
-  el.textContent=msg; el.style.display='block';
-  clearTimeout(el._t); el._t=setTimeout(()=>el.style.display='none',2500);
-}
-
-// startCinemaFromVideo — called from video bubble "شاهده معي في السينما"
-window.startCinemaFromVideo = (videoSrc) => {
-  openCinemaRoom(videoSrc, 'فيديو مشترك 🎬', true);
-};
+window.sendCinemaMsg=async()=>{const inp=document.getElementById('cinemaMsgInput');const msg=(inp.value||'').trim();if(!msg||!pId)return;inp.value='';addCinemaBubble(msg,true);await broadcastCinemaCmd('msg',{msg});await addDoc(collection(db,'chats',cid(),'messages'),{content:'🎬 '+msg,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});};
+function addCinemaBubble(msg,isMe){const c=document.getElementById('cinemaBubbles');const b=document.createElement('div');b.className='cinema-bubble'+(isMe?' me':'');b.textContent=(isMe?'':((hrNick||pName)+': '))+msg;c.appendChild(b);while(c.children.length>5)c.removeChild(c.firstChild);setTimeout(()=>b.remove(),5000);}
+function showPartnerAct(msg){const el=document.getElementById('cinemaPartnerAct');if(!el)return;el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2500);}
+window.startCinemaFromVideo=(videoSrc)=>{openCinemaRoom(videoSrc,'فيديو مشترك 🎬',true);};
 
 // ── NOVEL READER ──
 let novelPages = [], novelCurPage = 0, novelFontSz = 15, novelTitle = '';
