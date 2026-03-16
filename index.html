@@ -2628,12 +2628,22 @@ function getSB() {
 // ── UPLOAD helper ──
 async function uploadToSupabase(file, bucket, path, onProgress) {
   const sb = getSB();
-  // Read as ArrayBuffer for progress tracking
   const buf = await file.arrayBuffer();
   const { data, error } = await sb.storage.from(bucket).upload(path, buf, {
-    contentType: file.type, upsert: true
+    contentType: file.type || 'application/octet-stream',
+    upsert: true,
+    cacheControl: '3600'
   });
-  if(error) throw new Error(error.message);
+  if(error) {
+    // Give helpful error messages
+    if(error.message && error.message.includes('Bucket not found')) {
+      throw new Error('Bucket "shared-media" غير موجود. أنشئه في Supabase → Storage');
+    }
+    if(error.message && error.message.includes('row-level')) {
+      throw new Error('يجب تعطيل RLS في Supabase → Storage → shared-media → Policies');
+    }
+    throw new Error(error.message || 'فشل الرفع');
+  }
   const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
   return urlData.publicUrl;
 }
@@ -3225,6 +3235,38 @@ window.showVideoPickerModal = (dataUrl, filename) => {
   modal.appendChild(box);
   modal.classList.add('show');
 };
+
+// ── STICKER CATEGORIES ──
+const stkData = {
+  love:['🌹','💛','😍','🥰','💋','💕','💞','💓','💗','💝','💘','🎀','🫶','😘','💍','💌','🌷','🌸','🫦','❣️'],
+  fun:['😂','🤣','🙈','🙉','🙊','😜','🤪','😝','😈','🤓','🥸','🫠','🤯','🥴','😵','🤠','🫣','🙃','😏','🤭'],
+  nature:['🌺','✨','🌙','💎','🔥','🌸','🌼','🌻','🍀','🦋','🌊','🌈','⭐','🌟','💫','🍃','🌿','🌅','🌴','🦚'],
+  mood:['😴','😔','😢','😭','🥺','😤','😠','🙄','😒','🫤','😑','🤗','🫂','🥹','😶','😌','😪','🥱','😓','😞'],
+  celeb:['🎉','🎊','🎈','🎁','🏆','🥇','👑','🎂','🍰','🎆','🎇','🪅','🎯','🎮','🎴','🎲','💃','🥂','🎻','🪩'],
+  food:['🍕','🍔','🌮','🍜','🍣','🍩','🍪','🎂','🧁','🍦','🧋','☕','🍵','🫖','🥤','🍷','🍹','🍫','🧃','🥐']
+};
+let curStkCat = 'love';
+
+window.stkCat = (btn, cat) => {
+  document.querySelectorAll('#stkCatTabs .pill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  curStkCat = cat;
+  renderStkGrid();
+};
+
+function renderStkGrid() {
+  const grid = document.getElementById('stickerGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  (stkData[curStkCat]||stkData.love).forEach(e => {
+    const span = document.createElement('span');
+    span.className = 'stk';
+    span.textContent = e;
+    span.onclick = () => sendStk(e);
+    grid.appendChild(span);
+  });
+}
+
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
 window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
