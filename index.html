@@ -88,9 +88,17 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .mrow+.mrow.me,.mrow.me+.mrow{margin-top:2px}
 .mrow+.mrow.me .mav2,.mrow.me+.mrow .mav2{opacity:0}
 @keyframes msgIn{from{opacity:0;transform:scale(.96) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.mav2{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;align-self:flex-end;margin-bottom:2px}
+.mav2{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;align-self:flex-end;margin-bottom:2px;overflow:hidden;position:relative}
 .mav2.me{background:linear-gradient(135deg,var(--g),#c4813a)}
 .mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
+.mav2 img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:50%}
+/* Profile photo overlay */
+.av-wrap{position:relative;cursor:pointer}
+.av-wrap:hover .av-edit{opacity:1}
+.av-edit{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:14px;cursor:pointer}
+/* Profile modal */
+#profileModal .mbox{max-width:340px}
+.av-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--g);margin:0 auto 12px;display:block;background:linear-gradient(135deg,var(--g),#c4813a)}
 .mwrap{display:flex;flex-direction:column;max-width:75%;position:relative;animation:msgIn .15s ease}
 .bub{padding:7px 12px 5px;border-radius:12px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.3)}
 .bub.hr{background:var(--d3);border:1px solid rgba(255,255,255,.05);border-top-right-radius:0;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.25)}
@@ -657,7 +665,7 @@ textarea.field{resize:none}
 
   <!-- Topbar -->
   <div class="topbar">
-    <div class="pav" id="pAv"><span id="pInit">س</span><div class="odot"></div></div>
+    <div class="pav" id="pAv" style="position:relative;overflow:visible"><span id="pInit">س</span><img id="pAvImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:50%"><div class="odot"></div></div>
     <div class="pinfo">
       <div class="pname" id="pNameTop">شريكتك</div>
       <div class="pstatus" id="pStatus">متصلة الآن</div>
@@ -673,7 +681,10 @@ textarea.field{resize:none}
   <!-- Mood bar -->
   <div class="moodbar">
     <div class="mside">
+      <div class="av-wrap" onclick="openProfileModal()">
       <div class="mav me" id="myMavTop">أ</div>
+      <div class="av-edit">📷</div>
+    </div>
       <div class="minfo">
         <div class="mname">أنت</div>
         <div class="memoji" id="myMETop">😊</div>
@@ -1604,7 +1615,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); listenReadStatus(); initMobileNav(); }, 1500);
+    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); listenReadStatus(); initMobileNav(); initProfilePhotos(); }, 1500);
     setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
@@ -1769,7 +1780,15 @@ function renderMsg(id, data) {
 
   const av = document.createElement('div');
   av.className = 'mav2 ' + (isMe?'me':'hr');
-  av.textContent = isMe ? mi : hi;
+  const avPhotoUrl = isMe ? myPhotoUrl : hrPhotoUrl;
+  if(avPhotoUrl) {
+    const avImg = document.createElement('img'); avImg.className='av-img';
+    avImg.src=avPhotoUrl; avImg.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
+    avImg.onerror=()=>{avImg.style.display='none';av.textContent=isMe?mi:hi;};
+    av.appendChild(avImg);
+  } else {
+    av.textContent = isMe ? mi : hi;
+  }
   if(sameAsPrev) av.style.visibility = 'hidden';
 
   const wrap = document.createElement('div');
@@ -2945,6 +2964,14 @@ function getSB() {
 }
 
 // ── UPLOAD helper ──
+// Sanitize filename — remove Arabic/special chars, keep extension
+function sanitizeFileName(name) {
+  const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : 'bin';
+  // Keep only alphanumeric + dash/underscore, replace rest
+  const base = name.replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40) || 'file';
+  return base + '.' + ext;
+}
+
 async function uploadToSupabase(file, bucket, path, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -3019,7 +3046,7 @@ window.uploadCinemaFile = async (inp) => {
 
   trackUpload(true);
   try {
-    const path = cid() + '/videos/' + Date.now() + '_' + file.name;
+    const path = cid() + '/videos/' + Date.now() + '_' + sanitizeFileName(file.name);
     const url  = await uploadToSupabase(file, 'shared-media', path, (p) => {
       bar.style.width = p + '%';
       pct.textContent = p + '%';
@@ -3181,7 +3208,7 @@ window.uploadNovelFile = async (inp) => {
 
   trackUpload(true);
   try {
-    const path = cid()+'/novels/'+Date.now()+'_'+file.name;
+    const path = cid()+'/novels/'+Date.now()+'_'+sanitizeFileName(file.name);
     const url  = await uploadToSupabase(file,'shared-media',path, (p) => {
       document.getElementById('novelUploadBar').style.width=p+'%';
     });
@@ -4009,6 +4036,151 @@ window.insertEmoji = (emoji) => {
   aR(inp);
   document.getElementById('emojiPickerPanel').style.display = 'none';
 };
+
+
+// ── PROFILE PHOTO ──
+let myPhotoUrl  = localStorage.getItem('myPhoto_' + (uid||'')) || '';
+let hrPhotoUrl  = '';
+
+// Load photos on init
+function initProfilePhotos() {
+  // My stored photo
+  myPhotoUrl = localStorage.getItem('myPhoto_' + uid) || '';
+  applyMyPhoto(myPhotoUrl);
+  // Listen for partner photo
+  onSnapshot(doc(db,'users',pId), snap => {
+    if(!snap.exists()) return;
+    const d = snap.data();
+    if(d.photoUrl) { hrPhotoUrl = d.photoUrl; applyPartnerPhoto(d.photoUrl); }
+    else { hrPhotoUrl = ''; applyPartnerPhoto(''); }
+  });
+  // Also listen for my own photo updates (if logged in on another device)
+  onSnapshot(doc(db,'users',uid), snap => {
+    if(!snap.exists()) return;
+    const d = snap.data();
+    if(d.photoUrl) { myPhotoUrl = d.photoUrl; applyMyPhoto(d.photoUrl); localStorage.setItem('myPhoto_'+uid, d.photoUrl); }
+  });
+}
+
+function applyMyPhoto(url) {
+  const els = document.querySelectorAll('.mav.me, #myMavTop, #smcMe');
+  els.forEach(el => setAvatar(el, url, myName));
+  // Also update message avatars
+  document.querySelectorAll('.mav2.me').forEach(el => setAvatar(el, url, myName));
+}
+
+function applyPartnerPhoto(url) {
+  const pAvEl = document.getElementById('pAv');
+  const pImg  = document.getElementById('pAvImg');
+  const pInitEl = document.getElementById('pInit');
+  if(pImg && url) {
+    pImg.src = url; pImg.style.display = 'block';
+    if(pInitEl) pInitEl.style.display = 'none';
+  } else if(pImg) {
+    pImg.style.display = 'none';
+    if(pInitEl) pInitEl.style.display = '';
+  }
+  document.querySelectorAll('.mav2.hr').forEach(el => setAvatar(el, url, pName));
+  document.querySelectorAll('.mav.hr, #hrMavTop').forEach(el => setAvatar(el, url, pName));
+}
+
+function setAvatar(el, url, name) {
+  if(!el) return;
+  let img = el.querySelector('img.av-img');
+  if(url) {
+    if(!img) { img = document.createElement('img'); img.className='av-img'; img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:50%'; el.style.position='relative'; el.appendChild(img); }
+    img.src = url; img.style.display = 'block';
+    // Hide text initial
+    const span = el.querySelector('span');
+    if(span) span.style.display = 'none';
+  } else {
+    if(img) { img.style.display='none'; }
+    const span = el.querySelector('span');
+    if(span) span.style.display = '';
+  }
+}
+
+window.openProfileModal = () => {
+  // Update preview
+  const previewImg  = document.getElementById('avatarPreviewImg');
+  const previewInit = document.getElementById('avatarPreviewInitial');
+  const removeBtn   = document.getElementById('removeAvatarBtn');
+  previewInit.textContent = (myNick||myName)[0]||'أ';
+  if(myPhotoUrl) {
+    previewImg.src = myPhotoUrl; previewImg.style.display='block';
+    previewInit.style.display='none';
+    if(removeBtn) removeBtn.style.display='inline-flex';
+  } else {
+    previewImg.style.display='none';
+    previewInit.style.display='';
+    if(removeBtn) removeBtn.style.display='none';
+  }
+  document.getElementById('profilePhotoModal').classList.add('show');
+};
+
+window.onAvatarFileSelected = async (inp) => {
+  if(!inp.files.length) return;
+  const file = inp.files[0];
+  inp.value = '';
+  // Validate — image only, max 5MB
+  if(!file.type.startsWith('image/')) { showToast('يرجى اختيار صورة'); return; }
+  if(file.size > 5 * 1024 * 1024) { showToast('الصورة كبيرة — الحد الأقصى 5MB'); return; }
+
+  const prog    = document.getElementById('avatarUploadProgress');
+  const bar     = document.getElementById('avatarUploadBar');
+  const msg     = document.getElementById('avatarUploadMsg');
+  const prevImg = document.getElementById('avatarPreviewImg');
+  const prevInit= document.getElementById('avatarPreviewInitial');
+
+  // Show local preview immediately
+  const reader = new FileReader();
+  reader.onload = e => {
+    prevImg.src = e.target.result; prevImg.style.display='block'; prevInit.style.display='none';
+  };
+  reader.readAsDataURL(file);
+
+  prog.style.display='block'; bar.style.width='0%'; msg.textContent='⬆️ جاري الرفع...';
+  trackUpload(true);
+
+  try {
+    const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+    const path = 'avatars/' + uid + '.' + ext;
+    const url  = await uploadToSupabase(file, 'shared-media', path, p => {
+      bar.style.width = p + '%';
+    });
+
+    myPhotoUrl = url;
+    localStorage.setItem('myPhoto_'+uid, url);
+    applyMyPhoto(url);
+    // Save to Firestore
+    await setDoc(doc(db,'users',uid), { photoUrl: url }, { merge:true });
+
+    bar.style.width='100%'; msg.textContent='✅ تم بنجاح!';
+    const removeBtn = document.getElementById('removeAvatarBtn');
+    if(removeBtn) removeBtn.style.display='inline-flex';
+    setTimeout(() => prog.style.display='none', 1000);
+    showToast('✅ تم تحديث صورتك!');
+  } catch(e) {
+    prog.style.display='none';
+    showToast('خطأ: '+e.message);
+  } finally {
+    trackUpload(false);
+  }
+};
+
+window.removeProfilePhoto = async () => {
+  myPhotoUrl = '';
+  localStorage.removeItem('myPhoto_'+uid);
+  applyMyPhoto('');
+  await setDoc(doc(db,'users',uid), { photoUrl: '' }, { merge:true });
+  const prevImg  = document.getElementById('avatarPreviewImg');
+  const prevInit = document.getElementById('avatarPreviewInitial');
+  const removeBtn= document.getElementById('removeAvatarBtn');
+  if(prevImg)  { prevImg.style.display='none'; prevImg.src=''; }
+  if(prevInit) { prevInit.style.display=''; }
+  if(removeBtn){ removeBtn.style.display='none'; }
+  showToast('تم إزالة الصورة');
+};
 </script>
 
 <!-- IMG VIEWER -->
@@ -4165,6 +4337,35 @@ window.insertEmoji = (emoji) => {
     <button class="more-menu-item" onclick="mobileNav('lottery');toggleMobileMore()">
       <span class="mi-icon">🎲</span><span>قرعة</span>
     </button>
+  </div>
+</div>
+
+<!-- PROFILE PHOTO MODAL -->
+<div class="mbg" id="profilePhotoModal" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="mbox" style="max-width:320px;text-align:center">
+    <div style="font-size:18px;font-weight:700;color:var(--g);margin-bottom:16px">📷 صورة البروفايل</div>
+    <!-- Current avatar preview -->
+    <div style="position:relative;width:90px;height:90px;margin:0 auto 16px;cursor:pointer" onclick="document.getElementById('avatarFileInput').click()">
+      <div id="avatarPreview" style="width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--g),#c4813a);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;color:#000;overflow:hidden;border:3px solid var(--g)">
+        <span id="avatarPreviewInitial">أ</span>
+        <img id="avatarPreviewImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover">
+      </div>
+      <div style="position:absolute;bottom:0;right:0;width:28px;height:28px;border-radius:50%;background:var(--g);display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--d)">📷</div>
+    </div>
+    <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="onAvatarFileSelected(this)">
+    <div style="font-size:12px;color:var(--tm);margin-bottom:16px">اضغط على الصورة لتغييرها</div>
+    <!-- Upload progress -->
+    <div id="avatarUploadProgress" style="display:none;margin-bottom:12px">
+      <div style="background:var(--d4);border-radius:20px;height:5px;overflow:hidden">
+        <div id="avatarUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:20px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--tm);margin-top:4px" id="avatarUploadMsg">جاري الرفع...</div>
+    </div>
+    <!-- Remove photo button -->
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button onclick="removeProfilePhoto()" id="removeAvatarBtn" style="display:none;padding:8px 16px;border-radius:10px;border:1px solid rgba(224,85,85,.3);background:transparent;color:#ff8080;font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">🗑 إزالة الصورة</button>
+      <button onclick="document.getElementById('profilePhotoModal').classList.remove('show')" style="padding:8px 20px;border-radius:10px;border:1px solid rgba(201,168,76,.3);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer;font-weight:700">تم ✓</button>
+    </div>
   </div>
 </div>
 
