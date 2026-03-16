@@ -411,6 +411,177 @@ textarea.field{resize:none}
 .nk-name{font-size:14px;font-weight:600}
 .nk-email{font-size:11px;color:var(--tm)}
 .nk-tag{font-size:11px;padding:2px 9px;border-radius:10px;background:var(--gl);color:var(--g);border:1px solid rgba(201,168,76,.3)}
+
+/* ═══════════════════════════════════
+   MOBILE RESPONSIVE — Full Overhaul
+   ═══════════════════════════════════ */
+
+/* Bottom navigation for mobile */
+@media (max-width: 600px) {
+  /* App takes full screen */
+  #appScreen {
+    max-width: 100% !important;
+    height: 100dvh !important; /* dynamic viewport height */
+    height: 100vh;
+    border-radius: 0 !important;
+  }
+
+  /* Hide the top horizontal tabs — use bottom nav instead */
+  .tabs { display: none !important; }
+
+  /* Panels take remaining space above bottom nav */
+  .panels { flex: 1; overflow: hidden; padding-bottom: 0; }
+
+  /* Bottom nav bar */
+  #mobileBottomNav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--d2);
+    border-top: 1px solid rgba(255,255,255,.06);
+    height: 56px;
+    z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Push content above bottom nav */
+  #panel-chat, #panel-cinema, #panel-novel,
+  [id^="panel-"] {
+    padding-bottom: 56px !important;
+  }
+
+  /* Input area stays above bottom nav */
+  .iarea { padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important; }
+
+  /* Profile bar — compact */
+  .prof-bar { padding: 6px 10px !important; }
+  .prof-bar .pname { font-size: 14px !important; }
+  .odot { width: 9px !important; height: 9px !important; }
+
+  /* Message bubbles — wider on mobile */
+  .mwrap { max-width: 82% !important; }
+  .bub { font-size: 14.5px !important; }
+
+  /* Input font size — prevent zoom on iOS */
+  .minput { font-size: 16px !important; }
+
+  /* Cards full width */
+  .card { padding: 12px !important; }
+
+  /* Panels inner padding */
+  .pi { padding: 12px 10px !important; }
+
+  /* Topbar compact */
+  .topbar { padding: 8px 10px !important; }
+
+  /* Sticker panel larger touch targets */
+  .stk { font-size: 32px !important; }
+
+  /* Reaction buttons bigger */
+  .wa-reaction-btn { font-size: 26px !important; padding: 4px !important; }
+
+  /* Games grid */
+  .tgrid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+
+  /* Theme cards */
+  .thcard { padding: 10px 8px !important; }
+
+  /* Cinema player */
+  #cinemaPlayerOverlay { position: fixed !important; inset: 0 !important; }
+
+  /* Presence bar font */
+  .presence-bar { font-size: 12px !important; padding: 4px 12px !important; }
+}
+
+/* Bottom nav items */
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 6px 0;
+  color: rgba(255,255,255,.4);
+  font-family: Tajawal, sans-serif;
+  font-size: 10px;
+  border: none;
+  background: none;
+  transition: color .15s;
+  position: relative;
+}
+.mobile-nav-item.on { color: var(--g); }
+.mobile-nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.mobile-nav-item .nav-badge {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 16px);
+  background: #ff4444;
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  display: none;
+}
+
+/* More menu overlay */
+#mobileMoreMenu {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+}
+#mobileMoreMenu.show { display: block; }
+#mobileMoreMenuInner {
+  position: absolute;
+  bottom: 60px;
+  left: 0; right: 0;
+  background: var(--d2);
+  border-top: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 12px 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.more-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: var(--d3);
+  cursor: pointer;
+  border: none;
+  color: var(--tx);
+  font-family: Tajawal, sans-serif;
+  font-size: 11px;
+  transition: all .15s;
+}
+.more-menu-item:hover { background: var(--gl); color: var(--g); }
+.more-menu-item .mi-icon { font-size: 24px; }
+.more-menu-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Desktop: hide mobile nav */
+@media (min-width: 601px) {
+  #mobileBottomNav { display: none !important; }
+  #mobileMoreMenu { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -1398,8 +1569,21 @@ onAuthStateChanged(auth, async (user) => {
         calcAnniv(sd.anniversary);
       }
       if(sd.lotteryItems!==undefined){renderLotteryItems(sd.lotteryItems||[]);}
-      // Cinema and novel sync are handled inside setupCinemaListener and handleNovelSync
       if(sd.lotteryResult!==undefined && sd.lotteryResult){showLotteryResult(sd.lotteryResult);}
+      // RPS sync
+      handleRPSSync(sd);
+      // rpsRoom: challenger watching for guest to join
+      if(sd.rpsRoom && sd.rpsRoom.status==='ready' && sd.rpsRoom.challenger===uid) {
+        if(document.getElementById('rpsArena').classList.contains('show') &&
+           document.getElementById('rpsMainArena').style.display==='none') {
+          startRPSArena();
+        }
+      }
+      if(sd.rpsRoom && sd.rpsRoom.status==='waiting' && sd.rpsRoom.challenger!==uid) {
+        if(!document.getElementById('rpsArena').classList.contains('show')) {
+          showRPSInvite();
+        }
+      }
     });
 
     const unsub4=listenMsgs();
@@ -1410,7 +1594,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); listenReadStatus(); }, 1500);
+    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); listenReadStatus(); initMobileNav(); }, 1500);
     setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
@@ -3640,16 +3824,7 @@ function initPresence() {
 
 // Override swTab to track current tab for presence
 const _origSwTab = window.swTab;
-window.swTab = (n) => {
-  _origSwTab(n);
-  setDoc(doc(db,'presence',uid||'x'),{tab:n,at:Date.now()},{merge:true}).catch(()=>{});
-  // If opening chat, mark partner's messages as "seen"
-  if(n === 'chat' && pId) {
-    setDoc(doc(db,'shared',cid()), {
-      lastRead: { by: uid, at: Date.now() }
-    }, {merge:true}).catch(()=>{});
-  }
-};
+
 
 // ── UPDATE openNovelReader to handle PDF properly ──
 const _origOpenNovelReader = window.openNovelReader;
@@ -3859,6 +4034,71 @@ document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MOBILE BOTTOM NAVIGATION -->
+<div id="mobileBottomNav" style="display:none">
+  <button class="mobile-nav-item on" onclick="mobileNav('chat')" id="mnav-chat">
+    <span class="nav-icon">💬</span>
+    <span>محادثة</span>
+    <span class="nav-badge" id="badge-chat"></span>
+  </button>
+  <button class="mobile-nav-item" onclick="mobileNav('games')" id="mnav-games">
+    <span class="nav-icon">🎮</span>
+    <span>ألعاب</span>
+  </button>
+  <button class="mobile-nav-item" onclick="mobileNav('cinema')" id="mnav-cinema">
+    <span class="nav-icon">🎬</span>
+    <span>سينما</span>
+  </button>
+  <button class="mobile-nav-item" onclick="mobileNav('novel')" id="mnav-novel">
+    <span class="nav-icon">📚</span>
+    <span>روايات</span>
+  </button>
+  <button class="mobile-nav-item" onclick="toggleMobileMore()" id="mnav-more">
+    <span class="nav-icon">⋯</span>
+    <span>المزيد</span>
+  </button>
+</div>
+
+<!-- MOBILE MORE MENU -->
+<div id="mobileMoreMenu">
+  <div class="more-menu-bg" onclick="toggleMobileMore()"></div>
+  <div id="mobileMoreMenuInner">
+    <button class="more-menu-item" onclick="mobileNav('mood');toggleMobileMore()">
+      <span class="mi-icon">🌡️</span><span>مزاج</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('ideas');toggleMobileMore()">
+      <span class="mi-icon">💡</span><span>أفكار</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('todo');toggleMobileMore()">
+      <span class="mi-icon">📋</span><span>أهداف</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('letter');toggleMobileMore()">
+      <span class="mi-icon">💌</span><span>رسائل</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('draw');toggleMobileMore()">
+      <span class="mi-icon">🎨</span><span>رسم</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('memories');toggleMobileMore()">
+      <span class="mi-icon">✨</span><span>ذكريات</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('disc');toggleMobileMore()">
+      <span class="mi-icon">🗣️</span><span>نقاش</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('themes');toggleMobileMore()">
+      <span class="mi-icon">🎨</span><span>سمات</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('fight');toggleMobileMore()">
+      <span class="mi-icon">😤</span><span>مشاجرة</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('nick');toggleMobileMore()">
+      <span class="mi-icon">🏷️</span><span>كنيات</span>
+    </button>
+    <button class="more-menu-item" onclick="mobileNav('lottery');toggleMobileMore()">
+      <span class="mi-icon">🎲</span><span>قرعة</span>
+    </button>
   </div>
 </div>
 
