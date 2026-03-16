@@ -93,8 +93,8 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
 .mwrap{display:flex;flex-direction:column;max-width:75%;position:relative;animation:msgIn .15s ease}
 .bub{padding:7px 12px 5px;border-radius:12px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.3)}
-.bub.hr{background:#1e2b36;border-top-right-radius:0;color:#e9f0f3}
-.bub.me{background:#005c4b;border-top-left-radius:0;color:#e9f0f3}
+.bub.hr{background:var(--d3);border:1px solid rgba(255,255,255,.05);border-top-right-radius:0;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.bub.me{background:linear-gradient(135deg,var(--gl),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.2);border-top-left-radius:0;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.25)}
 .bub.sys{background:rgba(0,0,0,.3);border-radius:10px;font-size:11px;color:rgba(255,255,255,.5);padding:4px 12px;text-align:center;align-self:center;backdrop-filter:blur(4px)}
 .bub.ltr{background:linear-gradient(135deg,rgba(0,88,71,.6),rgba(0,60,50,.4));border:1.5px solid rgba(0,168,132,.3);cursor:pointer;border-radius:12px;padding:10px 12px}
 .ltr-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px}
@@ -102,8 +102,8 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);display:none;line-height:1.6}
 .ltr-body.open{display:block}
 /* WA tail on bubble */
-.bub.hr::before{content:'';position:absolute;top:0;right:-8px;width:0;height:0;border-left:8px solid #1e2b36;border-top:0px solid transparent;border-bottom:8px solid transparent}
-.bub.me::before{content:'';position:absolute;top:0;left:-8px;width:0;height:0;border-right:8px solid #005c4b;border-top:0px solid transparent;border-bottom:8px solid transparent}
+.bub.hr::before{content:'';position:absolute;top:0;right:-6px;width:8px;height:8px;background:var(--d3);clip-path:polygon(0 0,100% 0,0 100%)}
+.bub.me::before{content:'';position:absolute;top:0;left:-6px;width:8px;height:8px;background:var(--g);opacity:.3;clip-path:polygon(100% 0,0 0,100% 100%)}
 /* Hide tail when consecutive same-sender */
 .mrow.no-tail .bub.hr::before,.mrow.no-tail .bub.me::before{display:none}
 .mtime{font-size:11px;color:rgba(255,255,255,.45);float:right;margin-top:2px;margin-right:-4px;margin-left:6px;margin-bottom:-2px;display:flex;align-items:center;gap:3px;direction:ltr}
@@ -116,7 +116,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .rxn-count{font-size:11px;color:rgba(255,255,255,.6)}
 .starred-msg .bub{outline:2px solid rgba(201,168,76,.5);outline-offset:1px}
 /* WhatsApp emoji reaction picker (appears on long press / right-click) */
-.wa-reaction-picker{position:absolute;background:#1f2c34;border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:6px 10px;display:none;gap:6px;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,.6);bottom:calc(100% + 8px);animation:popUp .15s ease}
+.wa-reaction-picker{position:absolute;background:var(--d2);border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:6px 10px;display:none;gap:6px;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,.6);bottom:calc(100% + 8px);animation:popUp .15s ease}
 .mrow.me .wa-reaction-picker{right:0;left:auto}
 .mrow:not(.me) .wa-reaction-picker{left:0;right:auto}
 .wa-reaction-picker.show{display:flex}
@@ -124,19 +124,19 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .wa-reaction-btn:hover{transform:scale(1.3) translateY(-4px)}
 @keyframes popUp{from{opacity:0;transform:scale(.8) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
 /* Context menu (long press) */
-.wa-ctx-menu{position:fixed;background:#1f2c34;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:4px 0;z-index:100;min-width:160px;box-shadow:0 4px 24px rgba(0,0,0,.7);display:none}
+.wa-ctx-menu{position:fixed;background:var(--d2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:4px 0;z-index:100;min-width:160px;box-shadow:0 4px 24px rgba(0,0,0,.7);display:none}
 .wa-ctx-menu.show{display:block}
-.wa-ctx-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;color:#e9f0f3;transition:background .15s}
+.wa-ctx-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;color:var(--tx);transition:background .15s}
 .wa-ctx-item:hover{background:rgba(255,255,255,.06)}
 .wa-ctx-item.danger{color:#ff6b6b}
 
 /* INPUT — WhatsApp style */
-.iarea{background:#0d1b22;border-top:none;padding:6px 8px 8px;flex-shrink:0}
+.iarea{background:var(--d2);border-top:none;padding:6px 8px 8px;flex-shrink:0}
 .irow{display:flex;align-items:flex-end;gap:6px}
 .ibtn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;color:rgba(255,255,255,.45);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
 .ibtn:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.06)}
-.minput-wrap{flex:1;background:#1f2c34;border-radius:24px;display:flex;align-items:flex-end;padding:6px 12px;gap:6px}
-.minput{flex:1;background:transparent;border:none;color:#e9f0f3;font-family:'Tajawal',sans-serif;font-size:15px;resize:none;min-height:26px;max-height:100px;outline:none;direction:rtl;line-height:1.5;padding:0}
+.minput-wrap{flex:1;background:var(--d3);border-radius:24px;display:flex;align-items:flex-end;padding:6px 12px;gap:6px}
+.minput{flex:1;background:transparent;border:none;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:15px;resize:none;min-height:26px;max-height:100px;outline:none;direction:rtl;line-height:1.5;padding:0}
 .minput::placeholder{color:rgba(255,255,255,.3)}
 .sbtn{width:44px;height:44px;border-radius:50%;border:none;background:#00a884;color:white;font-size:18px;cursor:pointer;flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,168,132,.4)}
 .sbtn:hover{background:#00c49a;transform:scale(1.05)}
@@ -1404,7 +1404,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); }, 1500);
+    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); listenReadStatus(); }, 1500);
     setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
@@ -1454,6 +1454,49 @@ function renderMsg(id, data) {
     bub.style.cssText = 'font-style:italic;font-size:13px;opacity:.7;display:flex;align-items:center;gap:5px';
     bub.innerHTML = '🚫 <span>تم حذف هذه الرسالة</span>';
     wrap.appendChild(bub); row.appendChild(wrap); area.appendChild(row); return;
+  }
+
+  // RPS invite card
+  if(data.type === 'rps_invite') {
+    const isMyInvite = data.senderId === uid;
+    let d = {}; try { d = JSON.parse(data.content); } catch(e) {}
+    const challenger = d.challenger || (hrNick||pName);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;justify-content:center;padding:4px 0';
+
+    const card = document.createElement('div');
+    card.style.cssText = 'background:linear-gradient(135deg,rgba(60,0,80,.7),rgba(20,0,30,.8));border:1px solid rgba(201,168,76,.35);border-radius:16px;padding:14px 20px;text-align:center;max-width:260px;width:100%';
+
+    const icon  = document.createElement('div'); icon.style.cssText='font-size:32px;margin-bottom:6px'; icon.textContent='⚔️';
+    const title = document.createElement('div'); title.style.cssText='font-size:14px;font-weight:700;color:var(--g);margin-bottom:4px';
+    title.textContent = isMyInvite ? 'أرسلت تحدياً!' : challenger + ' يتحداك!';
+    const sub   = document.createElement('div'); sub.style.cssText='font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px';
+    sub.textContent = 'حجرة ورقة مقص 🪨📄✂️';
+
+    card.appendChild(icon); card.appendChild(title); card.appendChild(sub);
+
+    if(!isMyInvite) {
+      const joinBtn = document.createElement('button');
+      joinBtn.style.cssText = 'width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px';
+      joinBtn.innerHTML = '✊ ادخل الحلبة';
+      joinBtn.onclick = () => window.acceptRPSChallenge();
+      card.appendChild(joinBtn);
+    } else {
+      const wait = document.createElement('div');
+      wait.style.cssText='font-size:12px;color:rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;gap:5px';
+      wait.innerHTML='⏳ بانتظار القبول...';
+      card.appendChild(wait);
+    }
+
+    const t = document.createElement('div');
+    t.style.cssText='font-size:10px;color:rgba(255,255,255,.25);margin-top:8px';
+    t.textContent = fmtT(data.sentAt);
+
+    card.appendChild(t);
+    row.appendChild(card);
+    area.appendChild(row);
+    return;
   }
 
   // Cinema invite card
@@ -1727,7 +1770,8 @@ window.sendMsg = async () => {
   if(!text||!pId) return;
   inp.value=''; aR(inp);
   await addDoc(collection(db,'chats',cid(),'messages'),{
-    content:text, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+    content:text, senderId:uid, type:'text', reactions:[],
+    sentAt:serverTimestamp(), readBy:[]
   });
 };
 
@@ -3060,8 +3104,8 @@ window.openRPS = async () => {
   },{merge:true});
 
   addDoc(collection(db,'chats',cid(),'messages'),{
-    content:'⚔️ '+(myNick||myName)+' يتحداك في حجرة ورقة مقص! هل تقبل؟',
-    senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
+    content: JSON.stringify({ challenger: myNick||myName, challengerId: uid }),
+    senderId: uid, type: 'rps_invite', reactions:[], sentAt:serverTimestamp()
   });
 
   // Show waiting screen — don't start countdown until partner joins
@@ -3462,6 +3506,10 @@ function initPresence() {
     const presBar = document.getElementById('presenceBar');
     const presTxt = document.getElementById('presenceText');
     if(isOnline && p.tab && presBar && presTxt) {
+      // If partner is in chat tab → mark all my messages as read
+      if(p.tab === 'chat' && p.online) {
+        markMsgsAsRead();
+      }
       const tabNames = {
         chat:'المحادثة', letter:'الرسائل', mood:'صفحة المزاج',
         games:'الألعاب', ideas:'الأفكار', todo:'الأهداف',
@@ -3510,6 +3558,12 @@ const _origSwTab = window.swTab;
 window.swTab = (n) => {
   _origSwTab(n);
   setDoc(doc(db,'presence',uid||'x'),{tab:n,at:Date.now()},{merge:true}).catch(()=>{});
+  // If opening chat, mark partner's messages as "seen"
+  if(n === 'chat' && pId) {
+    setDoc(doc(db,'shared',cid()), {
+      lastRead: { by: uid, at: Date.now() }
+    }, {merge:true}).catch(()=>{});
+  }
 };
 
 // ── UPDATE openNovelReader to handle PDF properly ──
@@ -3627,6 +3681,34 @@ function showRPSInvite() {
   inv.appendChild(invIcon); inv.appendChild(invTitle); inv.appendChild(invSub); inv.appendChild(invBtns);
   inv.style.display = 'block';
   setTimeout(() => { if(inv.parentNode) inv.remove(); }, 20000);
+}
+
+
+// Mark all my messages as read by partner
+async function markMsgsAsRead() {
+  if(!pId) return;
+  // Set a simple flag in shared doc — partner has read
+  await setDoc(doc(db,'shared',cid()), {
+    lastRead: { by: pId, at: Date.now() }
+  }, {merge:true});
+}
+
+// Listen for read status — update ticks in UI
+function listenReadStatus() {
+  if(!pId) return;
+  onSnapshot(doc(db,'shared',cid()), snap => {
+    if(!snap.exists()) return;
+    const lr = snap.data().lastRead;
+    if(!lr || lr.by !== pId) return;
+    // Partner has read — turn all my sent ticks blue
+    const readTime = lr.at;
+    document.querySelectorAll('.msg-tick').forEach(tick => {
+      const row = tick.closest('.mrow');
+      if(row && row.classList.contains('me')) {
+        tick.classList.add('read');
+      }
+    });
+  });
 }
 
 // ── MODALS ──
