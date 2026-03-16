@@ -1131,6 +1131,9 @@ textarea.field{resize:none}
   </div>
 </div>
 
+<!-- PEERJS -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -1361,6 +1364,8 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
+    // Pre-init PeerJS so guest is ready to receive calls
+    setTimeout(()=>initPeer().catch(()=>{}), 2000);
   });
 });
 
@@ -1443,8 +1448,8 @@ function renderMsg(id, data) {
       joinBtn.style.cssText = 'padding:10px 24px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:4px';
       joinBtn.textContent = '🎬 افتح السينما الآن';
       joinBtn.onclick = () => {
-        // Direct screen view — opens full-screen overlay on guest device
-        joinScreenView(invSessionId || invUrl);
+        const peerId = inviteData.peerId || invSessionId || invUrl;
+        joinScreenView(peerId);
       };
       card.appendChild(joinBtn);
 
@@ -2672,309 +2677,187 @@ window.confirmSendMedia = async (dataUrl, type) => {
 
 
 // ── CINEMA ──
-// Pure WebRTC screen share — Firestore as signaling relay
-// ICE candidates sent one-by-one (trickle ICE) for reliability across networks
+// Screen share via PeerJS (free signaling server, no Firebase needed)
 
+let myPeer        = null;   // Peer instance
+let screenConn    = null;   // MediaConnection
+let screenStream  = null;   // getDisplayMedia stream
 let cinemaIsSyncing = false;
-let screenPeer      = null;   // RTCPeerConnection
-let screenStream    = null;   // getDisplayMedia stream
-let cinemaRole      = null;   // 'host' | 'guest'
-let cinemaSessId    = null;
-let iceUnsubHost    = null;
+let cinemaUploadAbort = false;
 
-// Free STUN + open TURN servers for NAT traversal
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    {
-      urls: 'turn:global.relay.metered.ca:80',
-      username: 'e9d3e3b3e3e3b3e3e3b3',
-      credential: 'e9d3e3b3'
-    },
-    {
-      urls: 'turn:global.relay.metered.ca:443',
-      username: 'e9d3e3b3e3e3b3e3e3b3',
-      credential: 'e9d3e3b3'
-    },
-    {
-      urls: 'turns:global.relay.metered.ca:443?transport=tcp',
-      username: 'e9d3e3b3e3e3b3e3e3b3',
-      credential: 'e9d3e3b3'
-    }
-  ],
-  iceCandidatePoolSize: 10
-};
+// ── Initialize PeerJS with a unique ID ──
+function initPeer() {
+  return new Promise((resolve) => {
+    if(myPeer && !myPeer.destroyed && myPeer.id) { resolve(myPeer); return; }
+    // Peer ID = uid so partner can call directly
+    const peer = new Peer(uid, {
+      host: '0.peerjs.com',
+      port: 443,
+      path: '/',
+      secure: true,
+      debug: 0
+    });
+    peer.on('open', (id) => {
+      myPeer = peer;
+      resolve(peer);
+    });
+    peer.on('error', (err) => {
+      // If ID taken (reconnect), use random ID
+      if(err.type === 'unavailable-id') {
+        const peer2 = new Peer(uid + '_' + Date.now(), {
+          host: '0.peerjs.com', port: 443, path: '/', secure: true, debug: 0
+        });
+        peer2.on('open', () => { myPeer = peer2; resolve(peer2); });
+      }
+    });
+    // Listen for incoming calls (guest side)
+    peer.on('call', (call) => {
+      call.answer(); // answer with no stream
+      screenConn = call;
+      call.on('stream', (remoteStream) => {
+        showScreenReceiveOverlay(remoteStream, call);
+      });
+    });
+    myPeer = peer;
+  });
+}
 
-// ── HOST: start screen share ──
+// ── HOST: share screen ──
 window.startScreenShare = async () => {
-  if(!pId){ showToast('يجب ربط الحسابين أولاً'); return; }
+  if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
+
+  // 1. Get screen
   try {
-    // 1. Get screen stream
     screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: 30, width: { ideal: 1280 }, height: { ideal: 720 } },
-      audio: true
+      video: { frameRate: 30 }, audio: true
     });
   } catch(e) {
     if(e.name !== 'NotAllowedError') showToast('خطأ: ' + e.message);
     return;
   }
 
-  cinemaRole   = 'host';
-  cinemaSessId = 'rtc_' + Date.now();
+  // 2. Init PeerJS
+  showToast('⏳ جاري الاتصال...');
+  const peer = await initPeer();
 
-  // Update share button
-  const sb = document.getElementById('cinemaShareBtn');
-  if(sb){ sb.textContent = '⏹ إيقاف المشاركة'; sb.style.cssText += ';background:rgba(224,85,85,.5);'; sb.onclick = stopScreenShare; }
+  // 3. Call partner using their uid as Peer ID
+  const call = peer.call(pId, screenStream);
+  screenConn = call;
 
-  const badge = document.getElementById('cinemaSyncBadge');
-  if(badge){ badge.style.display='flex'; badge.textContent='📡 جاري الإرسال...'; }
-
-  // 2. Show own screen in cinema video
-  const vid = document.getElementById('cinemaVideo');
-  vid.srcObject = screenStream;
-  vid.muted = true;
-  vid.play().catch(()=>{});
-
-  // 3. Create peer connection
-  screenPeer = new RTCPeerConnection(RTC_CONFIG);
-  screenStream.getTracks().forEach(t => screenPeer.addTrack(t, screenStream));
-
-  // 4. Trickle ICE — send candidates one-by-one as they arrive
-  screenPeer.onicecandidate = async (e) => {
-    if(!e.candidate) return;
-    await addDoc(collection(db, 'cinemaSignal', cid() + '_' + cinemaSessId, 'hostIce'), {
-      candidate: JSON.stringify(e.candidate.toJSON()),
-      at: Date.now()
-    });
-  };
-
-  screenPeer.onconnectionstatechange = () => {
-    const s = screenPeer.connectionState;
-    if(s === 'connected') {
-      if(badge){ badge.textContent='🔴 بث مشترك مباشر'; }
-      enableCinemaPlayback();
-    } else if(s === 'disconnected' || s === 'failed') {
-      if(badge){ badge.textContent='⚠️ انقطع الاتصال'; }
-    }
-  };
-
-  // 5. Create offer and save to Firestore
-  const offer = await screenPeer.createOffer();
-  await screenPeer.setLocalDescription(offer);
-
-  await setDoc(doc(db, 'cinemaSignal', cid() + '_' + cinemaSessId), {
-    type: 'offer',
-    sdp: JSON.stringify(screenPeer.localDescription),
-    by: uid,
-    sessId: cinemaSessId,
-    at: Date.now()
+  call.on('stream', () => {}); // host doesn't need remote stream
+  call.on('error', (e) => showToast('خطأ في الاتصال: ' + e.message));
+  call.on('close', () => {
+    showToast('انتهت مشاركة الشاشة');
+    resetShareBtn();
   });
 
-  // 6. Save session info so partner can find it
-  await setDoc(doc(db, 'shared', cid()), {
-    cinemaRTC: { sessId: cinemaSessId, by: uid, status: 'waiting', at: Date.now() }
-  }, { merge: true });
+  // 4. Update UI
+  const sb = document.getElementById('cinemaShareBtn');
+  if(sb) {
+    sb.textContent = '⏹ إيقاف المشاركة';
+    sb.style.background = 'rgba(224,85,85,.5)';
+    sb.onclick = stopScreenShare;
+  }
+  const badge = document.getElementById('cinemaSyncBadge');
+  if(badge) { badge.style.display='flex'; badge.textContent='📡 يتم الإرسال...'; }
 
-  // 7. Send invite message to chat
-  await addDoc(collection(db, 'chats', cid(), 'messages'), {
-    content: JSON.stringify({ type:'cinema_invite', sessId: cinemaSessId, title:'مشاركة الشاشة 🎬' }),
+  // 5. Send chat invite
+  await addDoc(collection(db,'chats',cid(),'messages'), {
+    content: JSON.stringify({ type:'cinema_invite', peerId: peer.id, title:'مشاركة الشاشة 🎬' }),
     senderId: uid, type: 'cinema_invite', reactions: [], sentAt: serverTimestamp()
   });
 
-  // 8. Listen for guest's answer
-  iceUnsubHost = onSnapshot(doc(db, 'cinemaSignal', cid() + '_' + cinemaSessId), async snap => {
-    if(!snap.exists()) return;
-    const d = snap.data();
-    if(d.type === 'answer' && d.by !== uid) {
-      if(screenPeer.signalingState !== 'have-local-offer') return;
-      await screenPeer.setRemoteDescription(new RTCSessionDescription(JSON.parse(d.sdp)));
-      // Listen for guest ICE candidates
-      onSnapshot(collection(db, 'cinemaSignal', cid()+'_'+cinemaSessId, 'guestIce'), snap2 => {
-        snap2.docChanges().forEach(ch => {
-          if(ch.type === 'added') {
-            const c = JSON.parse(ch.doc.data().candidate);
-            screenPeer.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
-          }
-        });
-      });
-    }
-  });
-
-  // Handle stream end (user clicks "Stop sharing" in browser UI)
+  // 6. Handle stream ended (user stops from browser)
   screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
 
-  showToast('📡 جاري الانتظار... سيبدأ البث عند انضمام الشريك');
+  showToast('📡 رسالة مشاركة أُرسلت! بانتظار الشريك...');
 };
 
 window.stopScreenShare = async () => {
-  if(screenStream){ screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
-  if(screenPeer){ screenPeer.close(); screenPeer=null; }
-  if(iceUnsubHost){ iceUnsubHost(); iceUnsubHost=null; }
-
-  const vid = document.getElementById('cinemaVideo');
-  vid.srcObject = null;
-
-  const sb = document.getElementById('cinemaShareBtn');
-  if(sb){ sb.textContent='📡 شارك الشاشة مع شريكك'; sb.style.cssText=sb.style.cssText.replace('rgba(224,85,85,.5)','rgba(201,168,76,.2)'); sb.onclick=startScreenShare; }
-
-  await setDoc(doc(db,'shared',cid()),{ cinemaRTC:{ status:'stopped', by:uid } },{merge:true});
-  await addDoc(collection(db,'chats',cid(),'messages'),{
-    content:'📡 انتهت مشاركة الشاشة', senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
-  });
+  if(screenStream) { screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
+  if(screenConn)   { screenConn.close(); screenConn=null; }
+  resetShareBtn();
   showToast('تم إيقاف مشاركة الشاشة');
 };
 
-// ── GUEST: join and receive stream ──
-window.joinScreenView = async (sessId) => {
-  if(!sessId){ showToast('⚠️ جلسة غير صالحة'); return; }
+function resetShareBtn() {
+  const sb = document.getElementById('cinemaShareBtn');
+  if(sb) { sb.textContent='📡 شارك الشاشة مع شريكك'; sb.style.background='rgba(201,168,76,.2)'; sb.onclick=startScreenShare; }
+  const badge = document.getElementById('cinemaSyncBadge');
+  if(badge) badge.style.display='none';
+}
 
-  // Show receiving overlay immediately
-  showScreenReceiving();
-
-  cinemaRole   = 'guest';
-  cinemaSessId = sessId;
-
-  // Get offer from Firestore
-  const sigSnap = await getDoc(doc(db,'cinemaSignal', cid()+'_'+sessId));
-  if(!sigSnap.exists()){ showToast('⚠️ لم تُوجد جلسة نشطة'); hideScreenReceiving(); return; }
-
-  const sigData = sigSnap.data();
-  if(sigData.type !== 'offer'){ showToast('⚠️ الجلسة غير جاهزة بعد'); hideScreenReceiving(); return; }
-
-  // Create peer
-  screenPeer = new RTCPeerConnection(RTC_CONFIG);
-
-  // Receive stream → show in overlay video
-  screenPeer.ontrack = (e) => {
-    const rv = document.getElementById('screenReceiveVideo');
-    if(rv && !rv.srcObject){
-      rv.srcObject = e.streams[0];
-      rv.play().catch(()=>{});
-      document.getElementById('screenReceivingStatus').textContent = '🔴 بث مباشر';
-      document.getElementById('screenReceivingStatus').style.color = '#ff6b6b';
-    }
-  };
-
-  screenPeer.onconnectionstatechange = () => {
-    const st = screenPeer.connectionState;
-    const statusEl = document.getElementById('screenReceivingStatus');
-    if(st==='connected' && statusEl) statusEl.textContent = '🔴 بث مباشر متصل';
-    if((st==='disconnected'||st==='failed') && statusEl) statusEl.textContent = '⚠️ انقطع الاتصال';
-  };
-
-  // Trickle ICE
-  screenPeer.onicecandidate = async (e) => {
-    if(!e.candidate) return;
-    await addDoc(collection(db,'cinemaSignal',cid()+'_'+sessId,'guestIce'),{
-      candidate: JSON.stringify(e.candidate.toJSON()), at:Date.now()
+// ── GUEST: receive screen share ──
+window.joinScreenView = async (peerId) => {
+  if(!peerId) { showToast('⚠️ معرّف غير صالح'); return; }
+  showToast('⏳ جاري الاتصال بـ ' + (hrNick||pName) + '...');
+  const peer = await initPeer();
+  // Call the host peer — they will send us the screen stream
+  const call = peer.call(peerId, null);
+  if(!call) {
+    // Receiving side — just wait for incoming call
+    showToast('⏳ انتظر حتى يشارك الشريك شاشته...');
+    peer.on('call', (inCall) => {
+      inCall.answer();
+      inCall.on('stream', (remote) => showScreenReceiveOverlay(remote, inCall));
     });
-  };
-
-  // Set remote offer and create answer
-  await screenPeer.setRemoteDescription(new RTCSessionDescription(JSON.parse(sigData.sdp)));
-  const answer = await screenPeer.createAnswer();
-  await screenPeer.setLocalDescription(answer);
-
-  // Save answer to Firestore
-  await setDoc(doc(db,'cinemaSignal',cid()+'_'+sessId),{
-    type:'answer', sdp: JSON.stringify(screenPeer.localDescription), by:uid, at:Date.now()
-  });
-
-  // Listen for host ICE candidates
-  onSnapshot(collection(db,'cinemaSignal',cid()+'_'+sessId,'hostIce'), snap2 => {
-    snap2.docChanges().forEach(ch => {
-      if(ch.type==='added'){
-        const c = JSON.parse(ch.doc.data().candidate);
-        screenPeer.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
-      }
-    });
-  });
-
-  // Listen for stop
-  onSnapshot(doc(db,'shared',cid()), snap => {
-    if(!snap.exists()) return;
-    const rtc = snap.data().cinemaRTC;
-    if(rtc && rtc.status==='stopped' && rtc.by!==uid) {
-      const rv = document.getElementById('screenReceiveVideo');
-      if(rv) rv.srcObject=null;
-      document.getElementById('screenReceivingStatus').textContent = '⏸ انتهت المشاركة';
-      showToast((hrNick||pName) + ' أوقف مشاركة الشاشة');
-    }
-  });
-
-  // Notify host
-  await setDoc(doc(db,'shared',cid()),{
-    cinemaRTC:{ status:'joined', by:uid, at:Date.now() }
-  },{merge:true});
+    return;
+  }
+  screenConn = call;
+  call.on('stream', (remote) => showScreenReceiveOverlay(remote, call));
+  call.on('error', (e) => showToast('خطأ: ' + e.message));
 };
 
-// ── Screen receive overlay (full screen on guest device) ──
-function showScreenReceiving() {
+// ── Full-screen receive overlay (guest) ──
+function showScreenReceiveOverlay(stream, call) {
   let el = document.getElementById('screenReceiveOverlay');
   if(!el) {
     el = document.createElement('div');
     el.id = 'screenReceiveOverlay';
-    el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:600;display:flex;flex-direction:column;';
-    el.innerHTML = ''
-      + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0">'
-      +   '<div id="screenReceivingStatus" style="font-size:13px;color:#4ade80;font-family:Tajawal,sans-serif">⏳ جاري الاتصال...</div>'
-      +   '<div style="font-size:13px;color:rgba(255,255,255,.6);font-family:Tajawal,sans-serif" id="screenHostName">شاشة الشريك</div>'
-      +   '<button onclick="closeScreenReceive()" style="background:rgba(224,85,85,.3);border:none;color:#ff8080;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>'
-      + '</div>'
-      + '<video id="screenReceiveVideo" playsinline autoplay style="flex:1;width:100%;object-fit:contain;background:#000"></video>'
-      + '<div style="background:rgba(0,0,0,.85);border-top:1px solid rgba(255,255,255,.1);padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0">'
-      +   '<button onclick="toggleScreenAudio()" id="screenAudioBtn" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🔊 الصوت</button>'
-      +   '<button onclick="toggleScreenFs()" style="padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">⛶ ملء الشاشة</button>'
-      + '</div>';
+    el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:600;display:flex;flex-direction:column';
     document.body.appendChild(el);
   }
-  el.style.display = 'flex';
-  // Set host name
-  const hn = document.getElementById('screenHostName');
-  if(hn) hn.textContent = '🎬 شاشة ' + (hrNick||pName);
-}
 
-function hideScreenReceiving() {
-  const el = document.getElementById('screenReceiveOverlay');
-  if(el) el.style.display = 'none';
+  el.innerHTML = ''
+    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0">'
+    +   '<div style="font-size:13px;color:#4ade80;font-family:Tajawal,sans-serif">🔴 بث مباشر — شاشة ' + (hrNick||pName) + '</div>'
+    +   '<div style="display:flex;gap:8px">'
+    +     '<button onclick="document.getElementById(\'screenReceiveVideo\').muted=!document.getElementById(\'screenReceiveVideo\').muted;this.textContent=document.getElementById(\'screenReceiveVideo\').muted?\'🔇 صوت\':\'🔊 صوت\'" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🔊 صوت</button>'
+    +     '<button onclick="const v=document.getElementById(\'screenReceiveVideo\');if(!document.fullscreenElement)v.requestFullscreen().catch(()=>{});else document.exitFullscreen();" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">⛶ ملء الشاشة</button>'
+    +     '<button onclick="closeScreenReceive()" style="padding:5px 12px;border-radius:20px;border:none;background:rgba(224,85,85,.4);color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">✕ إغلاق</button>'
+    +   '</div>'
+    + '</div>'
+    + '<video id="screenReceiveVideo" autoplay playsinline style="flex:1;width:100%;object-fit:contain;background:#000"></video>';
+
+  el.style.display = 'flex';
+
+  const vid = el.querySelector('#screenReceiveVideo');
+  vid.srcObject = stream;
+  vid.play().catch(()=>{});
+
+  call.on('close', () => {
+    showToast((hrNick||pName) + ' أوقف المشاركة');
+    if(vid) vid.srcObject = null;
+    el.style.display = 'none';
+  });
 }
 
 window.closeScreenReceive = () => {
-  if(screenPeer){ screenPeer.close(); screenPeer=null; }
-  hideScreenReceiving();
+  const el = document.getElementById('screenReceiveOverlay');
+  if(el) el.style.display = 'none';
+  if(screenConn) { screenConn.close(); screenConn=null; }
 };
 
-window.toggleScreenAudio = () => {
-  const v = document.getElementById('screenReceiveVideo');
-  if(!v) return;
-  v.muted = !v.muted;
-  document.getElementById('screenAudioBtn').textContent = v.muted ? '🔇 الصوت' : '🔊 الصوت';
-};
-
-window.toggleScreenFs = () => {
-  const v = document.getElementById('screenReceiveVideo');
-  if(!v) return;
-  if(!document.fullscreenElement) v.requestFullscreen().catch(()=>{});
-  else document.exitFullscreen();
-};
-
-// ── Local file cinema (unchanged flow) ──
+// ── Local file cinema ──
 window.loadCinemaFile = (inp) => {
   if(!inp.files.length) return;
-  const file = inp.files[0];
-  const url  = URL.createObjectURL(file);
-  openCinemaRoom(url, file.name, true);
+  const url = URL.createObjectURL(inp.files[0]);
+  openCinemaRoom(url, inp.files[0].name, true);
 };
 
 window.openCinemaFromUrl = async () => {
   const url = (document.getElementById('cinemaUrl').value||'').trim();
   if(!url) return;
-  if(pId) await setDoc(doc(db,'shared',cid()),{
-    cinemaSession:{url, title:'فيديو مشترك', by:uid, status:'waiting', startedAt:Date.now()}
-  },{merge:true});
   openCinemaRoom(url, 'فيديو مشترك', false);
 };
 
@@ -2984,47 +2867,16 @@ function openCinemaRoom(src, title, isLocal) {
   const video   = document.getElementById('cinemaVideo');
   overlay.classList.add('show');
   document.getElementById('cinemaIntroSub').textContent = '🎬 ' + title;
-  const shareBtn = document.getElementById('cinemaShareBtn');
-  if(shareBtn) shareBtn.style.display = isLocal ? 'flex' : 'none';
+  const sb = document.getElementById('cinemaShareBtn');
+  if(sb) sb.style.display = isLocal ? 'flex' : 'none';
   setTimeout(()=>{
     intro.classList.add('fade');
     video.src = src; video.load();
     document.getElementById('cinemaPlayBtn').disabled = false;
-    if(!isLocal) setupCinemaListener();
+    // Init peer in background so it's ready
+    if(isLocal && pId) initPeer().catch(()=>{});
   }, 2000);
   setTimeout(()=>{ intro.style.display='none'; }, 2800);
-}
-
-function enableCinemaPlayback() {
-  const badge = document.getElementById('cinemaSyncBadge');
-  if(badge){ badge.style.display='flex'; badge.textContent='🔴 بث مباشر'; }
-  const wait = document.getElementById('cinemaPartnerWait');
-  if(wait) wait.style.display='none';
-  showPartnerAct('🎬 ' + (hrNick||pName) + ' انضم!');
-}
-
-function setupCinemaListener() {
-  if(!pId) return;
-  const video = document.getElementById('cinemaVideo');
-  video.ontimeupdate = ()=>{
-    const p = video.duration?(video.currentTime/video.duration*100):0;
-    document.getElementById('cinemaProgFill').style.width=p+'%';
-    document.getElementById('cinemaTimeDisp').textContent=fmtSec(video.currentTime)+' / '+fmtSec(video.duration||0);
-  };
-  onSnapshot(doc(db,'shared',cid()), snap=>{
-    if(!snap.exists()) return;
-    const sd=snap.data();
-    if(sd.cinemaSession && sd.cinemaSession.by!==uid && sd.cinemaSession.status==='joined') enableCinemaPlayback();
-    if(sd.cinemaCmd && sd.cinemaCmd.by!==uid){
-      const cmd=sd.cinemaCmd; cinemaIsSyncing=true;
-      if(cmd.action==='play'){if(Math.abs(video.currentTime-cmd.time)>1.5)video.currentTime=cmd.time;video.play().catch(()=>{});document.getElementById('cinemaPlayBtn').textContent='⏸';showPartnerAct((hrNick||pName)+' ▶');}
-      else if(cmd.action==='pause'){video.pause();if(Math.abs(video.currentTime-cmd.time)>1.5)video.currentTime=cmd.time;document.getElementById('cinemaPlayBtn').textContent='▶';showPartnerAct((hrNick||pName)+' ⏸');}
-      else if(cmd.action==='seek'){video.currentTime=cmd.time;}
-      else if(cmd.action==='msg'){addCinemaBubble(cmd.msg,false);}
-      else if(cmd.action==='close'){closeCinemaLocal();}
-      setTimeout(()=>cinemaIsSyncing=false,300);
-    }
-  });
 }
 
 function fmtSec(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
@@ -3040,27 +2892,25 @@ window.toggleCinemaFs=()=>{const el=document.getElementById('cinemaOverlay');if(
 function closeCinemaLocal(){
   const v=document.getElementById('cinemaVideo');v.pause();v.srcObject=null;v.src='';
   if(screenStream){screenStream.getTracks().forEach(t=>t.stop());screenStream=null;}
-  if(screenPeer){screenPeer.close();screenPeer=null;}
+  if(screenConn){screenConn.close();screenConn=null;}
   document.getElementById('cinemaOverlay').classList.remove('show');
   document.getElementById('cinemaIntro').classList.remove('fade');
   document.getElementById('cinemaIntro').style.display='';
   document.getElementById('cinemaBubbles').innerHTML='';
   document.getElementById('cinemaPlayBtn').disabled=false;
   document.getElementById('cinemaPlayBtn').textContent='▶';
-  const sb=document.getElementById('cinemaShareBtn');
-  if(sb){sb.textContent='📡 شارك الشاشة مع شريكك';sb.onclick=startScreenShare;}
+  resetShareBtn();
   const st=document.getElementById('cinemaStatusTxt');if(st)st.textContent='لا يوجد بث نشط حالياً';
 }
-
 window.closeCinema=async()=>{
-  closeCinemaLocal();cinemaUploadAbort=false;
-  if(pId){await broadcastCinemaCmd('close');await setDoc(doc(db,'shared',cid()),{cinemaRTC:null,cinemaCmd:null,cinemaSession:null},{merge:true});}
+  closeCinemaLocal();
+  if(pId) await setDoc(doc(db,'shared',cid()),{cinemaCmd:null,cinemaSession:null},{merge:true});
 };
 window.sendCinemaMsg=async()=>{const inp=document.getElementById('cinemaMsgInput');const msg=(inp.value||'').trim();if(!msg||!pId)return;inp.value='';addCinemaBubble(msg,true);await broadcastCinemaCmd('msg',{msg});await addDoc(collection(db,'chats',cid(),'messages'),{content:'🎬 '+msg,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});};
 function addCinemaBubble(msg,isMe){const c=document.getElementById('cinemaBubbles');const b=document.createElement('div');b.className='cinema-bubble'+(isMe?' me':'');b.textContent=(isMe?'':((hrNick||pName)+': '))+msg;c.appendChild(b);while(c.children.length>5)c.removeChild(c.firstChild);setTimeout(()=>b.remove(),5000);}
 function showPartnerAct(msg){const el=document.getElementById('cinemaPartnerAct');if(!el)return;el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2500);}
 window.startCinemaFromVideo=(videoSrc)=>{openCinemaRoom(videoSrc,'فيديو مشترك 🎬',true);};
-let cinemaUploadAbort=false;
+window.joinCinema=(url,title,sessId)=>{openCinemaRoom(url||'',title||'فيديو',false);};
 
 // ── NOVEL READER ──
 let novelPages = [], novelCurPage = 0, novelFontSz = 15, novelTitle = '';
