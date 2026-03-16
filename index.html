@@ -81,45 +81,52 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .ptitle{font-size:17px;font-weight:700;color:var(--g);margin-bottom:4px}
 
 /* MESSAGES */
-.msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.2) transparent}
-.dsep{text-align:center;color:var(--tm);font-size:11px;display:flex;align-items:center;gap:8px}
-.dsep::before,.dsep::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.1)}
-.mrow{display:flex;align-items:flex-end;gap:7px}
+.msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:2px;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.15) transparent}
+.dsep{text-align:center;color:var(--tm);font-size:10px;display:flex;align-items:center;gap:10px;margin:10px 0}
+.dsep::before,.dsep::after{content:'';flex:1;height:1px;background:rgba(201,168,76,.08)}
+.mrow{display:flex;align-items:flex-end;gap:6px;padding:1px 0;animation:msgIn .2s ease}
 .mrow.me{flex-direction:row-reverse}
-.mav2{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0}
-.mav2.me{background:linear-gradient(135deg,var(--g),#c4813a)}
-.mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
-.mwrap{display:flex;flex-direction:column;max-width:70%}
-.bub{padding:9px 13px;border-radius:17px;font-size:14px;line-height:1.6;word-wrap:break-word;word-break:break-word}
-.bub.hr{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-bottom-right-radius:3px}
-.bub.me{background:linear-gradient(135deg,rgba(201,168,76,.22),rgba(192,107,75,.18));border:1px solid rgba(201,168,76,.22);border-bottom-left-radius:3px}
-.bub.sys{background:var(--d3);border:1px solid rgba(201,168,76,.1);font-size:12px;color:var(--tm);padding:5px 12px;border-radius:20px;text-align:center}
-.bub.ltr{background:rgba(201,168,76,.1);border:1.5px solid rgba(201,168,76,.35);cursor:pointer;border-radius:14px;padding:12px}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.mav2{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;margin-bottom:2px}
+.mav2.me{background:linear-gradient(135deg,var(--g),#c4813a);box-shadow:0 2px 8px rgba(201,168,76,.3)}
+.mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g));box-shadow:0 2px 8px rgba(224,122,142,.3)}
+.mwrap{display:flex;flex-direction:column;max-width:72%}
+.bub{padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.65;word-wrap:break-word;word-break:break-word;position:relative}
+.bub.hr{background:var(--d3);border:1px solid rgba(255,255,255,.05);border-bottom-right-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.bub.me{background:linear-gradient(135deg,rgba(201,168,76,.28),rgba(192,107,75,.2));border:1px solid rgba(201,168,76,.25);border-bottom-left-radius:4px;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.bub.sys{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);font-size:11px;color:var(--tm);padding:4px 14px;border-radius:20px;text-align:center;letter-spacing:.3px}
+.bub.ltr{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));border:1.5px solid rgba(201,168,76,.3);cursor:pointer;border-radius:16px;padding:13px;backdrop-filter:blur(4px)}
 .ltr-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px}
 .ltr-time{font-size:11px;color:var(--tm)}
-.ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,168,76,.2);display:none}
+.ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,168,76,.15);display:none;line-height:1.7}
 .ltr-body.open{display:block}
-.mtime{font-size:10px;color:var(--tm);margin-top:3px}
-.mrow.me .mtime{text-align:right}
-.rxns{display:flex;gap:3px;margin-top:4px;flex-wrap:wrap}
-.rxn{background:var(--d4);border:1px solid rgba(201,168,76,.15);border-radius:20px;padding:2px 7px;font-size:12px;cursor:pointer}
-.msg-menu{background:var(--d3);border:1px solid rgba(201,168,76,.2);border-radius:20px;padding:4px 8px;display:none;gap:5px;position:absolute;bottom:100%;right:0;white-space:nowrap;z-index:10}
-.mrow:hover .msg-menu{display:flex}
-.mmbtn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--tm);padding:2px 4px}
-.mmbtn:hover{color:var(--g)}
+.mtime{font-size:10px;color:var(--tm);margin-top:4px;opacity:.7;display:flex;align-items:center;gap:4px}
+.mrow.me .mtime{justify-content:flex-end}
+.msg-status{font-size:10px;color:var(--g);opacity:.8}
+.rxns{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.rxn{background:var(--d4);border:1px solid rgba(201,168,76,.18);border-radius:20px;padding:3px 8px;font-size:12px;cursor:pointer;transition:all .15s;backdrop-filter:blur(4px)}
+.rxn:hover{background:var(--gl);border-color:var(--g);transform:scale(1.1)}
+.msg-menu{background:var(--d2);border:1px solid rgba(201,168,76,.2);border-radius:22px;padding:5px 8px;display:none;gap:3px;position:absolute;bottom:calc(100% + 5px);right:0;white-space:nowrap;z-index:10;box-shadow:0 4px 20px rgba(0,0,0,.4);backdrop-filter:blur(10px)}
+.mrow:hover .msg-menu,.mrow.menu-open .msg-menu{display:flex}
+.mmbtn{background:none;border:none;cursor:pointer;font-size:15px;color:var(--tm);padding:3px 5px;border-radius:8px;transition:all .15s}
+.mmbtn:hover{color:var(--g);background:var(--gl)}
+.starred-msg .bub{outline:2px solid rgba(201,168,76,.4);outline-offset:2px}
+.star-badge{font-size:10px;margin-top:2px}
 
 /* INPUT */
-.iarea{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;flex-shrink:0}
+.iarea{background:var(--d2);border-top:1px solid rgba(201,168,76,.08);padding:10px 12px 12px;flex-shrink:0}
 .irow{display:flex;align-items:flex-end;gap:6px}
-.ibtn{width:40px;height:40px;border-radius:10px;border:none;background:var(--d3);color:var(--tm);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.ibtn:hover{color:var(--g)}
-.minput{flex:1;background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:11px;padding:9px 13px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;resize:none;min-height:40px;max-height:90px;outline:none;direction:rtl}
-.minput:focus{border-color:rgba(201,168,76,.4)}
-.minput::placeholder{color:var(--tm)}
-.sbtn{width:40px;height:40px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#b8832a);color:var(--d);font-size:16px;cursor:pointer;flex-shrink:0}
-.hints{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
-.hint{font-size:11px;color:var(--tm);background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:20px;padding:3px 9px;cursor:pointer}
-.hint:hover{color:var(--g);border-color:rgba(201,168,76,.3)}
+.ibtn{width:38px;height:38px;border-radius:10px;border:none;background:rgba(255,255,255,.05);color:var(--tm);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.ibtn:hover{color:var(--g);background:var(--gl)}
+.minput{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.12);border-radius:22px;padding:9px 16px;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:14px;resize:none;min-height:40px;max-height:100px;outline:none;direction:rtl;transition:border-color .2s,background .2s}
+.minput:focus{border-color:rgba(201,168,76,.5);background:rgba(255,255,255,.08)}
+.minput::placeholder{color:rgba(255,255,255,.25)}
+.sbtn{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--g),#b8832a);color:var(--d);font-size:16px;cursor:pointer;flex-shrink:0;transition:all .2s;box-shadow:0 2px 10px rgba(201,168,76,.4)}
+.sbtn:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(201,168,76,.5)}
+.sbtn:active{transform:scale(.95)}
+.hints{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;padding:0 2px}
+.hint{font-size:11px;color:rgba(255,255,255,.4);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 10px;cursor:pointer;transition:all .2s}
+.hint:hover{color:var(--g);border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
 
 /* STICKERS PANEL */
 .sp{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;display:none;flex-direction:column;gap:8px;flex-shrink:0;max-height:200px;overflow-y:auto}
@@ -277,7 +284,7 @@ textarea.field{resize:none}
 /* RECORDER */
 .rec-active{background:rgba(224,85,85,.2)!important;border-color:#e05555!important;color:#ff8080!important;animation:rpulse 1s infinite}
 @keyframes rpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
-.voice-bub{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--d3);border:1px solid rgba(201,168,76,.15);border-radius:17px;min-width:180px}
+.voice-bub{display:flex;align-items:center;gap:10px;padding:11px 14px;background:linear-gradient(135deg,var(--d3),var(--d4));border:1px solid rgba(201,168,76,.18);border-radius:20px;min-width:190px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .play-btn{width:32px;height:32px;border-radius:50%;background:var(--g);border:none;cursor:pointer;color:var(--d);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .waveform{display:flex;align-items:center;gap:2px;height:24px;flex:1}
 .wbar{width:3px;border-radius:2px;background:rgba(201,168,76,.35);flex-shrink:0}
@@ -311,8 +318,9 @@ textarea.field{resize:none}
 .cinema-btn:hover{background:rgba(201,168,76,.3)}
 .cinema-time{font-size:11px;color:rgba(255,255,255,.6);flex:1}
 .cinema-chat{position:absolute;bottom:80px;left:0;right:0;padding:0 12px;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-height:200px;overflow:hidden;justify-content:flex-end}
-.cinema-bubble{background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:6px 12px;font-size:13px;color:white;backdrop-filter:blur(8px);animation:bubbleIn .3s ease;align-self:flex-start;max-width:75%}
-.cinema-bubble.me{background:rgba(201,168,76,.25);border-color:rgba(201,168,76,.4);align-self:flex-end}
+.cinema-bubble{background:rgba(10,10,20,.82);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:7px 13px;font-size:13px;color:rgba(255,255,255,.92);backdrop-filter:blur(12px);animation:bubbleIn .25s cubic-bezier(.34,1.56,.64,1);align-self:flex-start;max-width:78%;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+.cinema-bubble.me{background:rgba(201,168,76,.22);border-color:rgba(201,168,76,.45);align-self:flex-end;color:white}
+.cinema-bubble .cb-name{font-size:10px;opacity:.6;margin-bottom:2px;font-weight:600;letter-spacing:.3px}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 @keyframes bubbleIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
@@ -331,6 +339,24 @@ textarea.field{resize:none}
 /* STARRED */
 .starred-msg{background:rgba(201,168,76,.08)!important;border-color:rgba(201,168,76,.4)!important}
 .star-badge{position:absolute;top:-6px;left:-6px;font-size:12px}
+
+/* PARTNER PRESENCE */
+.presence-bar{background:rgba(74,222,128,.06);border-bottom:1px solid rgba(74,222,128,.12);padding:5px 16px;font-size:11px;color:rgba(74,222,128,.8);display:flex;align-items:center;gap:6px;flex-shrink:0;animation:fadeIn .3s ease}
+.presence-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:presencePulse 2s infinite;flex-shrink:0}
+@keyframes presencePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+/* TYPING INDICATOR */
+.typing-bubble{display:flex;align-items:center;gap:4px;padding:10px 14px;background:var(--d3);border-radius:18px;border-bottom-right-radius:4px;width:fit-content}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--tm);animation:typingBounce 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+/* MEDIA BUB UPGRADE */
+.media-bub{background:transparent;border:none;padding:0;max-width:230px}
+.media-bub img{width:100%;border-radius:16px;display:block;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.3);transition:transform .2s}
+.media-bub img:hover{transform:scale(1.02)}
+.media-bub video{width:100%;border-radius:16px;display:block;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+
 /* IMG VIEWER */
 .img-viewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:600;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .img-viewer.show{display:flex}
@@ -416,6 +442,12 @@ textarea.field{resize:none}
     <div style="font-size:16px">📶</div>
     <div style="flex:1;font-size:12px;color:#ffb347"><strong style="display:block;font-size:13px">وضع النت الضعيف مفعّل</strong>الصور والفيديو معطّلة</div>
     <button onclick="toggleLN()" style="background:none;border:none;color:#ffb347;font-size:14px;cursor:pointer">✕</button>
+  </div>
+
+  <!-- Partner presence bar (shown when partner is on same page) -->
+  <div class="presence-bar" id="presenceBar" style="display:none">
+    <div class="presence-dot"></div>
+    <span id="presenceText">شريكتك تشاهد المحادثة الآن</span>
   </div>
 
   <!-- Topbar -->
@@ -565,6 +597,18 @@ textarea.field{resize:none}
       <div class="sp-grid" id="stickerGrid"></div>
       <div class="sp-grid" id="customSGrid"></div>
     </div>
+    <!-- Typing indicator -->
+    <div id="typingIndicator" style="display:none;padding:6px 16px;background:var(--d2)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="typing-bubble">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+        <span style="font-size:11px;color:var(--tm)" id="typingName">يكتب...</span>
+      </div>
+    </div>
+
     <div class="iarea">
       <div class="irow">
         <button class="ibtn" id="emojiPickerBtn" onclick="toggleEmojiPicker()" title="إيموجي">😊</button>
@@ -973,22 +1017,27 @@ textarea.field{resize:none}
     <div class="pi">
       <div class="ptitle">📚 مكتبة الروايات المشتركة</div>
       <div style="font-size:13px;color:var(--tm);margin-bottom:12px;line-height:1.7">
-        ارفع ملف PDF أو TXT — يظهر فوراً عند شريكك ويمكنكما قراءته معاً بتزامن كامل
+        ارفع PDF أو TXT — يظهر فوراً عند شريكك وتقرآنه معاً بتزامن كامل
       </div>
 
-      <!-- Upload button -->
-      <label style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;background:var(--d4);margin-bottom:12px;transition:all .2s">
-        <span style="font-size:36px">📄</span>
-        <span style="font-size:14px;color:var(--tm)">اضغط لرفع رواية</span>
-        <span style="font-size:11px;color:rgba(255,255,255,.25)">PDF · TXT</span>
+      <!-- Upload zone -->
+      <label id="novelDropZone" style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.25);border-radius:16px;padding:22px 16px;cursor:pointer;background:rgba(201,168,76,.03);margin-bottom:12px;transition:all .25s" onmouseenter="this.style.borderColor='rgba(201,168,76,.5)';this.style.background='rgba(201,168,76,.07)'" onmouseleave="this.style.borderColor='rgba(201,168,76,.25)';this.style.background='rgba(201,168,76,.03)'">
+        <div style="width:52px;height:52px;border-radius:14px;background:rgba(201,168,76,.1);display:flex;align-items:center;justify-content:center;font-size:24px">📄</div>
+        <div style="text-align:center">
+          <div style="font-size:14px;color:var(--tx);font-weight:600;margin-bottom:3px">ارفع رواية أو كتاب</div>
+          <div style="font-size:11px;color:var(--tm)">PDF · TXT — يظهر عند الطرفين فوراً</div>
+        </div>
         <input type="file" id="novelFileInput" accept=".pdf,.txt,application/pdf,text/plain" style="display:none" onchange="uploadNovelFile(this)">
       </label>
 
       <!-- Upload progress -->
-      <div id="novelUploadProgress" style="display:none;margin-bottom:12px">
-        <div style="font-size:13px;color:var(--g);margin-bottom:6px" id="novelUploadMsg">⬆️ جاري الرفع...</div>
-        <div style="background:var(--d4);border-radius:20px;height:6px;overflow:hidden">
-          <div id="novelUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:20px;transition:width .3s"></div>
+      <div id="novelUploadProgress" style="display:none;background:var(--d3);border-radius:14px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:13px;color:var(--g);font-weight:600" id="novelUploadMsg">⬆️ جاري الرفع...</div>
+          <div style="font-size:12px;color:var(--tm)" id="novelUploadPct">0%</div>
+        </div>
+        <div style="background:var(--d4);border-radius:20px;height:5px;overflow:hidden">
+          <div id="novelUploadBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--g),var(--pk));border-radius:20px;transition:width .3s"></div>
         </div>
       </div>
 
@@ -999,25 +1048,33 @@ textarea.field{resize:none}
 
   <!-- NOVEL READER OVERLAY -->
   <div id="novelReaderOverlay" style="display:none;position:fixed;inset:0;background:var(--d);z-index:400;flex-direction:column">
-    <!-- Reader top bar -->
-    <div style="background:var(--d2);border-bottom:1px solid rgba(201,168,76,.15);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
-      <button onclick="closeNovelReader()" style="background:var(--d3);border:none;color:var(--tm);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
-      <div style="flex:1;font-size:14px;font-weight:700;color:var(--g)" id="novelReaderTitle">الرواية</div>
-      <div id="novelSyncBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80">🔄 متزامن</div>
+    <!-- Top bar -->
+    <div style="background:var(--d2);border-bottom:1px solid rgba(201,168,76,.12);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <button onclick="closeNovelReader()" style="background:rgba(255,255,255,.06);border:none;color:var(--tm);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer;transition:all .2s" onmouseenter="this.style.background='rgba(224,85,85,.3)';this.style.color='#ff8080'" onmouseleave="this.style.background='rgba(255,255,255,.06)';this.style.color='var(--tm)'">✕</button>
+      <div style="flex:1;font-size:14px;font-weight:700;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="novelReaderTitle">الرواية</div>
+      <div id="novelSyncBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#4ade80;flex-shrink:0">🔄 متزامن</div>
     </div>
     <!-- Partner page badge -->
-    <div id="novelPartnerBadge" style="display:none;background:rgba(224,122,142,.1);border-bottom:1px solid rgba(224,122,142,.2);padding:7px 16px;font-size:12px;color:var(--pk)"></div>
-    <!-- Content -->
-    <div id="novelReaderContent" class="novel-page" style="flex:1;overflow-y:auto;border-radius:0;max-height:none;padding:20px 18px"></div>
-    <!-- Navigation -->
-    <div style="background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <div id="novelPartnerBadge" style="display:none;background:linear-gradient(135deg,rgba(224,122,142,.1),rgba(224,122,142,.05));border-bottom:1px solid rgba(224,122,142,.15);padding:7px 16px;font-size:12px;color:var(--pk);display:flex;align-items:center;gap:6px">
+      <span>👁</span><span id="novelPartnerBadgeTxt"></span>
+    </div>
+    <!-- PDF viewer or text content -->
+    <div style="flex:1;overflow:hidden;position:relative">
+      <!-- PDF embed -->
+      <iframe id="novelPdfFrame" style="display:none;width:100%;height:100%;border:none" title="PDF Reader"></iframe>
+      <!-- TXT reader -->
+      <div id="novelReaderContent" class="novel-page" style="display:none;flex:1;overflow-y:auto;border-radius:0;max-height:100%;padding:22px 18px;height:100%"></div>
+    </div>
+    <!-- Navigation (for TXT only) -->
+    <div id="novelNavBar" style="background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
       <button class="novel-btn" id="novelPrevBtn" onclick="novelGoPage(-1)" disabled>→ السابقة</button>
       <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">
         صفحة <strong id="novelCurPageEl" style="color:var(--g)">1</strong> / <span id="novelTotalPagesEl">1</span>
       </div>
       <button class="novel-btn" id="novelNextBtn" onclick="novelGoPage(1)">التالية ←</button>
-      <button class="novel-btn" onclick="novelFont(-1)" style="padding:6px 10px">أ-</button>
-      <button class="novel-btn" onclick="novelFont(1)" style="padding:6px 10px">أ+</button>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,.1)"></div>
+      <button class="novel-btn" onclick="novelFont(-1)" style="padding:5px 10px;min-width:0">أ-</button>
+      <button class="novel-btn" onclick="novelFont(1)" style="padding:5px 10px;min-width:0">أ+</button>
     </div>
   </div>
 
@@ -1311,7 +1368,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>initMediaLibrary(), 1500);
+    setTimeout(()=>{ initMediaLibrary(); initPresence(); listenCinemaChat(); }, 1500);
     setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
@@ -3272,6 +3329,179 @@ function renderStkGrid() {
     span.textContent = e;
     span.onclick = () => sendStk(e);
     grid.appendChild(span);
+  });
+}
+
+
+// ── PRESENCE & TYPING ──
+let presenceUnsub = null;
+let typingTimer   = null;
+let myCurrentTab  = 'chat';
+
+function initPresence() {
+  if(!pId) return;
+  // Update my presence + current tab
+  const updateMyPresence = (tab) => {
+    myCurrentTab = tab || myCurrentTab;
+    setDoc(doc(db,'presence',uid), {
+      tab: myCurrentTab, online:true, name:myNick||myName, at:Date.now()
+    }).catch(()=>{});
+  };
+
+  // Run every 20s and on tab change
+  updateMyPresence('chat');
+  setInterval(() => updateMyPresence(), 20000);
+
+  // Listen for partner presence
+  presenceUnsub = onSnapshot(doc(db,'presence',pId), snap => {
+    if(!snap.exists()) return;
+    const p = snap.data();
+    const age = Date.now() - (p.at||0);
+    const isOnline = age < 60000; // online if active within 60s
+
+    // Update status dot
+    const dot = document.querySelector('.odot');
+    if(dot) dot.style.background = isOnline ? '#4ade80' : 'rgba(255,255,255,.2)';
+    const statusEl = document.getElementById('pStatus');
+
+    // Show presence bar when partner is on chat tab
+    const presBar = document.getElementById('presenceBar');
+    const presTxt = document.getElementById('presenceText');
+    if(isOnline && p.tab && presBar && presTxt) {
+      const tabNames = {
+        chat:'المحادثة', letter:'الرسائل', mood:'صفحة المزاج',
+        games:'الألعاب', ideas:'الأفكار', todo:'الأهداف',
+        cinema:'السينما 🎬', novel:'الروايات 📚', draw:'الرسم',
+        themes:'السمات', lottery:'القرعة', memories:'الذكريات',
+        fight:'صفحة المشاجرة', disc:'النقاش', nick:'الكنيات'
+      };
+      const tabName = tabNames[p.tab] || p.tab;
+      presBar.style.display = 'flex';
+      presTxt.textContent = (hrNick||pName) + ' في ' + tabName + ' الآن';
+      if(statusEl && !statusEl.textContent.includes('مشاجرة') && !statusEl.textContent.includes('نت ضعيف'))
+        statusEl.textContent = isOnline ? 'متصل الآن 🟢' : 'غير متصل';
+    } else if(presBar) {
+      presBar.style.display = 'none';
+    }
+  });
+
+  // Typing indicator
+  const msgInp = document.getElementById('msgInput');
+  if(msgInp) {
+    msgInp.addEventListener('input', () => {
+      // Broadcast typing
+      setDoc(doc(db,'presence',uid),{typing:true,typingAt:Date.now()},{merge:true}).catch(()=>{});
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        setDoc(doc(db,'presence',uid),{typing:false},{merge:true}).catch(()=>{});
+      }, 2000);
+    });
+  }
+
+  // Listen for partner typing
+  onSnapshot(doc(db,'presence',pId), snap => {
+    if(!snap.exists()) return;
+    const p = snap.data();
+    const typingEl = document.getElementById('typingIndicator');
+    const typingName = document.getElementById('typingName');
+    if(!typingEl) return;
+    const isTyping = p.typing && (Date.now() - (p.typingAt||0)) < 4000;
+    typingEl.style.display = isTyping ? 'block' : 'none';
+    if(typingName) typingName.textContent = (hrNick||pName) + ' يكتب...';
+  });
+}
+
+// Override swTab to track current tab for presence
+const _origSwTab = window.swTab;
+window.swTab = (n) => {
+  _origSwTab(n);
+  setDoc(doc(db,'presence',uid||'x'),{tab:n,at:Date.now()},{merge:true}).catch(()=>{});
+};
+
+// ── UPDATE openNovelReader to handle PDF properly ──
+const _origOpenNovelReader = window.openNovelReader;
+window.openNovelReader = (id, v) => {
+  novelActiveId = id;
+  document.getElementById('novelReaderTitle').textContent = '📖 ' + (v.name||'رواية');
+  const overlay   = document.getElementById('novelReaderOverlay');
+  const pdfFrame  = document.getElementById('novelPdfFrame');
+  const txtReader = document.getElementById('novelReaderContent');
+  const navBar    = document.getElementById('novelNavBar');
+  overlay.style.display = 'flex';
+
+  if(v.type === 'pdf') {
+    // PDF: show in iframe
+    pdfFrame.src = v.url;
+    pdfFrame.style.display = 'block';
+    txtReader.style.display = 'none';
+    if(navBar) navBar.style.display = 'none';
+    document.getElementById('novelSyncBadge').textContent = '📄 PDF';
+    document.getElementById('novelSyncBadge').style.color = '#ffb347';
+  } else {
+    // TXT: inline reader
+    pdfFrame.style.display = 'none';
+    txtReader.style.display = 'block';
+    if(navBar) navBar.style.display = 'flex';
+    buildNovelPages(v.textContent || '');
+    novelCurPage = 0;
+    renderNovelPage();
+    document.getElementById('novelSyncBadge').textContent = '🔄 متزامن';
+    document.getElementById('novelSyncBadge').style.color = '#4ade80';
+  }
+
+  // Broadcast open
+  setDoc(doc(db,'shared',cid()),{novelPage:{id,page:0,by:uid,url:v.url,type:v.type||'txt',at:Date.now()}},{merge:true});
+};
+
+window.closeNovelReader = () => {
+  document.getElementById('novelReaderOverlay').style.display = 'none';
+  const pdfFrame = document.getElementById('novelPdfFrame');
+  if(pdfFrame) pdfFrame.src = '';
+  novelPages = []; novelCurPage = 0; novelActiveId = null;
+};
+
+// ── CINEMA chat enhancement ──
+window.sendCinemaMsg = async () => {
+  const inp = document.getElementById('cinemaChatIn');
+  const txt = (inp.value||'').trim();
+  if(!txt||!pId) return;
+  inp.value='';
+  // Add to cinema bubbles with sender name
+  addCinemaBubbleEnhanced(txt, true, myNick||myName);
+  // Also broadcast via Firestore (listen in cinemaCmd)
+  await setDoc(doc(db,'shared',cid()),{cinemaChatMsg:{text:txt,by:uid,name:myNick||myName,at:Date.now()}},{merge:true});
+  // Save to chat
+  await addDoc(collection(db,'chats',cid(),'messages'),{content:'🎬 '+txt,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});
+};
+
+function addCinemaBubbleEnhanced(msg, isMe, name) {
+  const c = document.getElementById('cinemaChatBubbles') || document.getElementById('cinemaBubbles');
+  if(!c) return;
+  const b = document.createElement('div');
+  b.className = 'cinema-bubble' + (isMe?' me':'');
+  if(!isMe) {
+    const nameEl = document.createElement('div');
+    nameEl.className = 'cb-name';
+    nameEl.textContent = name || (hrNick||pName);
+    b.appendChild(nameEl);
+  }
+  const txt = document.createElement('div');
+  txt.textContent = msg;
+  b.appendChild(txt);
+  c.appendChild(b);
+  while(c.children.length>6) c.removeChild(c.firstChild);
+  setTimeout(()=>b.remove(), 6000);
+}
+
+// Listen for cinema chat from partner
+function listenCinemaChat() {
+  if(!pId) return;
+  onSnapshot(doc(db,'shared',cid()), snap=>{
+    if(!snap.exists()) return;
+    const msg = snap.data().cinemaChatMsg;
+    if(msg && msg.by!==uid) {
+      addCinemaBubbleEnhanced(msg.text, false, hrNick||pName);
+    }
   });
 }
 
