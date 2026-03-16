@@ -939,129 +939,85 @@ textarea.field{resize:none}
   </div>
 
   <!-- ══ CINEMA ══ -->
-  <div class="panel" id="panel-cinema" style="overflow:hidden">
-
-    <!-- LOBBY -->
-    <div id="cinemaLobby" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
-      <div style="font-size:60px;filter:drop-shadow(0 0 20px rgba(201,168,76,.5))">🎬</div>
-      <div style="font-size:21px;font-weight:700;color:var(--g)">غرفة السينما</div>
-      <div style="font-size:13px;color:var(--tm);max-width:280px;line-height:1.8">
-        افتح غرفة وشارك شاشتك — شريكك سيشاهد ما تشغّله في الوقت الحقيقي
+  <div class="panel" id="panel-cinema">
+    <div class="pi">
+      <div class="ptitle">🎬 مكتبة الأفلام المشتركة</div>
+      <div style="font-size:13px;color:var(--tm);margin-bottom:12px;line-height:1.7">
+        ارفع فيديو — يظهر فوراً عند شريكك ويمكنكما مشاهدته معاً بتزامن كامل
       </div>
 
-      <!-- Host button -->
-      <button onclick="hostCinema()"
-        style="padding:14px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;max-width:280px">
-        🎥 افتح غرفة السينما
-      </button>
+      <!-- Upload button -->
+      <label style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;background:var(--d4);margin-bottom:12px;transition:all .2s" id="cinemaDropZone">
+        <span style="font-size:36px">🎥</span>
+        <span style="font-size:14px;color:var(--tm)">اضغط لرفع فيديو</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.25)">MP4 · MOV · WebM</span>
+        <input type="file" id="cinemaFileInput" accept="video/*" style="display:none" onchange="uploadCinemaFile(this)">
+      </label>
 
-      <!-- Guest join box (appears when partner opens room) -->
-      <div id="cinemaJoinBox" style="display:none;background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(224,122,142,.08));border:1.5px solid rgba(201,168,76,.4);border-radius:14px;padding:16px;width:100%;max-width:280px">
-        <div style="font-size:14px;font-weight:700;color:var(--g);margin-bottom:4px">🎬 شريكك فتح غرفة!</div>
-        <div style="font-size:12px;color:var(--tm);margin-bottom:12px">انضم الآن لمشاهدة ما يشاركه</div>
-        <button onclick="joinCinema()"
-          style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">
-          ▶ انضم للمشاهدة
-        </button>
-      </div>
-    </div>
-
-    <!-- ROOM (active) -->
-    <div id="cinemaRoom" style="display:none;flex-direction:column;height:100%">
-
-      <!-- Top bar -->
-      <div style="background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.08);padding:9px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <div style="font-size:13px;font-weight:700;color:var(--g);flex:1" id="cinemaRoomLabel">🎬 غرفة السينما</div>
-        <div id="cinemaBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80">⏳ جاري الاتصال...</div>
-        <button onclick="leaveCinema()" style="background:rgba(224,85,85,.3);border:none;color:#ff8080;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0">✕</button>
-      </div>
-
-      <!-- Video area -->
-      <div style="flex:1;background:#000;position:relative;min-height:180px;overflow:hidden">
-        <!-- Remote stream (guest sees this) -->
-        <div id="cinemaRemoteContainer" style="width:100%;height:100%;position:absolute;inset:0"></div>
-        <!-- Local preview (host sees this small) -->
-        <div id="cinemaLocalContainer" style="display:none;position:absolute;bottom:10px;left:10px;width:120px;height:80px;border-radius:8px;overflow:hidden;border:2px solid rgba(201,168,76,.4);z-index:5"></div>
-        <!-- Placeholder -->
-        <div id="cinemaPlaceholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.3)">
-          <div style="font-size:42px">📺</div>
-          <div style="font-size:13px" id="cinemaPlaceholderTxt">بانتظار مشاركة الشاشة...</div>
+      <!-- Upload progress -->
+      <div id="cinemaUploadProgress" style="display:none;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--g);margin-bottom:6px" id="cinemaUploadMsg">⬆️ جاري الرفع...</div>
+        <div style="background:var(--d4);border-radius:20px;height:6px;overflow:hidden">
+          <div id="cinemaUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:20px;transition:width .3s"></div>
         </div>
-        <!-- Chat bubbles -->
-        <div id="cinemaBubbles" style="position:absolute;bottom:8px;right:8px;left:8px;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:140px;overflow:hidden;justify-content:flex-end;z-index:10"></div>
+        <div style="font-size:11px;color:var(--tm);margin-top:4px" id="cinemaUploadPct">0%</div>
       </div>
 
-      <!-- Controls -->
-      <div style="background:rgba(0,0,0,.9);border-top:1px solid rgba(255,255,255,.08);padding:10px 12px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
-        <!-- Host share controls -->
-        <div id="cinemaHostCtrl" style="display:none;gap:7px">
-          <button id="cinemaShareBtn" onclick="startShare()"
-            style="flex:1;padding:10px;border-radius:11px;border:none;background:linear-gradient(135deg,rgba(201,168,76,.3),rgba(201,168,76,.15));color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-            📡 شارك الشاشة
-          </button>
-          <button id="cinemaStopBtn" onclick="stopShare()"
-            style="display:none;flex:1;padding:10px;border-radius:11px;border:none;background:rgba(224,85,85,.25);color:#ff8080;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-            ⏹ إيقاف المشاركة
-          </button>
-        </div>
-        <!-- Chat -->
-        <div style="display:flex;gap:6px">
-          <input id="cinemaChatIn" class="cinema-tinput" placeholder="💬 رسالة أثناء المشاهدة..."
-            onkeydown="if(event.key==='Enter')sendCinemaMsg()" style="flex:1">
-          <button onclick="sendCinemaMsg()" class="cinema-tsend">➤</button>
-        </div>
-      </div>
-
+      <!-- Video list -->
+      <div id="cinemaVideoList" style="display:flex;flex-direction:column;gap:10px"></div>
     </div>
   </div>
 
   <!-- ══ NOVEL ══ -->
   <div class="panel" id="panel-novel">
     <div class="pi">
-      <div class="ptitle">📖 قراءة معاً</div>
+      <div class="ptitle">📚 مكتبة الروايات المشتركة</div>
+      <div style="font-size:13px;color:var(--tm);margin-bottom:12px;line-height:1.7">
+        ارفع ملف PDF أو TXT — يظهر فوراً عند شريكك ويمكنكما قراءته معاً بتزامن كامل
+      </div>
 
-      <!-- Upload section -->
-      <div id="novelUploadSection">
-        <div class="card">
-          <div class="ctitle">📚 أضف رواية للقراءة المشتركة</div>
-          <div style="font-size:13px;color:var(--tm);margin-bottom:12px;line-height:1.6">أرفع ملف نصي أو الصق النص — ستظهر الرواية عند شريكك تلقائياً وتتزامنان على نفس الصفحة</div>
-          <label style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:12px;padding:18px;cursor:pointer;background:var(--d4);margin-bottom:10px">
-            <span style="font-size:30px">📄</span>
-            <span style="font-size:13px;color:var(--tm)">اضغط لرفع ملف .txt</span>
-            <input type="file" id="novelFileInput" accept=".txt,text/plain" style="display:none" onchange="onNovelFileSelected(this)">
-          </label>
-          <div style="text-align:center;color:var(--tm);font-size:12px;margin-bottom:8px">أو</div>
-          <textarea class="field" id="novelPasteArea" placeholder="الصق نص الرواية هنا..." rows="3" style="margin-bottom:8px"></textarea>
-          <button class="pbtn" onclick="onNovelTextPasted()">📖 ابدأ القراءة المشتركة</button>
+      <!-- Upload button -->
+      <label style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;background:var(--d4);margin-bottom:12px;transition:all .2s">
+        <span style="font-size:36px">📄</span>
+        <span style="font-size:14px;color:var(--tm)">اضغط لرفع رواية</span>
+        <span style="font-size:11px;color:rgba(255,255,255,.25)">PDF · TXT</span>
+        <input type="file" id="novelFileInput" accept=".pdf,.txt,application/pdf,text/plain" style="display:none" onchange="uploadNovelFile(this)">
+      </label>
+
+      <!-- Upload progress -->
+      <div id="novelUploadProgress" style="display:none;margin-bottom:12px">
+        <div style="font-size:13px;color:var(--g);margin-bottom:6px" id="novelUploadMsg">⬆️ جاري الرفع...</div>
+        <div style="background:var(--d4);border-radius:20px;height:6px;overflow:hidden">
+          <div id="novelUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:20px;transition:width .3s"></div>
         </div>
       </div>
 
-      <!-- Reader section -->
-      <div id="novelReaderSection" style="display:none;flex-direction:column;gap:10px;flex:1">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
-          <div style="font-size:14px;font-weight:700;color:var(--g)" id="novelTitleEl">الرواية</div>
-          <div id="novelSyncBadge" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:3px 10px;font-size:11px;color:#4ade80">🔄 متزامن</div>
-        </div>
-        <!-- Partner page indicator -->
-        <div id="novelPartnerPageEl" style="display:none;background:rgba(224,122,142,.1);border:1px solid rgba(224,122,142,.25);border-radius:10px;padding:7px 12px;font-size:12px;color:var(--pk)"></div>
-        <!-- Page content -->
-        <div class="novel-page" id="novelPageContent"></div>
-        <!-- Navigation -->
-        <div style="display:flex;align-items:center;gap:8px">
-          <button class="novel-btn" id="novelPrevBtn" onclick="novelGoPage(-1)" disabled>→ السابقة</button>
-          <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">
-            صفحة <strong id="novelCurPageEl" style="color:var(--g)">1</strong> / <span id="novelTotalPagesEl">1</span>
-          </div>
-          <button class="novel-btn" id="novelNextBtn" onclick="novelGoPage(1)">التالية ←</button>
-        </div>
-        <!-- Font size + close -->
-        <div style="display:flex;gap:7px;align-items:center">
-          <span style="font-size:11px;color:var(--tm)">الخط:</span>
-          <button class="novel-btn" onclick="novelFont(-1)" style="padding:5px 10px">أ-</button>
-          <button class="novel-btn" onclick="novelFont(1)" style="padding:5px 10px">أ+</button>
-          <button onclick="closeNovelSession()" style="margin-right:auto;padding:7px 14px;border-radius:12px;border:1px solid rgba(224,85,85,.3);background:transparent;color:#ff8080;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🗑 حذف الرواية</button>
-        </div>
+      <!-- Books list -->
+      <div id="novelBookList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- NOVEL READER OVERLAY -->
+  <div id="novelReaderOverlay" style="display:none;position:fixed;inset:0;background:var(--d);z-index:400;flex-direction:column">
+    <!-- Reader top bar -->
+    <div style="background:var(--d2);border-bottom:1px solid rgba(201,168,76,.15);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <button onclick="closeNovelReader()" style="background:var(--d3);border:none;color:var(--tm);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
+      <div style="flex:1;font-size:14px;font-weight:700;color:var(--g)" id="novelReaderTitle">الرواية</div>
+      <div id="novelSyncBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80">🔄 متزامن</div>
+    </div>
+    <!-- Partner page badge -->
+    <div id="novelPartnerBadge" style="display:none;background:rgba(224,122,142,.1);border-bottom:1px solid rgba(224,122,142,.2);padding:7px 16px;font-size:12px;color:var(--pk)"></div>
+    <!-- Content -->
+    <div id="novelReaderContent" class="novel-page" style="flex:1;overflow-y:auto;border-radius:0;max-height:none;padding:20px 18px"></div>
+    <!-- Navigation -->
+    <div style="background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <button class="novel-btn" id="novelPrevBtn" onclick="novelGoPage(-1)" disabled>→ السابقة</button>
+      <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">
+        صفحة <strong id="novelCurPageEl" style="color:var(--g)">1</strong> / <span id="novelTotalPagesEl">1</span>
       </div>
+      <button class="novel-btn" id="novelNextBtn" onclick="novelGoPage(1)">التالية ←</button>
+      <button class="novel-btn" onclick="novelFont(-1)" style="padding:6px 10px">أ-</button>
+      <button class="novel-btn" onclick="novelFont(1)" style="padding:6px 10px">أ+</button>
     </div>
   </div>
 
@@ -1122,8 +1078,8 @@ textarea.field{resize:none}
 </div>
 
 <!-- PEERJS -->
-<!-- AGORA RTC SDK -->
-<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.2.js"></script>
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1355,7 +1311,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
+    setTimeout(()=>initMediaLibrary(), 1500);
     setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
@@ -2659,398 +2615,354 @@ window.confirmSendMedia = async (dataUrl, type) => {
   });
 };
 
-// ── CINEMA — Agora RTC ──
-const AGORA_APP_ID = '84b371c81683485b9a8d8ff4de195988';
-// Channel = couple ID, token = null (use App ID mode — enable in Agora Console)
+// ── CINEMA & NOVEL — Supabase Storage Library ──
+const SB_URL = 'https://lykvgeseacxfyzladwin.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5a3ZnZXNlYWN4Znl6bGFkd2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzMyNDMsImV4cCI6MjA4OTIwOTI0M30.KRF4rPJn3xTlKm-mBVcAPw3Wy83NO8mp86fp_lxTfag';
+let sbClient = null;
 
-let agoraClient  = null;
-let localTracks  = [];   // [screenVideoTrack, screenAudioTrack]
-let isHost       = false;
-let inCinema     = false;
-
-// ── HOST: open room ──
-window.hostCinema = async () => {
-  if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
-  isHost   = true;
-  inCinema = true;
-
-  // Tell partner via Firestore
-  await setDoc(doc(db,'shared',cid()), {
-    cinemaRoom: { status:'open', by:uid, at:Date.now() }
-  }, {merge:true});
-
-  openRoomUI(true);
-  await agoraJoin();
-
-  // Chat invite in messages
-  await addDoc(collection(db,'chats',cid(),'messages'), {
-    content:'🎬 فُتحت غرفة السينما — اضغط للانضمام!',
-    senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
-  });
-
-  showToast('🎬 الغرفة جاهزة! بانتظار شريكك...');
-};
-
-// ── GUEST: join room ──
-window.joinCinema = async () => {
-  if(!pId) return;
-  isHost   = false;
-  inCinema = true;
-  openRoomUI(false);
-  await agoraJoin();
-  showToast('✅ انضممت للغرفة!');
-};
-
-// ── Agora: join channel ──
-async function agoraJoin() {
-  // Create client in live-streaming mode
-  agoraClient = AgoraRTC.createClient({ mode:'rtc', codec:'vp8' });
-
-  // Listen for remote users
-  agoraClient.on('user-published', async (user, mediaType) => {
-    await agoraClient.subscribe(user, mediaType);
-    if(mediaType === 'video') {
-      const remoteContainer = document.getElementById('cinemaRemoteContainer');
-      const placeholder     = document.getElementById('cinemaPlaceholder');
-      if(remoteContainer) {
-        remoteContainer.innerHTML = '';
-        user.videoTrack.play(remoteContainer);
-        if(placeholder) placeholder.style.display = 'none';
-      }
-      setBadge('🔴 بث مباشر', '#4ade80', 'rgba(74,222,128,.15)', 'rgba(74,222,128,.3)');
-      showToast('📺 ' + (hrNick||pName) + ' بدأ مشاركة الشاشة!');
-    }
-    if(mediaType === 'audio') {
-      user.audioTrack.play();
-    }
-  });
-
-  agoraClient.on('user-unpublished', (user, mediaType) => {
-    if(mediaType === 'video') {
-      document.getElementById('cinemaRemoteContainer').innerHTML = '';
-      document.getElementById('cinemaPlaceholder').style.display = 'flex';
-      setBadge('⏸ توقف البث', '#ffb347', 'rgba(255,160,0,.1)', 'rgba(255,160,0,.3)');
-    }
-  });
-
-  agoraClient.on('user-joined', (user) => {
-    setBadge('🟢 متصل', '#4ade80', 'rgba(74,222,128,.1)', 'rgba(74,222,128,.25)');
-    showToast('🎬 ' + (hrNick||pName) + ' انضم للغرفة!');
-  });
-
-  agoraClient.on('user-left', () => {
-    document.getElementById('cinemaRemoteContainer').innerHTML = '';
-    document.getElementById('cinemaPlaceholder').style.display = 'flex';
-    setBadge('⚠️ غادر الشريك', '#ff8080', 'rgba(224,85,85,.1)', 'rgba(224,85,85,.3)');
-  });
-
-  // Join with uid as integer
-  const uidInt = parseInt(uid.replace(/[^0-9]/g,'').slice(0,8)||'12345678');
-  await agoraClient.join(AGORA_APP_ID, cid(), null, uidInt);
-
-  if(isHost) {
-    // Show share controls
-    const ctrl = document.getElementById('cinemaHostCtrl');
-    if(ctrl) ctrl.style.display = 'flex';
-  }
+function getSB() {
+  if(!sbClient) sbClient = window.supabase.createClient(SB_URL, SB_KEY);
+  return sbClient;
 }
 
-// ── SCREEN SHARE ──
-window.startShare = async () => {
+// ── UPLOAD helper ──
+async function uploadToSupabase(file, bucket, path, onProgress) {
+  const sb = getSB();
+  // Read as ArrayBuffer for progress tracking
+  const buf = await file.arrayBuffer();
+  const { data, error } = await sb.storage.from(bucket).upload(path, buf, {
+    contentType: file.type, upsert: true
+  });
+  if(error) throw new Error(error.message);
+  const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
+  return urlData.publicUrl;
+}
+
+// ── CINEMA ──
+window.uploadCinemaFile = async (inp) => {
+  if(!inp.files.length || !pId) return;
+  const file = inp.files[0];
+  inp.value = '';
+  const prog = document.getElementById('cinemaUploadProgress');
+  const bar  = document.getElementById('cinemaUploadBar');
+  const msg  = document.getElementById('cinemaUploadMsg');
+  const pct  = document.getElementById('cinemaUploadPct');
+  prog.style.display = 'block';
+  msg.textContent = '⬆️ جاري رفع: ' + file.name;
+
+  // Fake progress while uploading (XHR doesn't support progress for Supabase JS client)
+  let fakeP = 0;
+  const fakeInt = setInterval(() => {
+    fakeP = Math.min(fakeP + 2, 90);
+    bar.style.width = fakeP + '%';
+    pct.textContent = fakeP + '%';
+  }, 200);
+
   try {
-    // Create screen video + audio tracks
-    const screenVideo = await AgoraRTC.createScreenVideoTrack(
-      { encoderConfig: '1080p_1', optimizationMode:'detail' },
-      'auto'  // auto = include audio if available
-    );
+    const path = cid() + '/videos/' + Date.now() + '_' + file.name;
+    const url  = await uploadToSupabase(file, 'shared-media', path, null);
 
-    // screenVideo might be [videoTrack, audioTrack] or just videoTrack
-    if(Array.isArray(screenVideo)) {
-      localTracks = screenVideo;
-    } else {
-      localTracks = [screenVideo];
-    }
+    clearInterval(fakeInt);
+    bar.style.width = '100%'; pct.textContent = '100%';
+    setTimeout(() => prog.style.display = 'none', 800);
 
-    // Publish to channel
-    await agoraClient.publish(localTracks);
-
-    // Show local preview (small)
-    const localContainer = document.getElementById('cinemaLocalContainer');
-    if(localContainer) {
-      localContainer.style.display = 'block';
-      localTracks[0].play(localContainer);
-    }
-    document.getElementById('cinemaPlaceholder').style.display = 'none';
-    document.getElementById('cinemaShareBtn').style.display = 'none';
-    document.getElementById('cinemaStopBtn').style.display = 'block';
-    setBadge('🔴 تشارك الآن', '#4ade80', 'rgba(74,222,128,.15)', 'rgba(74,222,128,.3)');
-    showToast('📡 يتم البث! شريكك يشاهدك الآن');
-
-    // Handle user stopping share from browser UI
-    localTracks[0].on('track-ended', () => stopShare());
-
+    // Save to Firestore so partner sees it
+    await addDoc(collection(db,'shared',cid(),'cinema'), {
+      name: file.name, url, type:'video', size:file.size,
+      by:uid, byName:myNick||myName, at:serverTimestamp()
+    });
+    showToast('✅ تم رفع الفيديو! يظهر عند شريكك الآن');
   } catch(e) {
-    if(e.code !== 'PERMISSION_DENIED') showToast('خطأ: ' + (e.message||e.code||e));
+    clearInterval(fakeInt);
+    prog.style.display = 'none';
+    showToast('خطأ في الرفع: ' + e.message);
   }
 };
 
-window.stopShare = async () => {
-  if(localTracks.length > 0) {
-    await agoraClient.unpublish(localTracks);
-    localTracks.forEach(t => t.close());
-    localTracks = [];
+// Cinema player state
+let cinemaCurrentUrl = '';
+let cinemaSyncing    = false;
+
+function listenCinema() {
+  if(!pId) return;
+  const q = query(collection(db,'shared',cid(),'cinema'), orderBy('at','desc'));
+  onSnapshot(q, snap => {
+    const list = document.getElementById('cinemaVideoList');
+    if(!list) return;
+    list.innerHTML = '';
+    if(snap.empty) {
+      list.innerHTML = '<div style="text-align:center;color:var(--tm);font-size:13px;padding:20px">لا توجد أفلام بعد... ارفع أول فيديو!</div>';
+      return;
+    }
+    snap.forEach(d => {
+      const v = d.data();
+      const isMe = v.by === uid;
+      const div = document.createElement('div');
+      div.style.cssText = 'background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px';
+      div.innerHTML = '<div style="font-size:32px;flex-shrink:0">🎬</div>'
+        + '<div style="flex:1;min-width:0">'
+        + '<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(v.name||'فيديو')+'</div>'
+        + '<div style="font-size:11px;color:var(--tm);margin-top:2px">'+( isMe?'أنت':(hrNick||pName))+' · '+(v.size?(Math.round(v.size/1024/1024)+'MB'):'')+'</div>'
+        + '</div>';
+      const playBtn = document.createElement('button');
+      playBtn.textContent = '▶ شغّل';
+      playBtn.style.cssText = 'padding:7px 14px;border-radius:10px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0';
+      playBtn.onclick = () => openCinemaPlayer(v.url, v.name, d.id);
+      div.appendChild(playBtn);
+      if(isMe) {
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.style.cssText = 'background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;flex-shrink:0';
+        delBtn.onclick = async () => {
+          await deleteDoc(doc(db,'shared',cid(),'cinema',d.id));
+        };
+        div.appendChild(delBtn);
+      }
+      list.appendChild(div);
+    });
+  });
+  // Cinema sync commands
+  onSnapshot(doc(db,'shared',cid()), snap => {
+    if(!snap.exists()) return;
+    const cmd = snap.data().cinemaCmd;
+    if(!cmd || cmd.by===uid) return;
+    const vid = document.getElementById('cinemaPlayerVid');
+    if(!vid) return;
+    cinemaSyncing = true;
+    if(cmd.a==='play') { if(Math.abs(vid.currentTime-cmd.t)>1.5) vid.currentTime=cmd.t; vid.play().catch(()=>{}); }
+    else if(cmd.a==='pause') { vid.pause(); if(Math.abs(vid.currentTime-cmd.t)>1.5) vid.currentTime=cmd.t; }
+    else if(cmd.a==='seek') { vid.currentTime=cmd.t; }
+    else if(cmd.a==='open') { openCinemaPlayer(cmd.url, cmd.name, null); }
+    setTimeout(()=>cinemaSyncing=false, 300);
+  });
+}
+
+function openCinemaPlayer(url, name, docId) {
+  // Show player overlay
+  let overlay = document.getElementById('cinemaPlayerOverlay');
+  if(!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'cinemaPlayerOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:400;display:flex;flex-direction:column';
+    // Build overlay with DOM to avoid quote issues
+    const topBar = document.createElement('div');
+    topBar.style.cssText = 'background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.08);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0';
+    const closeB = document.createElement('button');
+    closeB.textContent='✕'; closeB.style.cssText='background:rgba(224,85,85,.3);border:none;color:#ff8080;width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer';
+    closeB.onclick=()=>closeCinemaPlayer();
+    const titleEl=document.createElement('div'); titleEl.id='cinemaPlayerTitle'; titleEl.style.cssText='flex:1;font-size:14px;font-weight:700;color:var(--g)'; titleEl.textContent='الفيديو';
+    const badgeEl=document.createElement('div'); badgeEl.id='cinemaPlayerBadge'; badgeEl.style.cssText='font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80'; badgeEl.textContent='🔄 متزامن';
+    topBar.appendChild(closeB); topBar.appendChild(titleEl); topBar.appendChild(badgeEl);
+    const vidEl=document.createElement('video'); vidEl.id='cinemaPlayerVid'; vidEl.controls=true; vidEl.style.cssText='flex:1;width:100%;object-fit:contain;background:#000';
+    const chatBar=document.createElement('div'); chatBar.style.cssText='background:rgba(0,0,0,.85);border-top:1px solid rgba(255,255,255,.08);padding:8px 12px;display:flex;gap:6px;flex-shrink:0';
+    const chatInp=document.createElement('input'); chatInp.id='cinemaChatIn'; chatInp.className='cinema-tinput'; chatInp.placeholder='💬 رسالة أثناء المشاهدة...'; chatInp.style.flex='1';
+    chatInp.onkeydown=(e)=>{ if(e.key==='Enter') sendCinemaMsg(); };
+    const chatBtn=document.createElement('button'); chatBtn.className='cinema-tsend'; chatBtn.textContent='➤'; chatBtn.onclick=()=>sendCinemaMsg();
+    chatBar.appendChild(chatInp); chatBar.appendChild(chatBtn);
+    overlay.appendChild(topBar); overlay.appendChild(vidEl); overlay.appendChild(chatBar);
+    document.body.appendChild(overlay);
   }
-  const localContainer = document.getElementById('cinemaLocalContainer');
-  if(localContainer) { localContainer.innerHTML=''; localContainer.style.display='none'; }
-  document.getElementById('cinemaPlaceholder').style.display = 'flex';
-  document.getElementById('cinemaPlaceholderTxt').textContent = 'توقفت مشاركة الشاشة';
-  document.getElementById('cinemaShareBtn').style.display = 'block';
-  document.getElementById('cinemaStopBtn').style.display = 'none';
-  setBadge('⏸ إيقاف', '#ffb347', 'rgba(255,160,0,.1)', 'rgba(255,160,0,.3)');
+
+  overlay.style.display = 'flex';
+  document.getElementById('cinemaPlayerTitle').textContent = '🎬 ' + (name||'فيديو');
+  const vid = document.getElementById('cinemaPlayerVid');
+  vid.src = url; vid.load();
+  cinemaCurrentUrl = url;
+
+  // Sync events
+  vid.onplay = async () => {
+    if(cinemaSyncing) return;
+    await setDoc(doc(db,'shared',cid()),{cinemaCmd:{a:'play',t:vid.currentTime,by:uid,url,name,at:Date.now()}},{merge:true});
+  };
+  vid.onpause = async () => {
+    if(cinemaSyncing) return;
+    await setDoc(doc(db,'shared',cid()),{cinemaCmd:{a:'pause',t:vid.currentTime,by:uid,at:Date.now()}},{merge:true});
+  };
+  vid.onseeked = async () => {
+    if(cinemaSyncing) return;
+    await setDoc(doc(db,'shared',cid()),{cinemaCmd:{a:'seek',t:vid.currentTime,by:uid,at:Date.now()}},{merge:true});
+  };
+
+  // Also broadcast open so partner opens same video
+  setDoc(doc(db,'shared',cid()),{cinemaCmd:{a:'open',url,name,by:uid,at:Date.now()}},{merge:true});
+}
+
+window.closeCinemaPlayer = () => {
+  const el = document.getElementById('cinemaPlayerOverlay');
+  if(el) el.style.display = 'none';
+  const v = document.getElementById('cinemaPlayerVid');
+  if(v) { v.pause(); v.src=''; }
 };
 
-// ── LEAVE ──
-window.leaveCinema = async () => {
-  if(localTracks.length > 0) {
-    localTracks.forEach(t => t.close());
-    localTracks = [];
-  }
-  if(agoraClient) {
-    await agoraClient.leave();
-    agoraClient = null;
-  }
-  inCinema = false;
-  if(isHost && pId) {
-    await setDoc(doc(db,'shared',cid()), { cinemaRoom:null }, {merge:true});
-  }
-  closeRoomUI();
-};
-
-// ── CHAT ──
 window.sendCinemaMsg = async () => {
   const inp = document.getElementById('cinemaChatIn');
   const txt = (inp.value||'').trim();
   if(!txt||!pId) return;
-  inp.value = '';
-  addCinemaBubble(txt, true);
-  // Send via Firestore
-  await setDoc(doc(db,'shared',cid()), {
-    cinemaMsg:{ text:txt, by:uid, at:Date.now() }
-  }, {merge:true});
+  inp.value='';
+  await addDoc(collection(db,'chats',cid(),'messages'),{
+    content:'🎬 '+txt, senderId:uid, type:'text', reactions:[], sentAt:serverTimestamp()
+  });
 };
 
-function addCinemaBubble(msg, isMe) {
-  const c = document.getElementById('cinemaBubbles');
-  if(!c) return;
-  const b = document.createElement('div');
-  b.className = 'cinema-bubble' + (isMe?' me':'');
-  b.textContent = (isMe?'':(hrNick||pName)+': ') + msg;
-  c.appendChild(b);
-  while(c.children.length > 5) c.removeChild(c.firstChild);
-  setTimeout(() => b.remove(), 5000);
-}
+// ── NOVEL ──
+let novelPages=[], novelCurPage=0, novelFontSize=15, novelActiveId=null;
 
-// ── UI helpers ──
-function openRoomUI(asHost) {
-  document.getElementById('cinemaLobby').style.display = 'none';
-  const room = document.getElementById('cinemaRoom');
-  room.style.display = 'flex';
-  document.getElementById('cinemaRoomLabel').textContent = asHost ? '🎬 أنت المضيف' : '🎬 تشاهد مع '+(hrNick||pName);
-  if(!asHost) {
-    document.getElementById('cinemaPlaceholderTxt').textContent = 'بانتظار المضيف لمشاركة الشاشة...';
-  }
-}
+window.uploadNovelFile = async (inp) => {
+  if(!inp.files.length || !pId) return;
+  const file = inp.files[0];
+  inp.value='';
+  const isTxt = file.name.endsWith('.txt') || file.type==='text/plain';
+  const isPdf = file.name.endsWith('.pdf') || file.type==='application/pdf';
 
-function closeRoomUI() {
-  document.getElementById('cinemaLobby').style.display = 'flex';
-  document.getElementById('cinemaRoom').style.display = 'none';
-  document.getElementById('cinemaRemoteContainer').innerHTML = '';
-  document.getElementById('cinemaLocalContainer').innerHTML = '';
-  document.getElementById('cinemaLocalContainer').style.display = 'none';
-  document.getElementById('cinemaPlaceholder').style.display = 'flex';
-  document.getElementById('cinemaPlaceholderTxt').textContent = 'بانتظار مشاركة الشاشة...';
-  document.getElementById('cinemaShareBtn').style.display = 'block';
-  document.getElementById('cinemaStopBtn').style.display = 'none';
-  document.getElementById('cinemaHostCtrl').style.display = 'none';
-  document.getElementById('cinemaBubbles').innerHTML = '';
-}
+  document.getElementById('novelUploadProgress').style.display='block';
+  document.getElementById('novelUploadMsg').textContent='⬆️ جاري رفع: '+file.name;
 
-function setBadge(txt, color, bg, border) {
-  const b = document.getElementById('cinemaBadge');
-  if(!b) return;
-  b.textContent = txt;
-  b.style.color = color;
-  b.style.background = bg;
-  b.style.borderColor = border;
-}
+  let fakeP=0;
+  const fi=setInterval(()=>{fakeP=Math.min(fakeP+3,90);document.getElementById('novelUploadBar').style.width=fakeP+'%';},200);
 
-// ── Firestore listener for partner room + chat ──
-function initCinemaListener() {
-  if(!pId) return;
-  onSnapshot(doc(db,'shared',cid()), snap => {
-    if(!snap.exists()) return;
-    const sd = snap.data();
-    // Room invite
-    const cr = sd.cinemaRoom;
-    const joinBox = document.getElementById('cinemaJoinBox');
-    if(joinBox) {
-      joinBox.style.display = (cr && cr.status==='open' && cr.by!==uid && !inCinema) ? 'block' : 'none';
+  try {
+    const path = cid()+'/novels/'+Date.now()+'_'+file.name;
+    const url  = await uploadToSupabase(file,'shared-media',path,null);
+    clearInterval(fi);
+    document.getElementById('novelUploadBar').style.width='100%';
+    setTimeout(()=>document.getElementById('novelUploadProgress').style.display='none',800);
+
+    // If TXT, also read content for inline reader
+    let textContent = '';
+    if(isTxt) {
+      textContent = await file.text();
     }
-    // Cinema chat message from partner
-    if(sd.cinemaMsg && sd.cinemaMsg.by !== uid) {
-      addCinemaBubble(sd.cinemaMsg.text, false);
+
+    await addDoc(collection(db,'shared',cid(),'novels'),{
+      name:file.name, url, type:isTxt?'txt':'pdf',
+      textContent, size:file.size,
+      by:uid, byName:myNick||myName, at:serverTimestamp()
+    });
+    showToast('✅ تم رفع الرواية! تظهر عند شريكك الآن');
+  } catch(e) {
+    clearInterval(fi);
+    document.getElementById('novelUploadProgress').style.display='none';
+    showToast('خطأ: '+e.message);
+  }
+};
+
+function listenNovels() {
+  if(!pId) return;
+  const q = query(collection(db,'shared',cid(),'novels'), orderBy('at','desc'));
+  onSnapshot(q, snap => {
+    const list = document.getElementById('novelBookList');
+    if(!list) return;
+    list.innerHTML='';
+    if(snap.empty) {
+      list.innerHTML='<div style="text-align:center;color:var(--tm);font-size:13px;padding:20px">لا توجد روايات بعد... ارفع أول رواية!</div>';
+      return;
+    }
+    snap.forEach(d => {
+      const v=d.data(); const isMe=v.by===uid;
+      const div=document.createElement('div');
+      div.style.cssText='background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px';
+      div.innerHTML='<div style="font-size:32px;flex-shrink:0">'+(v.type==='pdf'?'📕':'📖')+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(v.name||'رواية')+'</div>'
+        +'<div style="font-size:11px;color:var(--tm);margin-top:2px">'+(isMe?'أنت':(hrNick||pName))+'</div>'
+        +'</div>';
+      const readBtn=document.createElement('button');
+      readBtn.textContent='📖 اقرأ';
+      readBtn.style.cssText='padding:7px 14px;border-radius:10px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0';
+      readBtn.onclick=()=>openNovelReader(d.id,v);
+      div.appendChild(readBtn);
+      if(isMe){
+        const db2=document.createElement('button');
+        db2.textContent='🗑️';
+        db2.style.cssText='background:none;border:none;color:var(--tm);cursor:pointer;font-size:16px;flex-shrink:0';
+        db2.onclick=async()=>await deleteDoc(doc(db,'shared',cid(),'novels',d.id));
+        div.appendChild(db2);
+      }
+      list.appendChild(div);
+    });
+  });
+  // Novel page sync
+  onSnapshot(doc(db,'shared',cid()), snap=>{
+    if(!snap.exists()) return;
+    const np=snap.data().novelPage;
+    if(!np||np.by===uid||np.id!==novelActiveId) return;
+    if(np.page!==novelCurPage && novelPages.length>0){
+      novelCurPage=np.page; renderNovelPage();
+      const b=document.getElementById('novelPartnerBadge');
+      if(b){b.style.display='block';b.textContent='👁 '+(hrNick||pName)+' انتقل لصفحة '+(novelCurPage+1);clearTimeout(b._t);b._t=setTimeout(()=>b.style.display='none',4000);}
+    }
+    if(np.id!==novelActiveId && np.url){
+      // Partner opened a novel — open same one
+      // Find in list and open
+      getDoc(doc(db,'shared',cid(),'novels',np.id)).then(ds=>{
+        if(ds.exists()) openNovelReader(np.id,ds.data());
+      });
     }
   });
 }
 
+function openNovelReader(id, v) {
+  novelActiveId=id;
+  document.getElementById('novelReaderTitle').textContent='📖 '+(v.name||'رواية');
 
-// ── NOVEL READER ──
-const NOVEL_CPP   = 1800;
-let novelPages    = [];
-let novelCurPage  = 0;
-let novelFontSize = 15;
-let novelSessId   = null;
-let novelListenerUnsub = null;
-let novelIsOwner  = false;
+  if(v.type==='pdf' || !v.textContent) {
+    // PDF: open in new tab (can't render inline easily)
+    window.open(v.url,'_blank');
+    // Still sync page turns via Firestore
+    return;
+  }
 
-window.onNovelFileSelected = (inp) => {
-  if(!inp.files.length) return;
-  const reader = new FileReader();
-  reader.onload = e => startNovelSession(e.target.result, inp.files[0].name.replace('.txt',''));
-  reader.readAsText(inp.files[0], 'UTF-8');
-};
-
-window.onNovelTextPasted = () => {
-  const txt = (document.getElementById('novelPasteArea').value||'').trim();
-  if(!txt){ showToast('الصق نصاً أولاً'); return; }
-  startNovelSession(txt, 'الرواية');
-};
-
-async function startNovelSession(text, title) {
-  novelIsOwner = true;
-  novelSessId  = 'nv_' + Date.now();
-  buildNovelPages(text);
-  novelCurPage = 0;
-  await setDoc(doc(db,'shared',cid()),{
-    novelSession:{ text, title, sessId:novelSessId, curPage:0, by:uid, at:Date.now() }
-  },{merge:true});
-  showNovelReader(title);
+  // TXT: render inline
+  buildNovelPages(v.textContent);
+  novelCurPage=0;
   renderNovelPage();
-  listenNovelChanges();
+  document.getElementById('novelReaderOverlay').style.display='flex';
+
+  // Broadcast open to partner
+  setDoc(doc(db,'shared',cid()),{novelPage:{id,page:0,by:uid,url:v.url,at:Date.now()}},{merge:true});
 }
 
-function buildNovelPages(text) {
-  novelPages = [];
-  const clean = text.split('\r\n').join('\n').split('\r').join('\n');
-  const NL2 = '\n\n';
-  const paras = clean.split(NL2);
-  let page = '';
+window.closeNovelReader = () => {
+  document.getElementById('novelReaderOverlay').style.display='none';
+  novelPages=[]; novelCurPage=0; novelActiveId=null;
+};
+
+function buildNovelPages(text){
+  novelPages=[];
+  const NL2='\n\n';
+  const paras=text.split('\r\n').join('\n').split('\r').join('\n').split(NL2);
+  let page='';
   for(const p of paras){
-    if((page+p).length > NOVEL_CPP && page.length > 0){
-      novelPages.push(page.trim()); page = p + NL2;
-    } else { page += p + NL2; }
+    if((page+p).length>1800&&page.length>0){novelPages.push(page.trim());page=p+NL2;}
+    else page+=p+NL2;
   }
   if(page.trim()) novelPages.push(page.trim());
 }
 
-function showNovelReader(title) {
-  document.getElementById('novelUploadSection').style.display = 'none';
-  const rs = document.getElementById('novelReaderSection');
-  rs.style.display = 'flex';
-  document.getElementById('novelTitleEl').textContent = '📖 ' + (title||'الرواية');
-  document.getElementById('novelTotalPagesEl').textContent = novelPages.length;
-}
-
-function renderNovelPage() {
-  const el = document.getElementById('novelPageContent');
+function renderNovelPage(){
+  const el=document.getElementById('novelReaderContent');
   if(!el||!novelPages.length) return;
-  el.style.fontSize = novelFontSize+'px';
-  el.textContent = novelPages[novelCurPage]||'';
-  document.getElementById('novelCurPageEl').textContent = novelCurPage+1;
-  document.getElementById('novelTotalPagesEl').textContent = novelPages.length;
-  document.getElementById('novelPrevBtn').disabled = novelCurPage===0;
-  document.getElementById('novelNextBtn').disabled = novelCurPage>=novelPages.length-1;
+  el.style.fontSize=novelFontSize+'px';
+  el.textContent=novelPages[novelCurPage]||'';
+  document.getElementById('novelCurPageEl').textContent=novelCurPage+1;
+  document.getElementById('novelTotalPagesEl').textContent=novelPages.length;
+  document.getElementById('novelPrevBtn').disabled=novelCurPage===0;
+  document.getElementById('novelNextBtn').disabled=novelCurPage>=novelPages.length-1;
 }
 
-window.novelGoPage = async (dir) => {
-  const next = novelCurPage+dir;
+window.novelGoPage=async(dir)=>{
+  const next=novelCurPage+dir;
   if(next<0||next>=novelPages.length) return;
-  novelCurPage = next;
-  renderNovelPage();
-  await setDoc(doc(db,'shared',cid()),{
-    novelSession:{ curPage:novelCurPage, pageBy:uid, at:Date.now() }
-  },{merge:true});
+  novelCurPage=next; renderNovelPage();
+  await setDoc(doc(db,'shared',cid()),{novelPage:{id:novelActiveId,page:novelCurPage,by:uid,at:Date.now()}},{merge:true});
 };
 
-window.novelFont = (dir) => {
-  novelFontSize = Math.max(12,Math.min(24,novelFontSize+dir*2));
-  renderNovelPage();
-};
+window.novelFont=(dir)=>{novelFontSize=Math.max(12,Math.min(26,novelFontSize+dir*2));renderNovelPage();};
 
-window.closeNovelSession = async () => {
-  novelPages=[]; novelCurPage=0; novelSessId=null; novelIsOwner=false;
-  document.getElementById('novelUploadSection').style.display='';
-  document.getElementById('novelReaderSection').style.display='none';
-  document.getElementById('novelPasteArea').value='';
-  if(novelListenerUnsub){novelListenerUnsub();novelListenerUnsub=null;}
-  if(pId) await setDoc(doc(db,'shared',cid()),{novelSession:null},{merge:true});
-};
-
-function listenNovelChanges() {
+function initMediaLibrary(){
   if(!pId) return;
-  if(novelListenerUnsub) novelListenerUnsub();
-  novelListenerUnsub = onSnapshot(doc(db,'shared',cid()), snap=>{
-    if(!snap.exists()) return;
-    const nv = snap.data().novelSession;
-    if(!nv){
-      if(novelPages.length>0&&!novelIsOwner){
-        novelPages=[]; novelCurPage=0; novelSessId=null;
-        document.getElementById('novelUploadSection').style.display='';
-        document.getElementById('novelReaderSection').style.display='none';
-        showToast('🗑 الرواية أُغلقت');
-      }
-      return;
-    }
-    // Partner added novel
-    if(nv.text && nv.by!==uid && nv.sessId!==novelSessId){
-      novelIsOwner=false; novelSessId=nv.sessId;
-      buildNovelPages(nv.text);
-      novelCurPage=nv.curPage||0;
-      showNovelReader(nv.title||'الرواية');
-      renderNovelPage();
-      swTab('novel');
-      showToast('📖 '+(hrNick||pName)+' أضاف رواية! تم فتحها تلقائياً');
-      return;
-    }
-    // Partner changed page
-    if(nv.pageBy && nv.pageBy!==uid && nv.curPage!==undefined && nv.curPage!==novelCurPage && novelPages.length>0){
-      novelCurPage=nv.curPage;
-      renderNovelPage();
-      const badge=document.getElementById('novelPartnerPageEl');
-      if(badge){
-        badge.style.display='block';
-        badge.textContent='👁 '+(hrNick||pName)+' انتقل لصفحة '+(novelCurPage+1);
-        clearTimeout(badge._t);
-        badge._t=setTimeout(()=>badge.style.display='none',4000);
-      }
-    }
-  });
-}
-
-function initNovelOnLoad() {
-  if(!pId) return;
-  getDoc(doc(db,'shared',cid())).then(snap=>{
-    if(!snap.exists()) return;
-    const nv=snap.data().novelSession;
-    if(!nv||!nv.text) return;
-    novelIsOwner = nv.by===uid;
-    novelSessId=nv.sessId;
-    buildNovelPages(nv.text);
-    novelCurPage=nv.curPage||0;
-    showNovelReader(nv.title||'الرواية');
-    renderNovelPage();
-    listenNovelChanges();
-  });
+  listenCinema();
+  listenNovels();
 }
 
 // ── ROCK PAPER SCISSORS ──
