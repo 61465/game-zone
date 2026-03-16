@@ -1573,15 +1573,25 @@ onAuthStateChanged(auth, async (user) => {
       // RPS sync
       handleRPSSync(sd);
       // rpsRoom: challenger watching for guest to join
-      if(sd.rpsRoom && sd.rpsRoom.status==='ready' && sd.rpsRoom.challenger===uid) {
-        if(document.getElementById('rpsArena').classList.contains('show') &&
-           document.getElementById('rpsMainArena').style.display==='none') {
-          startRPSArena();
-        }
-      }
-      if(sd.rpsRoom && sd.rpsRoom.status==='waiting' && sd.rpsRoom.challenger!==uid) {
-        if(!document.getElementById('rpsArena').classList.contains('show')) {
-          showRPSInvite();
+      if(sd.rpsRoom) {
+        const room = sd.rpsRoom;
+        // Only process if session matches (or no session set yet)
+        const sidOk = !rpsSessionId || !room.sid || room.sid === rpsSessionId;
+        if(sidOk) {
+          if(room.status==='ready' && rpsAmChallenger) {
+            const main = document.getElementById('rpsMainArena');
+            if(document.getElementById('rpsArena').classList.contains('show') &&
+               main && main.style.display==='none') startRPSArena();
+          }
+          if(room.status==='waiting' && room.challenger!==uid &&
+             !document.getElementById('rpsArena').classList.contains('show')) {
+            rpsSessionId = room.sid || rpsSessionId;
+            showRPSInvite();
+          }
+          if(room.status==='closed' && room.closer && room.closer!==uid) {
+            // Partner left — show toast but DON'T force close
+            showToast((hrNick||pName) + ' خرج من اللعبة');
+          }
         }
       }
     });
@@ -3318,75 +3328,86 @@ function initMediaLibrary(){
 }
 
 // ── ROCK PAPER SCISSORS ──
-let rpsScore = { me: 0, hr: 0 };
-let rpsRound = 1;
-let rpsMyChoice = null;
-let rpsHrChoice = null;
+let rpsScore        = { me:0, hr:0 };
+let rpsRound        = 1;
+let rpsMyChoice     = null;
+let rpsHrChoice     = null;
 let rpsCountdownInt = null;
 let rpsAmChallenger = false;
+let rpsSessionId    = null;  // unique per game session — prevents stale events
 
-// ── Start: called from games list ──
+// ─── Challenger opens game ───
 window.openRPS = async () => {
   if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
-
-  rpsScore = { me:0, hr:0 };
-  rpsRound = 1;
-  rpsMyChoice = null;
-  rpsHrChoice = null;
+  rpsScore      = { me:0, hr:0 };
+  rpsRound      = 1;
+  rpsMyChoice   = null;
+  rpsHrChoice   = null;
   rpsAmChallenger = true;
+  rpsSessionId  = 'rps_' + Date.now();
 
-  // Write challenge to Firestore
   await setDoc(doc(db,'shared',cid()), {
-    rpsRoom: { challenger: uid, guest: null, status: 'waiting', at: Date.now() }
-  }, { merge: true });
+    rpsRoom: { challenger:uid, guest:null, status:'waiting', sid:rpsSessionId, at:Date.now() }
+  }, { merge:true });
 
-  // Send invite card to chat
   await addDoc(collection(db,'chats',cid(),'messages'), {
-    content: JSON.stringify({ challenger: myNick||myName }),
-    senderId: uid, type: 'rps_invite', reactions: [], sentAt: serverTimestamp()
+    content: JSON.stringify({ challenger:myNick||myName, sid:rpsSessionId }),
+    senderId:uid, type:'rps_invite', reactions:[], sentAt:serverTimestamp()
   });
 
-  // Show waiting screen
   showRPSLobby('waiting');
 };
 
-// ── Guest accepts from chat card ──
-window.acceptRPSChallenge = async () => {
-  // Remove invite toast if present
+// ─── Guest accepts ───
+window.acceptRPSChallenge = async (sid) => {
   const t = document.getElementById('rpsInviteToast'); if(t) t.remove();
-
-  rpsScore = { me:0, hr:0 };
-  rpsRound = 1;
-  rpsMyChoice = null;
-  rpsHrChoice = null;
+  rpsScore      = { me:0, hr:0 };
+  rpsRound      = 1;
+  rpsMyChoice   = null;
+  rpsHrChoice   = null;
   rpsAmChallenger = false;
+  rpsSessionId  = sid || rpsSessionId;
 
-  // Mark guest joined
   await setDoc(doc(db,'shared',cid()), {
-    rpsRoom: { guest: uid, status: 'ready', at: Date.now() }
-  }, { merge: true });
+    rpsRoom: { guest:uid, status:'ready', sid:rpsSessionId, at:Date.now() }
+  }, { merge:true });
 
-  // Start arena for guest
   startRPSArena();
 };
 
-// ── Firestore listener triggers this when rpsRoom changes ──
-function handleRPSRoomSync(room) {
-  if(!room) return;
-
-  if(room.status === 'ready' && rpsAmChallenger) {
-    // Guest joined → start for challenger
-    startRPSArena();
-  } else if(room.status === 'closed') {
-    closeRPSArenaLocal();
-  }
-}
-
-// ── handleRPSSync: handles in-game events (chose, next, closed) ──
+// ─── Main sync handler (called from shared listener) ───
 function handleRPSSync(sd) {
+  // rpsRoom changes (room state)
+  if(sd.rpsRoom) {
+    const room = sd.rpsRoom;
+    // Only react if same session
+    if(rpsSessionId && room.sid && room.sid !== rpsSessionId) return;
+
+    if(room.status === 'ready' && rpsAmChallenger) {
+      // Guest joined → start countdown for challenger
+      const main = document.getElementById('rpsMainArena');
+      const isWaiting = document.getElementById('rpsArena').classList.contains('show')
+                        && (!main || main.style.display === 'none');
+      if(isWaiting) startRPSArena();
+
+    } else if(room.status === 'closed' && room.closer && room.closer !== uid) {
+      // Only close if OTHER person explicitly closed
+      closeRPSArenaLocal();
+    }
+    // status='waiting' from another device → show invite
+    if(room.status === 'waiting' && room.challenger !== uid) {
+      if(!document.getElementById('rpsArena').classList.contains('show')) {
+        rpsSessionId = room.sid;
+        showRPSInvite();
+      }
+    }
+  }
+
+  // rps in-game events
   if(!sd.rps) return;
   const r = sd.rps;
-  if(r.by === uid) return; // ignore own events
+  if(r.by === uid) return;
+  if(rpsSessionId && r.sid && r.sid !== rpsSessionId) return;
 
   const arenaOpen = document.getElementById('rpsArena').classList.contains('show');
 
@@ -3398,25 +3419,17 @@ function handleRPSSync(sd) {
       const el = document.getElementById('rpsChooseMsg');
       if(el) el.textContent = (hrNick||pName) + ' اختار! دورك الآن ⚡';
     }
-  } else if(r.state === 'next') {
-    rpsRound = r.round;
-    rpsMyChoice = null;
-    rpsHrChoice = null;
-    if(arenaOpen) resetRPSChoices();
-  } else if(r.state === 'closed') {
-    closeRPSArenaLocal();
+  } else if(r.state === 'next' && arenaOpen) {
+    rpsRound     = r.round;
+    rpsMyChoice  = null;
+    rpsHrChoice  = null;
+    resetRPSChoices();
   }
-
-  // Also check rpsRoom for challenger waiting
-  if(sd.rpsRoom) handleRPSRoomSync(sd.rpsRoom);
-
-  // Show invite for new challenge
-  if(sd.rpsRoom && sd.rpsRoom.status === 'waiting' && sd.rpsRoom.challenger !== uid && !arenaOpen) {
-    showRPSInvite();
-  }
+  // NOTE: we do NOT close arena on r.state==='closed' anymore
+  // Each player closes their own arena manually with the X button
 }
 
-// ── Show lobby ──
+// ─── Lobby (waiting screen before countdown) ───
 function showRPSLobby(status) {
   const arena   = document.getElementById('rpsArena');
   const curtain = document.getElementById('rpsIntroCurtain');
@@ -3431,26 +3444,23 @@ function showRPSLobby(status) {
   vsLabel.textContent   = status === 'waiting'
     ? '⏳ بانتظار ' + (hrNick||pName) + ' للانضمام...'
     : (hrNick||pName) + ' يتحداك!';
-  document.getElementById('rpsHrName').textContent      = hrNick||pName;
+  document.getElementById('rpsHrName').textContent       = hrNick||pName;
   document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
 }
 
-// ── Start arena with countdown ──
+// ─── Countdown then show arena ───
 function startRPSArena() {
+  document.getElementById('rpsArena').classList.add('show');
   const curtain = document.getElementById('rpsIntroCurtain');
   const main    = document.getElementById('rpsMainArena');
   const countEl = document.getElementById('rpsCountdown');
-  const vsLabel = document.getElementById('rpsVsLabel');
 
-  // Show arena if not already
-  document.getElementById('rpsArena').classList.add('show');
   curtain.style.cssText = 'display:flex;opacity:1;transition:none';
   main.style.display    = 'none';
-  vsLabel.textContent   = 'أنت ضد ' + (hrNick||pName);
-  document.getElementById('rpsHrName').textContent       = hrNick||pName;
-  document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
+  document.getElementById('rpsVsLabel').textContent          = 'أنت ⚔️ ' + (hrNick||pName);
+  document.getElementById('rpsHrName').textContent           = hrNick||pName;
+  document.getElementById('rpsHrRevealName').textContent     = hrNick||pName;
 
-  // Countdown 3..2..1..GO
   let count = 3;
   clearInterval(rpsCountdownInt);
   countEl.style.display = 'block';
@@ -3476,12 +3486,13 @@ function startRPSArena() {
   }, 800);
 }
 
+// ─── Reset choices for new round ───
 function resetRPSChoices() {
   rpsMyChoice = null;
   rpsHrChoice = null;
-  document.getElementById('rpsRoundLabel').textContent = 'جولة ' + rpsRound;
-  document.getElementById('rpsMyScore').textContent    = rpsScore.me;
-  document.getElementById('rpsHrScore').textContent    = rpsScore.hr;
+  document.getElementById('rpsRoundLabel').textContent    = 'جولة ' + rpsRound;
+  document.getElementById('rpsMyScore').textContent       = rpsScore.me;
+  document.getElementById('rpsHrScore').textContent       = rpsScore.hr;
   document.getElementById('rpsRevealArea').style.display  = 'none';
   document.getElementById('rpsChooseArea').style.display  = 'block';
   const msg = document.getElementById('rpsChooseMsg');
@@ -3492,25 +3503,25 @@ function resetRPSChoices() {
   });
 }
 
+// ─── Player chooses weapon ───
 window.rpsChoose = async (choice) => {
   if(rpsMyChoice) return;
   rpsMyChoice = choice;
-
   ['rock','paper','scissors'].forEach(w => {
     const b = document.getElementById('rpsBtn_'+w);
     if(b) { b.classList.toggle('selected', w===choice); b.disabled = true; }
   });
-
   const msg = document.getElementById('rpsChooseMsg');
   if(msg) msg.textContent = '✅ اخترت ' + getRPSEmoji(choice) + ' — بانتظار الشريك...';
 
   await setDoc(doc(db,'shared',cid()), {
-    rps: { state:'chose', choice, by:uid, round:rpsRound, at:Date.now() }
-  }, { merge: true });
+    rps: { state:'chose', choice, by:uid, round:rpsRound, sid:rpsSessionId, at:Date.now() }
+  }, { merge:true });
 
   if(rpsHrChoice) revealRPS();
 };
 
+// ─── Reveal result ───
 function revealRPS() {
   const res = getRPSResult(rpsMyChoice, rpsHrChoice);
   if(res==='win')       rpsScore.me++;
@@ -3526,7 +3537,13 @@ function revealRPS() {
   document.getElementById('rpsMyReveal').textContent = myE;
   document.getElementById('rpsHrReveal').textContent = hrE;
 
-  // Animate winner
+  // Remove old animation classes first
+  ['rpsMyReveal','rpsHrReveal'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('winner','rps-reveal');
+    void el?.offsetWidth;
+    el?.classList.add('rps-reveal');
+  });
   setTimeout(() => {
     const winEl = res==='win' ? 'rpsMyReveal' : res==='lose' ? 'rpsHrReveal' : null;
     if(winEl) document.getElementById(winEl).classList.add('winner');
@@ -3538,27 +3555,33 @@ function revealRPS() {
   else if(res==='lose') { resultEl.textContent='😔 فاز '+hn+'!'; resultEl.style.color='#ff8080'; }
   else                  { resultEl.textContent='🤝 تعادل!';       resultEl.style.color='#ffb347'; }
 
-  const resMsg = res==='win' ? '🎉 فزت' : res==='lose' ? ('😔 فاز '+hn) : '🤝 تعادل';
+  const resMsg = res==='win'?'🎉 فزت':res==='lose'?('😔 فاز '+hn):'🤝 تعادل';
   addDoc(collection(db,'chats',cid(),'messages'), {
-    content: resMsg + ' في الجولة ' + rpsRound + ' (' + myE + ' vs ' + hrE + ')',
+    content: resMsg+' في الجولة '+rpsRound+' ('+myE+' vs '+hrE+')',
     senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
   });
 }
 
+// ─── Next round — stays in arena ───
 window.rpsNextRound = async () => {
   rpsRound++;
   await setDoc(doc(db,'shared',cid()), {
-    rps: { state:'next', round:rpsRound, by:uid, at:Date.now() }
-  }, { merge: true });
+    rps: { state:'next', round:rpsRound, by:uid, sid:rpsSessionId, at:Date.now() }
+  }, { merge:true });
   resetRPSChoices();
 };
 
+// ─── X button — only closes locally, notifies partner ───
 window.closeRPSArena = async () => {
   closeRPSArenaLocal();
+  // Tell partner we left but DON'T force-close their arena
   await setDoc(doc(db,'shared',cid()), {
-    rps:     { state:'closed', by:uid },
-    rpsRoom: { status:'closed', by:uid }
-  }, { merge: true });
+    rpsRoom: { status:'closed', closer:uid, sid:rpsSessionId, at:Date.now() }
+  }, { merge:true });
+  // Reset room so it doesn't interfere with next game
+  setTimeout(async () => {
+    await setDoc(doc(db,'shared',cid()), { rpsRoom:null, rps:null }, { merge:true });
+  }, 3000);
 };
 
 function closeRPSArenaLocal() {
@@ -3569,42 +3592,34 @@ function closeRPSArenaLocal() {
   document.getElementById('rpsCountdown').style.display = 'none';
   document.getElementById('rpsMainArena').style.display = 'none';
   rpsAmChallenger = false;
+  rpsSessionId    = null;
 }
 
-function getRPSEmoji(c) {
-  return c==='rock'?'✊':c==='paper'?'🖐️':c==='scissors'?'✌️':'?';
-}
+function getRPSEmoji(c) { return c==='rock'?'✊':c==='paper'?'🖐️':c==='scissors'?'✌️':'?'; }
 function getRPSResult(mine, theirs) {
   if(mine===theirs) return 'draw';
   return (mine==='rock'&&theirs==='scissors')||(mine==='paper'&&theirs==='rock')||(mine==='scissors'&&theirs==='paper') ? 'win' : 'lose';
 }
 
 function showRPSInvite() {
-  let inv = document.getElementById('rpsInviteToast');
-  if(inv) inv.remove();
-  inv = document.createElement('div');
-  inv.id = 'rpsInviteToast';
-  inv.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--d2);border:1px solid rgba(201,168,76,.4);border-radius:16px;padding:14px 18px;z-index:800;font-family:Tajawal,sans-serif;text-align:center;min-width:260px;box-shadow:0 4px 24px rgba(0,0,0,.6);animation:popUp .3s ease';
-
-  const icon  = document.createElement('div'); icon.style.cssText='font-size:28px;margin-bottom:6px'; icon.textContent='⚔️';
-  const title = document.createElement('div'); title.style.cssText='font-size:15px;font-weight:700;color:var(--g);margin-bottom:4px'; title.textContent='تحدي من '+(hrNick||pName)+'!';
-  const sub   = document.createElement('div'); sub.style.cssText='font-size:12px;color:var(--tm);margin-bottom:12px'; sub.textContent='حجرة ورقة مقص';
-  const btns  = document.createElement('div'); btns.style.cssText='display:flex;gap:8px;justify-content:center';
-
-  const accept = document.createElement('button');
+  let inv = document.getElementById('rpsInviteToast'); if(inv) inv.remove();
+  inv = document.createElement('div'); inv.id='rpsInviteToast';
+  inv.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--d2);border:1px solid rgba(201,168,76,.4);border-radius:16px;padding:14px 18px;z-index:800;font-family:Tajawal,sans-serif;text-align:center;min-width:260px;box-shadow:0 4px 24px rgba(0,0,0,.6);animation:popUp .3s ease';
+  const icon=document.createElement('div'); icon.style.cssText='font-size:28px;margin-bottom:6px'; icon.textContent='⚔️';
+  const title=document.createElement('div'); title.style.cssText='font-size:15px;font-weight:700;color:var(--g);margin-bottom:4px'; title.textContent='تحدي من '+(hrNick||pName)+'!';
+  const sub=document.createElement('div'); sub.style.cssText='font-size:12px;color:var(--tm);margin-bottom:12px'; sub.textContent='حجرة ورقة مقص';
+  const btns=document.createElement('div'); btns.style.cssText='display:flex;gap:8px;justify-content:center';
+  const accept=document.createElement('button');
   accept.style.cssText='padding:9px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer';
-  accept.textContent = '✊ قبلت!';
-  accept.onclick = () => { inv.remove(); window.acceptRPSChallenge(); };
-
-  const reject = document.createElement('button');
+  accept.textContent='✊ قبلت!';
+  accept.onclick=()=>{ inv.remove(); window.acceptRPSChallenge(rpsSessionId); };
+  const reject=document.createElement('button');
   reject.style.cssText='padding:9px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer';
-  reject.textContent = 'رفض';
-  reject.onclick = () => inv.remove();
-
+  reject.textContent='رفض'; reject.onclick=()=>inv.remove();
   btns.appendChild(accept); btns.appendChild(reject);
   inv.appendChild(icon); inv.appendChild(title); inv.appendChild(sub); inv.appendChild(btns);
   document.body.appendChild(inv);
-  setTimeout(() => { if(inv.parentNode) inv.remove(); }, 30000);
+  setTimeout(()=>{ if(inv.parentNode) inv.remove(); }, 30000);
 }
 
 
@@ -4025,10 +4040,13 @@ window.insertEmoji = (emoji) => {
 
   <!-- Main arena -->
   <div id="rpsMainArena" style="display:none;flex-direction:column;align-items:center;width:100%;height:100%;padding:20px">
-    <!-- Header -->
+    <!-- Header with close button -->
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;width:100%;max-width:400px">
-      <button onclick="closeRPSArena()" style="background:rgba(255,255,255,.08);border:none;color:rgba(255,255,255,.5);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer">✕</button>
-      <div style="flex:1;text-align:center;font-size:14px;font-weight:700;color:var(--g)" id="rpsRoundLabel">جولة 1</div>
+      <div style="flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--g)" id="rpsRoundLabel">جولة 1</div>
+      <button onclick="closeRPSArena()" title="خروج من اللعبة"
+        style="background:rgba(224,85,85,.2);border:1px solid rgba(224,85,85,.35);color:#ff8080;width:34px;height:34px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0;transition:all .2s"
+        onmouseenter="this.style.background='rgba(224,85,85,.4)'"
+        onmouseleave="this.style.background='rgba(224,85,85,.2)'">✕</button>
     </div>
 
     <!-- Scores -->
@@ -4058,7 +4076,10 @@ window.insertEmoji = (emoji) => {
         </div>
       </div>
       <div style="font-size:20px;font-weight:700;margin-bottom:12px" id="rpsResultText"></div>
-      <button onclick="rpsNextRound()" style="padding:11px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">جولة جديدة 🔄</button>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button onclick="rpsNextRound()" style="padding:11px 24px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">جولة جديدة 🔄</button>
+        <button onclick="closeRPSArena()" style="padding:11px 20px;border-radius:12px;border:1px solid rgba(224,85,85,.35);background:rgba(224,85,85,.1);color:#ff8080;font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">🚪 خروج</button>
+      </div>
     </div>
 
     <!-- Weapon choices -->
