@@ -650,7 +650,7 @@ textarea.field{resize:none}
           <button class="ibtn" onclick="document.getElementById('stickerPanel').classList.toggle('show');document.getElementById('emojiPickerPanel').style.display='none'" title="ستيكرات" style="margin-bottom:0;flex-shrink:0">🎭</button>
           <textarea class="minput" id="msgInput" placeholder="رسالة..." rows="1" onkeydown="onKey(event)" oninput="aR(this)"></textarea>
           <label class="ibtn" title="صورة/فيديو" style="cursor:pointer;margin-bottom:0;flex-shrink:0">📎<input type="file" id="mediaFile" accept="image/*,video/*" style="display:none" onchange="sendMedia(this)"></label>
-          <button class="ibtn" id="recBtn" onmousedown="startRec()" onmouseup="stopRec()" ontouchstart="startRec()" ontouchend="stopRec()" title="اضغط مطولاً للتسجيل" style="margin-bottom:0;flex-shrink:0">🎙️</button>
+          <button class="ibtn" id="recBtn" onclick="toggleRec()" title="تسجيل صوتي" style="margin-bottom:0;flex-shrink:0">🎙️</button>
         </div>
         <button class="sbtn" onclick="sendMsg()">➤</button>
       </div>
@@ -1328,6 +1328,12 @@ window.doRegister = async () => {
 
 window.doLogout = async () => {
   unsubs.forEach(u=>u()); unsubs=[];
+  // Clear presence
+  if(uid) {
+    setDoc(doc(db,'presence',uid),{online:false,tab:'',at:Date.now()},{merge:true}).catch(()=>{});
+  }
+  // Stop recorder if active
+  if(isRec) stopRec();
   await signOut(auth);
 };
 
@@ -1433,9 +1439,14 @@ function listenMsgs() {
   const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));
   return onSnapshot(q,(snap)=>{
     const area=document.getElementById('msgsArea');
+    if(!area) return;
+    const wasAtBottom = area.scrollHeight - area.clientHeight - area.scrollTop < 80;
     area.innerHTML='';
     snap.docs.forEach(d=>renderMsg(d.id,d.data()));
-    area.scrollTop=area.scrollHeight;
+    // Only auto-scroll if user was already at bottom
+    if(wasAtBottom) {
+      requestAnimationFrame(() => { area.scrollTop = area.scrollHeight; });
+    }
   });
 }
 
@@ -1764,15 +1775,20 @@ function renderMsg(id, data) {
 }
 
 
+let _sending = false;
 window.sendMsg = async () => {
+  if(_sending) return;
   const inp=document.getElementById('msgInput');
   const text=(inp.value||'').trim();
   if(!text||!pId) return;
+  _sending = true;
   inp.value=''; aR(inp);
-  await addDoc(collection(db,'chats',cid(),'messages'),{
-    content:text, senderId:uid, type:'text', reactions:[],
-    sentAt:serverTimestamp(), readBy:[]
-  });
+  try {
+    await addDoc(collection(db,'chats',cid(),'messages'),{
+      content:text, senderId:uid, type:'text', reactions:[],
+      sentAt:serverTimestamp(), readBy:[]
+    });
+  } finally { _sending = false; }
 };
 
 window.sendStk = async (emoji) => {
@@ -1873,8 +1889,9 @@ window.onKey = (ev) => {
   if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();sendMsg();}
 };
 window.aR = (el) => {
+  if(!el) return;
   el.style.height='auto';
-  el.style.height=Math.min(el.scrollHeight,90)+'px';
+  el.style.height=Math.min(el.scrollHeight,100)+'px';
 };
 
 // ── STICKERS IMPORT ──
@@ -2486,46 +2503,75 @@ function showLotteryResult(result) {
 }
 
 // ── VOICE RECORDER ──
-let mediaRec = null, audioChunks = [], isRec = false;
+let mediaRec = null;
+let recStream = null;
+let recChunks = [];
+let isRec = false;
+let recTimer = null;
+let recSecs = 0;
+
+window.toggleRec = () => { if(isRec) stopRec(); else startRec(); };
 
 window.startRec = async () => {
   if(isRec) return;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    mediaRec = new MediaRecorder(stream);
-    audioChunks = [];
-    mediaRec.ondataavailable = e => audioChunks.push(e.data);
-    mediaRec.onstop = async () => {
-      const blob = new Blob(audioChunks, {type:'audio/webm'});
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const dataUrl = e.target.result;
-        if(pId) {
-          await addDoc(collection(db,'chats',cid(),'messages'),{
-            content:dataUrl, senderId:uid, type:'voice',
-            reactions:[], sentAt:serverTimestamp()
-          });
-        }
-      };
-      reader.readAsDataURL(blob);
-      stream.getTracks().forEach(t=>t.stop());
-    };
-    mediaRec.start();
-    isRec = true;
-    const btn = document.getElementById('recBtn');
-    btn.classList.add('rec-active');
-    btn.textContent = '⏹️';
+    recStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   } catch(e) {
-    alert('يرجى السماح بالوصول للميكروفون');
+    showToast('يرجى السماح بالوصول للميكروفون'); return;
   }
+
+  recChunks = [];
+  mediaRec = new MediaRecorder(recStream, { mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg' });
+
+  mediaRec.ondataavailable = e => { if(e.data && e.data.size > 0) recChunks.push(e.data); };
+
+  mediaRec.onstop = async () => {
+    // Stop mic tracks immediately
+    if(recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+    clearInterval(recTimer); recSecs = 0;
+
+    const btn = document.getElementById('recBtn');
+    if(btn) { btn.textContent = '🎙️'; btn.style.color = ''; }
+
+    if(recChunks.length === 0 || !pId) { recChunks = []; return; }
+
+    const blob = new Blob(recChunks, { type: mediaRec.mimeType });
+    recChunks = [];
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      await addDoc(collection(db,'chats',cid(),'messages'), {
+        content: ev.target.result, senderId: uid,
+        type: 'voice', reactions: [], sentAt: serverTimestamp()
+      });
+    };
+    reader.readAsDataURL(blob);
+  };
+
+  mediaRec.start(200);
+  isRec = true;
+
+  const btn = document.getElementById('recBtn');
+  if(btn) { btn.textContent = '⏹️'; btn.style.color = '#ff6b6b'; }
+
+  // Timer
+  recSecs = 0;
+  recTimer = setInterval(() => {
+    recSecs++;
+    if(recSecs >= 120) stopRec(); // max 2 min
+  }, 1000);
 };
 
 window.stopRec = () => {
-  if(!isRec || !mediaRec) return;
-  mediaRec.stop(); isRec = false;
-  const btn = document.getElementById('recBtn');
-  btn.classList.remove('rec-active');
-  btn.textContent = '🎙️';
+  if(!isRec) return;
+  isRec = false;
+  clearInterval(recTimer);
+  if(mediaRec && mediaRec.state !== 'inactive') {
+    mediaRec.stop(); // triggers onstop → saves + cleans up
+  } else {
+    if(recStream) { recStream.getTracks().forEach(t => t.stop()); recStream = null; }
+    const btn = document.getElementById('recBtn');
+    if(btn) { btn.textContent = '🎙️'; btn.style.color = ''; }
+  }
 };
 
 // ── MEMORIES ──
@@ -3088,256 +3134,295 @@ function initMediaLibrary(){
 }
 
 // ── ROCK PAPER SCISSORS ──
-// ── RPS ARENA ──
-let rpsState = {myChoice:null, partnerChoice:null, myScore:0, partnerScore:0, round:1};
+let rpsScore = { me: 0, hr: 0 };
+let rpsRound = 1;
+let rpsMyChoice = null;
+let rpsHrChoice = null;
 let rpsCountdownInt = null;
+let rpsAmChallenger = false;
 
-// Called from games list
+// ── Start: called from games list ──
 window.openRPS = async () => {
   if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
 
-  rpsState = {myChoice:null, partnerChoice:null, myScore:0, partnerScore:0, round:1};
+  rpsScore = { me:0, hr:0 };
+  rpsRound = 1;
+  rpsMyChoice = null;
+  rpsHrChoice = null;
+  rpsAmChallenger = true;
 
-  // Mark that I entered the room
-  await setDoc(doc(db,'shared',cid()),{
-    rps:{ state:'challenge', by:uid, round:1, at:Date.now(), challenger:uid, challengerReady:true }
-  },{merge:true});
+  // Write challenge to Firestore
+  await setDoc(doc(db,'shared',cid()), {
+    rpsRoom: { challenger: uid, guest: null, status: 'waiting', at: Date.now() }
+  }, { merge: true });
 
-  addDoc(collection(db,'chats',cid(),'messages'),{
-    content: JSON.stringify({ challenger: myNick||myName, challengerId: uid }),
-    senderId: uid, type: 'rps_invite', reactions:[], sentAt:serverTimestamp()
+  // Send invite card to chat
+  await addDoc(collection(db,'chats',cid(),'messages'), {
+    content: JSON.stringify({ challenger: myNick||myName }),
+    senderId: uid, type: 'rps_invite', reactions: [], sentAt: serverTimestamp()
   });
 
-  // Show waiting screen — don't start countdown until partner joins
-  showRPSWaiting();
+  // Show waiting screen
+  showRPSLobby('waiting');
 };
 
-function showRPSWaiting() {
-  const arena = document.getElementById('rpsArena');
-  const curtain = document.getElementById('rpsIntroCurtain');
-  const main = document.getElementById('rpsMainArena');
-  const vsLabel = document.getElementById('rpsVsLabel');
-  const countEl = document.getElementById('rpsCountdown');
-
-  arena.classList.add('show');
-  curtain.style.display = 'flex';
-  curtain.style.opacity = '1';
-  main.style.display = 'none';
-  countEl.style.display = 'none';
-  vsLabel.textContent = '⏳ بانتظار ' + (hrNick||pName) + ' للانضمام...';
-
-  document.getElementById('rpsHrName').textContent = hrNick||pName;
-  document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
-}
-
+// ── Guest accepts from chat card ──
 window.acceptRPSChallenge = async () => {
-  await setDoc(doc(db,'shared',cid()),{
-    rps:{ state:'both_ready', by:uid, round:1, at:Date.now() }
-  },{merge:true});
-  openRPSArena(false);
+  // Remove invite toast if present
+  const t = document.getElementById('rpsInviteToast'); if(t) t.remove();
+
+  rpsScore = { me:0, hr:0 };
+  rpsRound = 1;
+  rpsMyChoice = null;
+  rpsHrChoice = null;
+  rpsAmChallenger = false;
+
+  // Mark guest joined
+  await setDoc(doc(db,'shared',cid()), {
+    rpsRoom: { guest: uid, status: 'ready', at: Date.now() }
+  }, { merge: true });
+
+  // Start arena for guest
+  startRPSArena();
 };
 
+// ── Firestore listener triggers this when rpsRoom changes ──
+function handleRPSRoomSync(room) {
+  if(!room) return;
 
-function openRPSArena(isChallenger) {
-  const arena = document.getElementById('rpsArena');
-  const curtain = document.getElementById('rpsIntroCurtain');
-  const main = document.getElementById('rpsMainArena');
-  const vsLabel = document.getElementById('rpsVsLabel');
-
-  arena.classList.add('show');
-  curtain.style.display = 'flex';
-  main.style.display = 'none';
-
-  vsLabel.textContent = isChallenger
-    ? 'أنت ضد ' + (hrNick||pName)
-    : (hrNick||pName) + ' يتحداك!';
-
-  document.getElementById('rpsHrName').textContent = hrNick||pName;
-  document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
-
-  // Countdown 3..2..1
-  let count = 3;
-  const countEl = document.getElementById('rpsCountdown');
-
-  setTimeout(() => {
-    countEl.style.display = 'block';
-    countEl.textContent = count;
-
-    rpsCountdownInt = setInterval(() => {
-      count--;
-      if(count > 0) {
-        countEl.textContent = count;
-        countEl.style.animation = 'none';
-        void countEl.offsetWidth; // reflow
-        countEl.style.animation = 'countdown .5s ease';
-      } else {
-        clearInterval(rpsCountdownInt);
-        curtain.style.opacity = '0';
-        curtain.style.transition = 'opacity .4s';
-        setTimeout(() => {
-          curtain.style.display = 'none';
-          curtain.style.opacity = '1';
-          main.style.display = 'flex';
-          resetRPSRound();
-        }, 400);
-      }
-    }, 700);
-  }, 1200);
+  if(room.status === 'ready' && rpsAmChallenger) {
+    // Guest joined → start for challenger
+    startRPSArena();
+  } else if(room.status === 'closed') {
+    closeRPSArenaLocal();
+  }
 }
 
-function resetRPSRound() {
-  rpsState.myChoice = null;
-  rpsState.partnerChoice = null;
+// ── handleRPSSync: handles in-game events (chose, next, closed) ──
+function handleRPSSync(sd) {
+  if(!sd.rps) return;
+  const r = sd.rps;
+  if(r.by === uid) return; // ignore own events
 
-  document.getElementById('rpsRoundLabel').textContent = 'جولة ' + rpsState.round;
-  document.getElementById('rpsMyScore').textContent = rpsState.myScore;
-  document.getElementById('rpsHrScore').textContent = rpsState.partnerScore;
-  document.getElementById('rpsRevealArea').style.display = 'none';
-  document.getElementById('rpsChooseArea').style.display = 'block';
-  document.getElementById('rpsChooseMsg').textContent = 'اختر سلاحك!';
+  const arenaOpen = document.getElementById('rpsArena').classList.contains('show');
 
+  if(r.state === 'chose' && r.round === rpsRound) {
+    rpsHrChoice = r.choice;
+    if(rpsMyChoice) {
+      revealRPS();
+    } else {
+      const el = document.getElementById('rpsChooseMsg');
+      if(el) el.textContent = (hrNick||pName) + ' اختار! دورك الآن ⚡';
+    }
+  } else if(r.state === 'next') {
+    rpsRound = r.round;
+    rpsMyChoice = null;
+    rpsHrChoice = null;
+    if(arenaOpen) resetRPSChoices();
+  } else if(r.state === 'closed') {
+    closeRPSArenaLocal();
+  }
+
+  // Also check rpsRoom for challenger waiting
+  if(sd.rpsRoom) handleRPSRoomSync(sd.rpsRoom);
+
+  // Show invite for new challenge
+  if(sd.rpsRoom && sd.rpsRoom.status === 'waiting' && sd.rpsRoom.challenger !== uid && !arenaOpen) {
+    showRPSInvite();
+  }
+}
+
+// ── Show lobby ──
+function showRPSLobby(status) {
+  const arena   = document.getElementById('rpsArena');
+  const curtain = document.getElementById('rpsIntroCurtain');
+  const main    = document.getElementById('rpsMainArena');
+  const vsLabel = document.getElementById('rpsVsLabel');
+  const countEl = document.getElementById('rpsCountdown');
+
+  arena.classList.add('show');
+  curtain.style.cssText = 'display:flex;opacity:1;transition:none';
+  main.style.display    = 'none';
+  countEl.style.display = 'none';
+  vsLabel.textContent   = status === 'waiting'
+    ? '⏳ بانتظار ' + (hrNick||pName) + ' للانضمام...'
+    : (hrNick||pName) + ' يتحداك!';
+  document.getElementById('rpsHrName').textContent      = hrNick||pName;
+  document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
+}
+
+// ── Start arena with countdown ──
+function startRPSArena() {
+  const curtain = document.getElementById('rpsIntroCurtain');
+  const main    = document.getElementById('rpsMainArena');
+  const countEl = document.getElementById('rpsCountdown');
+  const vsLabel = document.getElementById('rpsVsLabel');
+
+  // Show arena if not already
+  document.getElementById('rpsArena').classList.add('show');
+  curtain.style.cssText = 'display:flex;opacity:1;transition:none';
+  main.style.display    = 'none';
+  vsLabel.textContent   = 'أنت ضد ' + (hrNick||pName);
+  document.getElementById('rpsHrName').textContent       = hrNick||pName;
+  document.getElementById('rpsHrRevealName').textContent = hrNick||pName;
+
+  // Countdown 3..2..1..GO
+  let count = 3;
+  clearInterval(rpsCountdownInt);
+  countEl.style.display = 'block';
+  countEl.textContent   = count;
+
+  rpsCountdownInt = setInterval(() => {
+    count--;
+    if(count > 0) {
+      countEl.textContent = count;
+      countEl.style.animation = 'none';
+      void countEl.offsetWidth;
+      countEl.style.animation = 'countdown .5s ease';
+    } else {
+      clearInterval(rpsCountdownInt);
+      curtain.style.transition = 'opacity .35s';
+      curtain.style.opacity    = '0';
+      setTimeout(() => {
+        curtain.style.display = 'none';
+        main.style.display    = 'flex';
+        resetRPSChoices();
+      }, 360);
+    }
+  }, 800);
+}
+
+function resetRPSChoices() {
+  rpsMyChoice = null;
+  rpsHrChoice = null;
+  document.getElementById('rpsRoundLabel').textContent = 'جولة ' + rpsRound;
+  document.getElementById('rpsMyScore').textContent    = rpsScore.me;
+  document.getElementById('rpsHrScore').textContent    = rpsScore.hr;
+  document.getElementById('rpsRevealArea').style.display  = 'none';
+  document.getElementById('rpsChooseArea').style.display  = 'block';
+  const msg = document.getElementById('rpsChooseMsg');
+  if(msg) msg.textContent = 'اختر سلاحك!';
   ['rock','paper','scissors'].forEach(w => {
-    const btn = document.getElementById('rpsBtn_'+w);
-    if(btn) { btn.classList.remove('selected'); btn.disabled = false; }
+    const b = document.getElementById('rpsBtn_'+w);
+    if(b) { b.classList.remove('selected','winner'); b.disabled = false; }
   });
 }
 
 window.rpsChoose = async (choice) => {
-  if(rpsState.myChoice) return;
-  rpsState.myChoice = choice;
+  if(rpsMyChoice) return;
+  rpsMyChoice = choice;
 
-  // Highlight chosen button
   ['rock','paper','scissors'].forEach(w => {
-    const btn = document.getElementById('rpsBtn_'+w);
-    if(btn) {
-      btn.classList.toggle('selected', w===choice);
-      btn.disabled = true;
-    }
+    const b = document.getElementById('rpsBtn_'+w);
+    if(b) { b.classList.toggle('selected', w===choice); b.disabled = true; }
   });
 
-  document.getElementById('rpsChooseMsg').textContent = '✅ اخترت! بانتظار الشريك...';
+  const msg = document.getElementById('rpsChooseMsg');
+  if(msg) msg.textContent = '✅ اخترت ' + getRPSEmoji(choice) + ' — بانتظار الشريك...';
 
-  await setDoc(doc(db,'shared',cid()),{
-    rps:{state:'chose', choice, by:uid, round:rpsState.round, at:Date.now()}
-  },{merge:true});
+  await setDoc(doc(db,'shared',cid()), {
+    rps: { state:'chose', choice, by:uid, round:rpsRound, at:Date.now() }
+  }, { merge: true });
 
-  // If partner already chose, reveal
-  if(rpsState.partnerChoice) {
-    revealRPS();
-  }
+  if(rpsHrChoice) revealRPS();
 };
 
 function revealRPS() {
-  const result = getRPSResult(rpsState.myChoice, rpsState.partnerChoice);
+  const res = getRPSResult(rpsMyChoice, rpsHrChoice);
+  if(res==='win')       rpsScore.me++;
+  else if(res==='lose') rpsScore.hr++;
 
-  // Update scores
-  if(result==='win')       rpsState.myScore++;
-  else if(result==='lose') rpsState.partnerScore++;
-
-  document.getElementById('rpsMyScore').textContent  = rpsState.myScore;
-  document.getElementById('rpsHrScore').textContent  = rpsState.partnerScore;
-
-  // Show reveal
+  document.getElementById('rpsMyScore').textContent = rpsScore.me;
+  document.getElementById('rpsHrScore').textContent = rpsScore.hr;
   document.getElementById('rpsRevealArea').style.display = 'block';
   document.getElementById('rpsChooseArea').style.display = 'none';
 
-  const myEmoji = getRPSEmoji(rpsState.myChoice);
-  const hrEmoji = getRPSEmoji(rpsState.partnerChoice);
-
-  document.getElementById('rpsMyReveal').textContent = myEmoji;
-  document.getElementById('rpsHrReveal').textContent = hrEmoji;
+  const myE = getRPSEmoji(rpsMyChoice);
+  const hrE = getRPSEmoji(rpsHrChoice);
+  document.getElementById('rpsMyReveal').textContent = myE;
+  document.getElementById('rpsHrReveal').textContent = hrE;
 
   // Animate winner
   setTimeout(() => {
-    if(result==='win')       document.getElementById('rpsMyReveal').classList.add('winner');
-    else if(result==='lose') document.getElementById('rpsHrReveal').classList.add('winner');
-  }, 300);
+    const winEl = res==='win' ? 'rpsMyReveal' : res==='lose' ? 'rpsHrReveal' : null;
+    if(winEl) document.getElementById(winEl).classList.add('winner');
+  }, 200);
 
   const resultEl = document.getElementById('rpsResultText');
   const hn = hrNick||pName;
-  if(result==='win')       { resultEl.textContent='🎉 فزت!'; resultEl.style.color='#4ade80'; }
-  else if(result==='lose') { resultEl.textContent='😔 فازت '+hn+'!'; resultEl.style.color='#ff8080'; }
-  else                     { resultEl.textContent='🤝 تعادل!'; resultEl.style.color='#ffb347'; }
+  if(res==='win')       { resultEl.textContent='🎉 فزت!';        resultEl.style.color='#4ade80'; }
+  else if(res==='lose') { resultEl.textContent='😔 فاز '+hn+'!'; resultEl.style.color='#ff8080'; }
+  else                  { resultEl.textContent='🤝 تعادل!';       resultEl.style.color='#ffb347'; }
 
-  // Chat message
-  const msg = result==='win' ? '🎉 فزت في الجولة '+rpsState.round+'! ('+myEmoji+' ضد '+hrEmoji+')'
-            : result==='lose'? '😔 '+hn+' فازت في الجولة '+rpsState.round+' ('+hrEmoji+' ضد '+myEmoji+')'
-            : '🤝 تعادل في الجولة '+rpsState.round+' ('+myEmoji+' VS '+hrEmoji+')';
-  addDoc(collection(db,'chats',cid(),'messages'),{
-    content:msg, senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
+  const resMsg = res==='win' ? '🎉 فزت' : res==='lose' ? ('😔 فاز '+hn) : '🤝 تعادل';
+  addDoc(collection(db,'chats',cid(),'messages'), {
+    content: resMsg + ' في الجولة ' + rpsRound + ' (' + myE + ' vs ' + hrE + ')',
+    senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
   });
 }
 
 window.rpsNextRound = async () => {
-  rpsState.round++;
-  resetRPSRound();
-  await setDoc(doc(db,'shared',cid()),{
-    rps:{state:'next', round:rpsState.round, by:uid, at:Date.now()}
-  },{merge:true});
+  rpsRound++;
+  await setDoc(doc(db,'shared',cid()), {
+    rps: { state:'next', round:rpsRound, by:uid, at:Date.now() }
+  }, { merge: true });
+  resetRPSChoices();
 };
 
 window.closeRPSArena = async () => {
-  clearInterval(rpsCountdownInt);
-  document.getElementById('rpsArena').classList.remove('show');
-  // Reset curtain for next time
-  const curtain = document.getElementById('rpsIntroCurtain');
-  curtain.style.display = 'flex'; curtain.style.opacity = '1'; curtain.style.transition = '';
-  document.getElementById('rpsCountdown').style.display = 'none';
-  await setDoc(doc(db,'shared',cid()),{rps:{state:'closed',by:uid}},{merge:true});
+  closeRPSArenaLocal();
+  await setDoc(doc(db,'shared',cid()), {
+    rps:     { state:'closed', by:uid },
+    rpsRoom: { status:'closed', by:uid }
+  }, { merge: true });
 };
 
+function closeRPSArenaLocal() {
+  clearInterval(rpsCountdownInt);
+  document.getElementById('rpsArena').classList.remove('show');
+  const curtain = document.getElementById('rpsIntroCurtain');
+  curtain.style.cssText = 'display:flex;opacity:1;transition:none';
+  document.getElementById('rpsCountdown').style.display = 'none';
+  document.getElementById('rpsMainArena').style.display = 'none';
+  rpsAmChallenger = false;
+}
+
 function getRPSEmoji(c) {
-  return c==='rock'?'✊':c==='paper'?'🖐️':c==='scissors'?'✌️':'❓';
+  return c==='rock'?'✊':c==='paper'?'🖐️':c==='scissors'?'✌️':'?';
 }
 function getRPSResult(mine, theirs) {
   if(mine===theirs) return 'draw';
-  if((mine==='rock'&&theirs==='scissors')||(mine==='paper'&&theirs==='rock')||(mine==='scissors'&&theirs==='paper')) return 'win';
-  return 'lose';
+  return (mine==='rock'&&theirs==='scissors')||(mine==='paper'&&theirs==='rock')||(mine==='scissors'&&theirs==='paper') ? 'win' : 'lose';
 }
 
-// Handle incoming RPS sync from partner
-function handleRPSSync(sd) {
-  if(!sd.rps) return;
-  const r = sd.rps;
-  if(r.by === uid) return;
+function showRPSInvite() {
+  let inv = document.getElementById('rpsInviteToast');
+  if(inv) inv.remove();
+  inv = document.createElement('div');
+  inv.id = 'rpsInviteToast';
+  inv.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--d2);border:1px solid rgba(201,168,76,.4);border-radius:16px;padding:14px 18px;z-index:800;font-family:Tajawal,sans-serif;text-align:center;min-width:260px;box-shadow:0 4px 24px rgba(0,0,0,.6);animation:popUp .3s ease';
 
-  if(r.state === 'challenge') {
-    // Partner challenges us — show accept modal, DON'T start yet
-    if(!document.getElementById('rpsArena').classList.contains('show')) {
-      showRPSInvite();
-    }
+  const icon  = document.createElement('div'); icon.style.cssText='font-size:28px;margin-bottom:6px'; icon.textContent='⚔️';
+  const title = document.createElement('div'); title.style.cssText='font-size:15px;font-weight:700;color:var(--g);margin-bottom:4px'; title.textContent='تحدي من '+(hrNick||pName)+'!';
+  const sub   = document.createElement('div'); sub.style.cssText='font-size:12px;color:var(--tm);margin-bottom:12px'; sub.textContent='حجرة ورقة مقص';
+  const btns  = document.createElement('div'); btns.style.cssText='display:flex;gap:8px;justify-content:center';
 
-  } else if(r.state === 'both_ready') {
-    // Both ready — challenger starts arena too
-    if(r.by !== uid && document.getElementById('rpsArena').classList.contains('show')) {
-      // I'm the challenger waiting, now start!
-      openRPSArena(true);
-    }
+  const accept = document.createElement('button');
+  accept.style.cssText='padding:9px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer';
+  accept.textContent = '✊ قبلت!';
+  accept.onclick = () => { inv.remove(); window.acceptRPSChallenge(); };
 
-  } else if(r.state === 'chose' && r.round === rpsState.round) {
-    rpsState.partnerChoice = r.choice;
-    if(rpsState.myChoice) {
-      // Both chose — reveal
-      revealRPS();
-    } else {
-      // Partner chose, we haven't
-      document.getElementById('rpsChooseMsg').textContent = (hrNick||pName)+' اختار! دورك الآن...';
-    }
+  const reject = document.createElement('button');
+  reject.style.cssText='padding:9px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--tm);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer';
+  reject.textContent = 'رفض';
+  reject.onclick = () => inv.remove();
 
-  } else if(r.state === 'next') {
-    rpsState.round = r.round;
-    rpsState.myChoice = null;
-    rpsState.partnerChoice = null;
-    if(document.getElementById('rpsArena').classList.contains('show')) {
-      resetRPSRound();
-    }
-
-  } else if(r.state === 'closed') {
-    document.getElementById('rpsArena').classList.remove('show');
-  }
+  btns.appendChild(accept); btns.appendChild(reject);
+  inv.appendChild(icon); inv.appendChild(title); inv.appendChild(sub); inv.appendChild(btns);
+  document.body.appendChild(inv);
+  setTimeout(() => { if(inv.parentNode) inv.remove(); }, 30000);
 }
 
-// Keep old openRPS name in games list (already mapped correctly above)
 
 window.joinCinema = (url) => {
   openCinema(url, 'مشاهدة مشتركة 🎬');
@@ -3654,34 +3739,6 @@ function listenCinemaChat() {
 }
 
 
-function showRPSInvite() {
-  // Show a toast with accept button
-  let inv = document.getElementById('rpsInviteToast');
-  if(!inv) {
-    inv = document.createElement('div');
-    inv.id = 'rpsInviteToast';
-    inv.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1f2c34;border:1px solid rgba(201,168,76,.4);border-radius:16px;padding:14px 18px;z-index:800;font-family:Tajawal,sans-serif;text-align:center;min-width:280px;box-shadow:0 4px 24px rgba(0,0,0,.6);animation:popUp .3s ease';
-    document.body.appendChild(inv);
-  }
-  // Build with DOM to avoid quote issues
-  const invIcon = document.createElement('div'); invIcon.style.cssText='font-size:24px;margin-bottom:6px'; invIcon.textContent='⚔️';
-  const invTitle = document.createElement('div'); invTitle.style.cssText='font-size:15px;font-weight:700;color:var(--g);margin-bottom:4px'; invTitle.textContent='تحدي من '+(hrNick||pName)+'!';
-  const invSub = document.createElement('div'); invSub.style.cssText='font-size:12px;color:rgba(255,255,255,.5);margin-bottom:12px'; invSub.textContent='حجرة ورقة مقص — هل تقبل؟';
-  const invBtns = document.createElement('div'); invBtns.style.cssText='display:flex;gap:8px;justify-content:center';
-  const acceptBtn = document.createElement('button');
-  acceptBtn.style.cssText='padding:9px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer';
-  acceptBtn.textContent='✊ قبلت!';
-  acceptBtn.onclick=()=>{ window.acceptRPSChallenge(); inv.remove(); };
-  const rejectBtn = document.createElement('button');
-  rejectBtn.style.cssText='padding:9px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer';
-  rejectBtn.textContent='رفض';
-  rejectBtn.onclick=()=>inv.remove();
-  invBtns.appendChild(acceptBtn); invBtns.appendChild(rejectBtn);
-  inv.innerHTML='';
-  inv.appendChild(invIcon); inv.appendChild(invTitle); inv.appendChild(invSub); inv.appendChild(invBtns);
-  inv.style.display = 'block';
-  setTimeout(() => { if(inv.parentNode) inv.remove(); }, 20000);
-}
 
 
 // Mark all my messages as read by partner
@@ -3710,6 +3767,8 @@ function listenReadStatus() {
     });
   });
 }
+
+
 
 // ── MODALS ──
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
