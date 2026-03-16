@@ -326,6 +326,8 @@ textarea.field{resize:none}
 /* RPS ARENA */
 #rpsModal .mbg{background:rgba(0,0,0,.92)!important}
 @keyframes rpsReveal{from{transform:scale(0) rotate(-20deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+/* CINEMA PULSE */
+@keyframes cinemaPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.4)}50%{box-shadow:0 0 0 8px rgba(201,168,76,0)}}
 /* STARRED */
 .starred-msg{background:rgba(201,168,76,.08)!important;border-color:rgba(201,168,76,.4)!important}
 .star-badge{position:absolute;top:-6px;left:-6px;font-size:12px}
@@ -1433,18 +1435,37 @@ function renderMsg(id, data) {
     card.appendChild(cardTitle);
     card.appendChild(cardSub);
 
-    if(!isMyInvite && invUrl) {
+    const invSessionId = inviteData.sessionId || null;
+
+    if(!isMyInvite) {
+      // PARTNER: show join button always
       const joinBtn = document.createElement('button');
-      joinBtn.style.cssText = 'padding:8px 20px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer';
-      joinBtn.textContent = '▶ انضم الآن';
-      const invSessionId = inviteData.sessionId || null;
-      joinBtn.onclick = () => joinCinema(invUrl, invTitle, invSessionId);
+      joinBtn.style.cssText = 'padding:10px 24px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:4px';
+      joinBtn.textContent = '🎬 افتح السينما الآن';
+      joinBtn.onclick = () => {
+        // Switch to cinema tab first, then join
+        swTab('cinema');
+        setTimeout(() => joinCinema(invUrl, invTitle, invSessionId), 300);
+      };
       card.appendChild(joinBtn);
-    } else if(isMyInvite) {
+
+      // Pulse animation to draw attention
+      card.style.animation = 'cinemaPulse 2s infinite';
+
+    } else {
+      // HOST: show re-open cinema button + waiting status
+      const waitRow = document.createElement('div');
+      waitRow.style.cssText = 'display:flex;flex-direction:column;gap:8px;align-items:center';
       const waitBadge = document.createElement('div');
-      waitBadge.style.cssText = 'font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;gap:5px';
+      waitBadge.style.cssText = 'font-size:11px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:5px';
       waitBadge.innerHTML = '⏳ <span>بانتظار انضمام الشريك</span>';
-      card.appendChild(waitBadge);
+      const reopenBtn = document.createElement('button');
+      reopenBtn.style.cssText = 'padding:7px 16px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.1);color:var(--g);font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer';
+      reopenBtn.textContent = '🎬 افتح السينما';
+      reopenBtn.onclick = () => swTab('cinema');
+      waitRow.appendChild(waitBadge);
+      waitRow.appendChild(reopenBtn);
+      card.appendChild(waitRow);
     }
 
     wrap2.appendChild(card);
@@ -2826,9 +2847,18 @@ async function guestDownloadAndPlay(sessionId) {
   const snap = await getDoc(doc(db,'shared',cid()));
   if(!snap.exists()){ showToast('⚠️ لم تُوجد جلسة'); return; }
   const share = snap.data().cinemaShare;
-  if(!share || share.sessionId !== sessionId){
-    // Session changed or waiting — listen for ready
-    showToast('⏳ الملف لا يزال يُرفع، انتظر...');
+  // Helper: wait for session to be ready then download
+  const waitAndDownload = () => {
+    showCinemaProgress('⏳ الملف لا يزال يُرفع... بانتظار اكتمال الرفع', 0);
+    // Open cinema overlay while waiting
+    const ov=document.getElementById('cinemaOverlay');
+    const intro=document.getElementById('cinemaIntro');
+    if(!ov.classList.contains('show')){
+      ov.classList.add('show');
+      document.getElementById('cinemaIntroSub').textContent='🎬 جاري التحضير...';
+      setTimeout(()=>{intro.classList.add('fade');},2000);
+      setTimeout(()=>{intro.style.display='none';},2800);
+    }
     const unsub = onSnapshot(doc(db,'shared',cid()), async (s)=>{
       if(!s.exists()) return;
       const sh = s.data().cinemaShare;
@@ -2837,20 +2867,10 @@ async function guestDownloadAndPlay(sessionId) {
         await downloadChunksAndPlay(sessionId, sh.mimeType, sh.totalChunks);
       }
     });
-    return;
-  }
-  if(share.status === 'uploading'){
-    showToast('⏳ الملف لا يزال يُرفع، سيبدأ تلقائياً...');
-    const unsub = onSnapshot(doc(db,'shared',cid()), async (s)=>{
-      if(!s.exists()) return;
-      const sh = s.data().cinemaShare;
-      if(sh && sh.sessionId===sessionId && sh.status==='ready'){
-        unsub();
-        await downloadChunksAndPlay(sessionId, sh.mimeType, sh.totalChunks);
-      }
-    });
-    return;
-  }
+  };
+
+  if(!share || share.sessionId !== sessionId){ waitAndDownload(); return; }
+  if(share.status === 'uploading'){ waitAndDownload(); return; }
   if(share.status === 'ready'){
     await downloadChunksAndPlay(sessionId, share.mimeType, share.totalChunks);
   }
