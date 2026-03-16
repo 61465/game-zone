@@ -941,80 +941,78 @@ textarea.field{resize:none}
   <!-- ══ CINEMA ══ -->
   <div class="panel" id="panel-cinema" style="overflow:hidden">
 
-    <!-- Lobby (before session starts) -->
-    <div id="cinemaLobby" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center">
-      <div style="font-size:64px;filter:drop-shadow(0 0 20px rgba(201,168,76,.4))">🎬</div>
-      <div style="font-size:22px;font-weight:700;color:var(--g)">غرفة السينما</div>
-      <div style="font-size:13px;color:var(--tm);max-width:280px;line-height:1.8">شاهدا فيديو معاً بمشاركة الشاشة المباشرة</div>
+    <!-- LOBBY -->
+    <div id="cinemaLobby" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center">
+      <div style="font-size:60px;filter:drop-shadow(0 0 20px rgba(201,168,76,.5))">🎬</div>
+      <div style="font-size:21px;font-weight:700;color:var(--g)">غرفة السينما</div>
+      <div style="font-size:13px;color:var(--tm);max-width:280px;line-height:1.8">
+        افتح غرفة وشارك شاشتك — شريكك سيشاهد ما تشغّله في الوقت الحقيقي
+      </div>
 
-      <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px">
-        <!-- Host: open cinema room -->
-        <button onclick="hostOpenCinema()" 
-          style="padding:14px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-          🎥 افتح غرفة السينما
+      <!-- Host button -->
+      <button onclick="hostCinema()"
+        style="padding:14px 28px;border-radius:14px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:15px;font-weight:700;cursor:pointer;width:100%;max-width:280px">
+        🎥 افتح غرفة السينما
+      </button>
+
+      <!-- Guest join box (appears when partner opens room) -->
+      <div id="cinemaJoinBox" style="display:none;background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(224,122,142,.08));border:1.5px solid rgba(201,168,76,.4);border-radius:14px;padding:16px;width:100%;max-width:280px">
+        <div style="font-size:14px;font-weight:700;color:var(--g);margin-bottom:4px">🎬 شريكك فتح غرفة!</div>
+        <div style="font-size:12px;color:var(--tm);margin-bottom:12px">انضم الآن لمشاهدة ما يشاركه</div>
+        <button onclick="joinCinema()"
+          style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">
+          ▶ انضم للمشاهدة
         </button>
-        <!-- Guest: join existing room -->
-        <div id="cinemaGuestInvite" style="display:none;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:14px;padding:14px">
-          <div style="font-size:13px;color:var(--g);font-weight:700;margin-bottom:8px">🎬 شريكك فتح غرفة!</div>
-          <button onclick="guestJoinCinema()" 
-            style="width:100%;padding:11px;border-radius:10px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">
-            ▶ انضم للمشاهدة
-          </button>
-        </div>
       </div>
     </div>
 
-    <!-- Cinema Room (active session) -->
+    <!-- ROOM (active) -->
     <div id="cinemaRoom" style="display:none;flex-direction:column;height:100%">
 
       <!-- Top bar -->
-      <div style="background:rgba(0,0,0,.6);border-bottom:1px solid rgba(201,168,76,.15);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <div style="font-size:13px;font-weight:700;color:var(--g);flex:1" id="cinemaRoomTitle">🎬 غرفة السينما</div>
-        <div id="cinemaStatusBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);color:#4ade80">⏳ بانتظار الشريك</div>
-        <button onclick="closeCinemaRoom()" style="background:rgba(224,85,85,.3);border:none;color:#ff8080;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer">✕</button>
+      <div style="background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.08);padding:9px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <div style="font-size:13px;font-weight:700;color:var(--g);flex:1" id="cinemaRoomLabel">🎬 غرفة السينما</div>
+        <div id="cinemaBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);color:#4ade80">⏳ جاري الاتصال...</div>
+        <button onclick="leaveCinema()" style="background:rgba(224,85,85,.3);border:none;color:#ff8080;width:28px;height:28px;border-radius:50%;font-size:14px;cursor:pointer;flex-shrink:0">✕</button>
       </div>
 
       <!-- Video area -->
-      <div style="flex:1;background:#000;position:relative;display:flex;align-items:center;justify-content:center;min-height:200px">
-        <!-- Host: local video -->
-        <video id="cinemaHostVideo" autoplay muted playsinline
-          style="width:100%;height:100%;object-fit:contain;display:none"></video>
-        <!-- Guest: remote stream -->
-        <video id="cinemaGuestVideo" autoplay playsinline
-          style="width:100%;height:100%;object-fit:contain;display:none"></video>
+      <div style="flex:1;background:#000;position:relative;min-height:180px;overflow:hidden">
+        <!-- Remote stream (guest sees this) -->
+        <div id="cinemaRemoteContainer" style="width:100%;height:100%;position:absolute;inset:0"></div>
+        <!-- Local preview (host sees this small) -->
+        <div id="cinemaLocalContainer" style="display:none;position:absolute;bottom:10px;left:10px;width:120px;height:80px;border-radius:8px;overflow:hidden;border:2px solid rgba(201,168,76,.4);z-index:5"></div>
         <!-- Placeholder -->
-        <div id="cinemaVideoPlaceholder" style="text-align:center;color:rgba(255,255,255,.3)">
-          <div style="font-size:48px;margin-bottom:8px">📺</div>
-          <div style="font-size:13px" id="cinemaPlaceholderTxt">شغّل فيديو أو شارك الشاشة</div>
+        <div id="cinemaPlaceholder" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:rgba(255,255,255,.3)">
+          <div style="font-size:42px">📺</div>
+          <div style="font-size:13px" id="cinemaPlaceholderTxt">بانتظار مشاركة الشاشة...</div>
         </div>
-        <!-- Chat bubbles overlay -->
-        <div id="cinemaChatBubbles" style="position:absolute;bottom:10px;left:10px;right:10px;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:150px;overflow:hidden;justify-content:flex-end"></div>
+        <!-- Chat bubbles -->
+        <div id="cinemaBubbles" style="position:absolute;bottom:8px;right:8px;left:8px;display:flex;flex-direction:column;gap:5px;pointer-events:none;max-height:140px;overflow:hidden;justify-content:flex-end;z-index:10"></div>
       </div>
 
       <!-- Controls -->
-      <div style="background:rgba(0,0,0,.85);border-top:1px solid rgba(255,255,255,.08);padding:10px 12px;flex-shrink:0">
-        <!-- Host controls -->
-        <div id="cinemaHostControls" style="display:none;flex-direction:column;gap:8px">
-          <div style="display:flex;gap:7px;flex-wrap:wrap">
-            <button onclick="startScreenShare()" id="cinemaShareBtn"
-              style="flex:1;padding:9px;border-radius:10px;border:none;background:rgba(201,168,76,.25);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-              📡 شارك الشاشة
-            </button>
-            <button onclick="stopScreenShare()" id="cinemaStopShareBtn"
-              style="display:none;flex:1;padding:9px;border-radius:10px;border:none;background:rgba(224,85,85,.3);color:#ff8080;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
-              ⏹ إيقاف المشاركة
-            </button>
-          </div>
+      <div style="background:rgba(0,0,0,.9);border-top:1px solid rgba(255,255,255,.08);padding:10px 12px;flex-shrink:0;display:flex;flex-direction:column;gap:8px">
+        <!-- Host share controls -->
+        <div id="cinemaHostCtrl" style="display:none;gap:7px">
+          <button id="cinemaShareBtn" onclick="startShare()"
+            style="flex:1;padding:10px;border-radius:11px;border:none;background:linear-gradient(135deg,rgba(201,168,76,.3),rgba(201,168,76,.15));color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            📡 شارك الشاشة
+          </button>
+          <button id="cinemaStopBtn" onclick="stopShare()"
+            style="display:none;flex:1;padding:10px;border-radius:11px;border:none;background:rgba(224,85,85,.25);color:#ff8080;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer">
+            ⏹ إيقاف المشاركة
+          </button>
         </div>
         <!-- Chat -->
-        <div style="display:flex;gap:6px;margin-top:8px">
-          <input id="cinemaChatInput" class="cinema-tinput" placeholder="💬 اكتب رسالة..."
-            onkeydown="if(event.key==='Enter')sendCinemaChat()" style="flex:1">
-          <button onclick="sendCinemaChat()" class="cinema-tsend">➤</button>
+        <div style="display:flex;gap:6px">
+          <input id="cinemaChatIn" class="cinema-tinput" placeholder="💬 رسالة أثناء المشاهدة..."
+            onkeydown="if(event.key==='Enter')sendCinemaMsg()" style="flex:1">
+          <button onclick="sendCinemaMsg()" class="cinema-tsend">➤</button>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
 
   <!-- ══ NOVEL ══ -->
@@ -1124,8 +1122,8 @@ textarea.field{resize:none}
 </div>
 
 <!-- PEERJS -->
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- AGORA RTC SDK -->
+<script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.20.2.js"></script>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -1357,7 +1355,8 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    setTimeout(()=>{ initNovelOnLoad(); initCinemaRoomListener(); }, 1500);
+    setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
+    setTimeout(()=>{ initNovelOnLoad(); initCinemaListener(); }, 1500);
   });
 });
 
@@ -2660,316 +2659,246 @@ window.confirmSendMedia = async (dataUrl, type) => {
   });
 };
 
-// ── CINEMA (WebRTC + Supabase Realtime Signaling) ──
-const SUPA_URL = 'https://lykvgeseacxfyzladwin.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5a3ZnZXNlYWN4Znl6bGFkd2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2MzMyNDMsImV4cCI6MjA4OTIwOTI0M30.KRF4rPJn3xTlKm-mBVcAPw3Wy83NO8mp86fp_lxTfag';
+// ── CINEMA — Agora RTC ──
+const AGORA_APP_ID = '84b371c81683485b9a8d8ff4de195988';
+// Channel = couple ID, token = null (use App ID mode — enable in Agora Console)
 
-// Free TURN servers from Open Relay Project
-const RTC_CONFIG = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    {
-      urls: 'turn:openrelay.metered.ca:80',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turn:openrelay.metered.ca:443',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    },
-    {
-      urls: 'turns:openrelay.metered.ca:443?transport=tcp',
-      username: 'openrelayproject',
-      credential: 'openrelayproject'
-    }
-  ]
-};
+let agoraClient  = null;
+let localTracks  = [];   // [screenVideoTrack, screenAudioTrack]
+let isHost       = false;
+let inCinema     = false;
 
-let supaClient   = null;
-let supaChannel  = null;
-let rtcPeer      = null;
-let screenStream = null;
-let cinemaIsHost = false;
-let cinemaRoomId = null;
-
-function getSupaClient() {
-  if(!supaClient) {
-    supaClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-  }
-  return supaClient;
-}
-
-// ── HOST: open cinema room ──
-window.hostOpenCinema = async () => {
+// ── HOST: open room ──
+window.hostCinema = async () => {
   if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
-  cinemaIsHost = true;
-  cinemaRoomId = cid();
+  isHost   = true;
+  inCinema = true;
 
-  // Notify partner via Firestore
+  // Tell partner via Firestore
   await setDoc(doc(db,'shared',cid()), {
     cinemaRoom: { status:'open', by:uid, at:Date.now() }
   }, {merge:true});
 
-  // Open room UI
-  openCinemaRoomUI(true);
+  openRoomUI(true);
+  await agoraJoin();
 
-  // Send chat invite
+  // Chat invite in messages
   await addDoc(collection(db,'chats',cid(),'messages'), {
-    content: '🎬 فتح غرفة السينما! اضغط للانضمام',
+    content:'🎬 فُتحت غرفة السينما — اضغط للانضمام!',
     senderId:uid, type:'system', reactions:[], sentAt:serverTimestamp()
   });
-
-  // Setup Supabase signaling channel
-  await setupSignalingChannel();
 
   showToast('🎬 الغرفة جاهزة! بانتظار شريكك...');
 };
 
 // ── GUEST: join room ──
-window.guestJoinCinema = async () => {
+window.joinCinema = async () => {
   if(!pId) return;
-  cinemaIsHost = false;
-  cinemaRoomId = cid();
-
-  openCinemaRoomUI(false);
-
-  // Setup signaling
-  await setupSignalingChannel();
-
-  // Signal host that we're ready
-  await sendSignal({ type:'guest_ready', from:uid });
-
-  document.getElementById('cinemaStatusBadge').textContent = '⏳ جاري الاتصال...';
+  isHost   = false;
+  inCinema = true;
+  openRoomUI(false);
+  await agoraJoin();
+  showToast('✅ انضممت للغرفة!');
 };
 
-function openCinemaRoomUI(isHost) {
-  document.getElementById('cinemaLobby').style.display = 'none';
-  const room = document.getElementById('cinemaRoom');
-  room.style.display = 'flex';
-  const hostCtrl = document.getElementById('cinemaHostControls');
-  if(hostCtrl) hostCtrl.style.display = isHost ? 'flex' : 'none';
-  document.getElementById('cinemaRoomTitle').textContent = isHost ? '🎬 أنت المضيف' : '🎬 تشاهد مع ' + (hrNick||pName);
-}
+// ── Agora: join channel ──
+async function agoraJoin() {
+  // Create client in live-streaming mode
+  agoraClient = AgoraRTC.createClient({ mode:'rtc', codec:'vp8' });
 
-// ── Supabase Realtime signaling ──
-async function setupSignalingChannel() {
-  const supa = getSupaClient();
-  const channelName = 'cinema_' + cid();
-
-  supaChannel = supa.channel(channelName, {
-    config: { broadcast: { self: false } }
-  });
-
-  supaChannel.on('broadcast', { event:'signal' }, async (payload) => {
-    const msg = payload.payload;
-    if(!msg || msg.from === uid) return;
-    await handleSignal(msg);
-  });
-
-  await supaChannel.subscribe();
-}
-
-async function sendSignal(data) {
-  if(!supaChannel) return;
-  await supaChannel.send({
-    type: 'broadcast',
-    event: 'signal',
-    payload: { ...data, from: uid }
-  });
-}
-
-async function handleSignal(msg) {
-  if(msg.type === 'guest_ready' && cinemaIsHost) {
-    // Guest joined — create offer
-    await createAndSendOffer();
-    document.getElementById('cinemaStatusBadge').textContent = '🔗 جاري الاتصال...';
-    document.getElementById('cinemaStatusBadge').style.color = '#ffb347';
-
-  } else if(msg.type === 'offer' && !cinemaIsHost) {
-    // Receive offer → create answer
-    await handleOffer(msg.sdp);
-
-  } else if(msg.type === 'answer' && cinemaIsHost) {
-    // Receive answer
-    if(rtcPeer && rtcPeer.signalingState === 'have-local-offer') {
-      await rtcPeer.setRemoteDescription(new RTCSessionDescription({type:'answer', sdp:msg.sdp}));
+  // Listen for remote users
+  agoraClient.on('user-published', async (user, mediaType) => {
+    await agoraClient.subscribe(user, mediaType);
+    if(mediaType === 'video') {
+      const remoteContainer = document.getElementById('cinemaRemoteContainer');
+      const placeholder     = document.getElementById('cinemaPlaceholder');
+      if(remoteContainer) {
+        remoteContainer.innerHTML = '';
+        user.videoTrack.play(remoteContainer);
+        if(placeholder) placeholder.style.display = 'none';
+      }
+      setBadge('🔴 بث مباشر', '#4ade80', 'rgba(74,222,128,.15)', 'rgba(74,222,128,.3)');
+      showToast('📺 ' + (hrNick||pName) + ' بدأ مشاركة الشاشة!');
     }
-
-  } else if(msg.type === 'ice') {
-    // ICE candidate
-    if(rtcPeer && msg.candidate) {
-      try {
-        await rtcPeer.addIceCandidate(new RTCIceCandidate(JSON.parse(msg.candidate)));
-      } catch(e) {}
+    if(mediaType === 'audio') {
+      user.audioTrack.play();
     }
+  });
 
-  } else if(msg.type === 'chat') {
-    addCinemaBubble(msg.text, false);
+  agoraClient.on('user-unpublished', (user, mediaType) => {
+    if(mediaType === 'video') {
+      document.getElementById('cinemaRemoteContainer').innerHTML = '';
+      document.getElementById('cinemaPlaceholder').style.display = 'flex';
+      setBadge('⏸ توقف البث', '#ffb347', 'rgba(255,160,0,.1)', 'rgba(255,160,0,.3)');
+    }
+  });
 
-  } else if(msg.type === 'close') {
-    closeCinemaRoomLocal();
-    showToast((hrNick||pName) + ' أغلق غرفة السينما');
+  agoraClient.on('user-joined', (user) => {
+    setBadge('🟢 متصل', '#4ade80', 'rgba(74,222,128,.1)', 'rgba(74,222,128,.25)');
+    showToast('🎬 ' + (hrNick||pName) + ' انضم للغرفة!');
+  });
+
+  agoraClient.on('user-left', () => {
+    document.getElementById('cinemaRemoteContainer').innerHTML = '';
+    document.getElementById('cinemaPlaceholder').style.display = 'flex';
+    setBadge('⚠️ غادر الشريك', '#ff8080', 'rgba(224,85,85,.1)', 'rgba(224,85,85,.3)');
+  });
+
+  // Join with uid as integer
+  const uidInt = parseInt(uid.replace(/[^0-9]/g,'').slice(0,8)||'12345678');
+  await agoraClient.join(AGORA_APP_ID, cid(), null, uidInt);
+
+  if(isHost) {
+    // Show share controls
+    const ctrl = document.getElementById('cinemaHostCtrl');
+    if(ctrl) ctrl.style.display = 'flex';
   }
-}
-
-function createRTCPeer() {
-  if(rtcPeer) { rtcPeer.close(); }
-  rtcPeer = new RTCPeerConnection(RTC_CONFIG);
-
-  rtcPeer.onicecandidate = async (e) => {
-    if(e.candidate) {
-      await sendSignal({ type:'ice', candidate:JSON.stringify(e.candidate.toJSON()) });
-    }
-  };
-
-  rtcPeer.onconnectionstatechange = () => {
-    const s = rtcPeer.connectionState;
-    const badge = document.getElementById('cinemaStatusBadge');
-    if(s === 'connected') {
-      if(badge) { badge.textContent='🔴 بث مباشر'; badge.style.color='#4ade80'; badge.style.background='rgba(74,222,128,.15)'; badge.style.borderColor='rgba(74,222,128,.3)'; }
-      showToast('✅ اتصال ناجح! الآن يمكنك مشاركة الشاشة');
-    } else if(s==='disconnected'||s==='failed') {
-      if(badge) { badge.textContent='⚠️ انقطع الاتصال'; badge.style.color='#ff8080'; }
-    }
-  };
-
-  // Guest receives stream
-  rtcPeer.ontrack = (e) => {
-    const guestVid = document.getElementById('cinemaGuestVideo');
-    const placeholder = document.getElementById('cinemaVideoPlaceholder');
-    if(guestVid && e.streams[0]) {
-      guestVid.srcObject = e.streams[0];
-      guestVid.style.display = 'block';
-      if(placeholder) placeholder.style.display = 'none';
-    }
-  };
-
-  return rtcPeer;
-}
-
-async function createAndSendOffer() {
-  if(!screenStream) { showToast('شارك الشاشة أولاً ثم سيتصل الشريك'); return; }
-  createRTCPeer();
-  screenStream.getTracks().forEach(t => rtcPeer.addTrack(t, screenStream));
-  const offer = await rtcPeer.createOffer();
-  await rtcPeer.setLocalDescription(offer);
-  await sendSignal({ type:'offer', sdp:offer.sdp });
-}
-
-async function handleOffer(sdp) {
-  createRTCPeer();
-  await rtcPeer.setRemoteDescription(new RTCSessionDescription({type:'offer', sdp}));
-  const answer = await rtcPeer.createAnswer();
-  await rtcPeer.setLocalDescription(answer);
-  await sendSignal({ type:'answer', sdp:answer.sdp });
-  document.getElementById('cinemaStatusBadge').textContent = '🔗 تم الرد...';
 }
 
 // ── SCREEN SHARE ──
-window.startScreenShare = async () => {
+window.startShare = async () => {
   try {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video:{ frameRate:30 }, audio:true
-    });
+    // Create screen video + audio tracks
+    const screenVideo = await AgoraRTC.createScreenVideoTrack(
+      { encoderConfig: '1080p_1', optimizationMode:'detail' },
+      'auto'  // auto = include audio if available
+    );
+
+    // screenVideo might be [videoTrack, audioTrack] or just videoTrack
+    if(Array.isArray(screenVideo)) {
+      localTracks = screenVideo;
+    } else {
+      localTracks = [screenVideo];
+    }
+
+    // Publish to channel
+    await agoraClient.publish(localTracks);
+
+    // Show local preview (small)
+    const localContainer = document.getElementById('cinemaLocalContainer');
+    if(localContainer) {
+      localContainer.style.display = 'block';
+      localTracks[0].play(localContainer);
+    }
+    document.getElementById('cinemaPlaceholder').style.display = 'none';
+    document.getElementById('cinemaShareBtn').style.display = 'none';
+    document.getElementById('cinemaStopBtn').style.display = 'block';
+    setBadge('🔴 تشارك الآن', '#4ade80', 'rgba(74,222,128,.15)', 'rgba(74,222,128,.3)');
+    showToast('📡 يتم البث! شريكك يشاهدك الآن');
+
+    // Handle user stopping share from browser UI
+    localTracks[0].on('track-ended', () => stopShare());
+
   } catch(e) {
-    if(e.name !== 'NotAllowedError') showToast('خطأ: ' + e.message);
-    return;
+    if(e.code !== 'PERMISSION_DENIED') showToast('خطأ: ' + (e.message||e.code||e));
   }
-
-  // Show in host video
-  const hostVid = document.getElementById('cinemaHostVideo');
-  const placeholder = document.getElementById('cinemaVideoPlaceholder');
-  hostVid.srcObject = screenStream;
-  hostVid.style.display = 'block';
-  if(placeholder) placeholder.style.display = 'none';
-
-  document.getElementById('cinemaShareBtn').style.display = 'none';
-  document.getElementById('cinemaStopShareBtn').style.display = 'block';
-
-  // Add tracks to existing peer if connected
-  if(rtcPeer && rtcPeer.connectionState === 'connected') {
-    screenStream.getTracks().forEach(t => {
-      rtcPeer.addTrack(t, screenStream);
-    });
-  } else if(rtcPeer) {
-    // Re-negotiate
-    screenStream.getTracks().forEach(t => rtcPeer.addTrack(t, screenStream));
-    const offer = await rtcPeer.createOffer();
-    await rtcPeer.setLocalDescription(offer);
-    await sendSignal({ type:'offer', sdp:offer.sdp });
-  }
-
-  screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
-  showToast('📡 يتم الإرسال...');
 };
 
-window.stopScreenShare = async () => {
-  if(screenStream) { screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
-  const hostVid = document.getElementById('cinemaHostVideo');
-  hostVid.srcObject = null; hostVid.style.display='none';
-  document.getElementById('cinemaVideoPlaceholder').style.display='block';
-  document.getElementById('cinemaShareBtn').style.display='block';
-  document.getElementById('cinemaStopShareBtn').style.display='none';
+window.stopShare = async () => {
+  if(localTracks.length > 0) {
+    await agoraClient.unpublish(localTracks);
+    localTracks.forEach(t => t.close());
+    localTracks = [];
+  }
+  const localContainer = document.getElementById('cinemaLocalContainer');
+  if(localContainer) { localContainer.innerHTML=''; localContainer.style.display='none'; }
+  document.getElementById('cinemaPlaceholder').style.display = 'flex';
+  document.getElementById('cinemaPlaceholderTxt').textContent = 'توقفت مشاركة الشاشة';
+  document.getElementById('cinemaShareBtn').style.display = 'block';
+  document.getElementById('cinemaStopBtn').style.display = 'none';
+  setBadge('⏸ إيقاف', '#ffb347', 'rgba(255,160,0,.1)', 'rgba(255,160,0,.3)');
+};
+
+// ── LEAVE ──
+window.leaveCinema = async () => {
+  if(localTracks.length > 0) {
+    localTracks.forEach(t => t.close());
+    localTracks = [];
+  }
+  if(agoraClient) {
+    await agoraClient.leave();
+    agoraClient = null;
+  }
+  inCinema = false;
+  if(isHost && pId) {
+    await setDoc(doc(db,'shared',cid()), { cinemaRoom:null }, {merge:true});
+  }
+  closeRoomUI();
 };
 
 // ── CHAT ──
-window.sendCinemaChat = async () => {
-  const inp = document.getElementById('cinemaChatInput');
+window.sendCinemaMsg = async () => {
+  const inp = document.getElementById('cinemaChatIn');
   const txt = (inp.value||'').trim();
-  if(!txt) return;
-  inp.value='';
+  if(!txt||!pId) return;
+  inp.value = '';
   addCinemaBubble(txt, true);
-  await sendSignal({ type:'chat', text:txt });
+  // Send via Firestore
+  await setDoc(doc(db,'shared',cid()), {
+    cinemaMsg:{ text:txt, by:uid, at:Date.now() }
+  }, {merge:true});
 };
 
 function addCinemaBubble(msg, isMe) {
-  const c = document.getElementById('cinemaChatBubbles');
+  const c = document.getElementById('cinemaBubbles');
   if(!c) return;
   const b = document.createElement('div');
   b.className = 'cinema-bubble' + (isMe?' me':'');
   b.textContent = (isMe?'':(hrNick||pName)+': ') + msg;
   c.appendChild(b);
-  while(c.children.length>5) c.removeChild(c.firstChild);
-  setTimeout(()=>b.remove(), 5000);
+  while(c.children.length > 5) c.removeChild(c.firstChild);
+  setTimeout(() => b.remove(), 5000);
 }
 
-// ── CLOSE ──
-window.closeCinemaRoom = async () => {
-  await sendSignal({ type:'close' });
-  closeCinemaRoomLocal();
-  if(pId) await setDoc(doc(db,'shared',cid()),{cinemaRoom:null},{merge:true});
-};
-
-function closeCinemaRoomLocal() {
-  if(screenStream) { screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
-  if(rtcPeer) { rtcPeer.close(); rtcPeer=null; }
-  if(supaChannel) { supaChannel.unsubscribe(); supaChannel=null; }
-  // Reset UI
-  document.getElementById('cinemaLobby').style.display='flex';
-  document.getElementById('cinemaRoom').style.display='none';
-  const gv=document.getElementById('cinemaGuestVideo'); if(gv){gv.srcObject=null;gv.style.display='none';}
-  const hv=document.getElementById('cinemaHostVideo'); if(hv){hv.srcObject=null;hv.style.display='none';}
-  document.getElementById('cinemaVideoPlaceholder').style.display='block';
-  document.getElementById('cinemaShareBtn').style.display='block';
-  document.getElementById('cinemaStopShareBtn').style.display='none';
-  document.getElementById('cinemaChatBubbles').innerHTML='';
-  cinemaIsHost=false; cinemaRoomId=null; screenStream=null;
+// ── UI helpers ──
+function openRoomUI(asHost) {
+  document.getElementById('cinemaLobby').style.display = 'none';
+  const room = document.getElementById('cinemaRoom');
+  room.style.display = 'flex';
+  document.getElementById('cinemaRoomLabel').textContent = asHost ? '🎬 أنت المضيف' : '🎬 تشاهد مع '+(hrNick||pName);
+  if(!asHost) {
+    document.getElementById('cinemaPlaceholderTxt').textContent = 'بانتظار المضيف لمشاركة الشاشة...';
+  }
 }
 
-// Listen for partner opening/closing room
-function initCinemaRoomListener() {
+function closeRoomUI() {
+  document.getElementById('cinemaLobby').style.display = 'flex';
+  document.getElementById('cinemaRoom').style.display = 'none';
+  document.getElementById('cinemaRemoteContainer').innerHTML = '';
+  document.getElementById('cinemaLocalContainer').innerHTML = '';
+  document.getElementById('cinemaLocalContainer').style.display = 'none';
+  document.getElementById('cinemaPlaceholder').style.display = 'flex';
+  document.getElementById('cinemaPlaceholderTxt').textContent = 'بانتظار مشاركة الشاشة...';
+  document.getElementById('cinemaShareBtn').style.display = 'block';
+  document.getElementById('cinemaStopBtn').style.display = 'none';
+  document.getElementById('cinemaHostCtrl').style.display = 'none';
+  document.getElementById('cinemaBubbles').innerHTML = '';
+}
+
+function setBadge(txt, color, bg, border) {
+  const b = document.getElementById('cinemaBadge');
+  if(!b) return;
+  b.textContent = txt;
+  b.style.color = color;
+  b.style.background = bg;
+  b.style.borderColor = border;
+}
+
+// ── Firestore listener for partner room + chat ──
+function initCinemaListener() {
   if(!pId) return;
-  onSnapshot(doc(db,'shared',cid()), snap=>{
+  onSnapshot(doc(db,'shared',cid()), snap => {
     if(!snap.exists()) return;
-    const cr = snap.data().cinemaRoom;
-    const inviteEl = document.getElementById('cinemaGuestInvite');
-    if(!inviteEl) return;
-    if(cr && cr.status==='open' && cr.by!==uid) {
-      inviteEl.style.display='block';
-    } else {
-      inviteEl.style.display='none';
+    const sd = snap.data();
+    // Room invite
+    const cr = sd.cinemaRoom;
+    const joinBox = document.getElementById('cinemaJoinBox');
+    if(joinBox) {
+      joinBox.style.display = (cr && cr.status==='open' && cr.by!==uid && !inCinema) ? 'block' : 'none';
+    }
+    // Cinema chat message from partner
+    if(sd.cinemaMsg && sd.cinemaMsg.by !== uid) {
+      addCinemaBubble(sd.cinemaMsg.text, false);
     }
   });
 }
