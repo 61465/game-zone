@@ -3949,6 +3949,51 @@ function listenReadStatus() {
 window.showModal=(id)=>document.getElementById(id).classList.add('show');
 window.closeModal=(id)=>document.getElementById(id).classList.remove('show');
 document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');}));
+
+
+// ── MOBILE NAVIGATION ──
+function isMobile() { return window.innerWidth <= 600; }
+
+window.mobileNav = (tab) => {
+  swTab(tab);
+  document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('on'));
+  const mainTabs = ['chat','games','cinema','novel'];
+  const navId = mainTabs.includes(tab) ? 'mnav-'+tab : 'mnav-more';
+  const el = document.getElementById(navId);
+  if(el) el.classList.add('on');
+};
+
+window.toggleMobileMore = () => {
+  const menu = document.getElementById('mobileMoreMenu');
+  if(menu) menu.classList.toggle('show');
+};
+
+window.initMobileNav = () => {
+  const nav = document.getElementById('mobileBottomNav');
+  if(nav) nav.style.display = isMobile() ? 'flex' : 'none';
+};
+window.addEventListener('resize', () => window.initMobileNav && window.initMobileNav());
+
+// ── EMOJI PICKER & INSERT ──
+window.toggleEmojiPicker = () => {
+  const panel = document.getElementById('emojiPickerPanel');
+  if(!panel) return;
+  const isVisible = panel.style.display === 'block';
+  panel.style.display = isVisible ? 'none' : 'block';
+  document.getElementById('stickerPanel').classList.remove('show');
+};
+
+window.insertEmoji = (emoji) => {
+  const inp = document.getElementById('msgInput');
+  if(!inp) return;
+  const start = inp.selectionStart || inp.value.length;
+  const end   = inp.selectionEnd   || inp.value.length;
+  inp.value = inp.value.slice(0, start) + emoji + inp.value.slice(end);
+  inp.selectionStart = inp.selectionEnd = start + emoji.length;
+  inp.focus();
+  aR(inp);
+  document.getElementById('emojiPickerPanel').style.display = 'none';
+};
 </script>
 
 <!-- IMG VIEWER -->
