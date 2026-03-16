@@ -2627,25 +2627,43 @@ function getSB() {
 
 // ── UPLOAD helper ──
 async function uploadToSupabase(file, bucket, path, onProgress) {
-  const sb = getSB();
-  const buf = await file.arrayBuffer();
-  const { data, error } = await sb.storage.from(bucket).upload(path, buf, {
-    contentType: file.type || 'application/octet-stream',
-    upsert: true,
-    cacheControl: '3600'
+  // Use XMLHttpRequest for real upload progress
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    const uploadUrl = SB_URL + '/storage/v1/object/' + bucket + '/' + path;
+
+    xhr.open('POST', uploadUrl, true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + SB_KEY);
+    xhr.setRequestHeader('x-upsert', 'true');
+    if(file.type) xhr.setRequestHeader('Content-Type', file.type);
+
+    // Real progress event
+    xhr.upload.onprogress = (e) => {
+      if(e.lengthComputable && onProgress) {
+        const pct = Math.round(e.loaded / e.total * 100);
+        onProgress(pct);
+      }
+    };
+
+    xhr.onload = () => {
+      if(xhr.status >= 200 && xhr.status < 300) {
+        // Build public URL
+        const publicUrl = SB_URL + '/storage/v1/object/public/' + bucket + '/' + path;
+        resolve(publicUrl);
+      } else {
+        let msg = 'فشل الرفع ('+xhr.status+')';
+        try {
+          const err = JSON.parse(xhr.responseText);
+          if(err.error === 'Bucket not found') msg = 'Bucket "shared-media" غير موجود — أنشئه في Supabase → Storage';
+          else if(err.message) msg = err.message;
+        } catch(e) {}
+        reject(new Error(msg));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error('خطأ في الشبكة'));
+    xhr.send(file);
   });
-  if(error) {
-    // Give helpful error messages
-    if(error.message && error.message.includes('Bucket not found')) {
-      throw new Error('Bucket "shared-media" غير موجود. أنشئه في Supabase → Storage');
-    }
-    if(error.message && error.message.includes('row-level')) {
-      throw new Error('يجب تعطيل RLS في Supabase → Storage → shared-media → Policies');
-    }
-    throw new Error(error.message || 'فشل الرفع');
-  }
-  const { data: urlData } = sb.storage.from(bucket).getPublicUrl(path);
-  return urlData.publicUrl;
 }
 
 // ── CINEMA ──
@@ -2660,19 +2678,13 @@ window.uploadCinemaFile = async (inp) => {
   prog.style.display = 'block';
   msg.textContent = '⬆️ جاري رفع: ' + file.name;
 
-  // Fake progress while uploading (XHR doesn't support progress for Supabase JS client)
-  let fakeP = 0;
-  const fakeInt = setInterval(() => {
-    fakeP = Math.min(fakeP + 2, 90);
-    bar.style.width = fakeP + '%';
-    pct.textContent = fakeP + '%';
-  }, 200);
-
   try {
     const path = cid() + '/videos/' + Date.now() + '_' + file.name;
-    const url  = await uploadToSupabase(file, 'shared-media', path, null);
+    const url  = await uploadToSupabase(file, 'shared-media', path, (p) => {
+      bar.style.width = p + '%';
+      pct.textContent = p + '%';
+    });
 
-    clearInterval(fakeInt);
     bar.style.width = '100%'; pct.textContent = '100%';
     setTimeout(() => prog.style.display = 'none', 800);
 
@@ -2683,7 +2695,6 @@ window.uploadCinemaFile = async (inp) => {
     });
     showToast('✅ تم رفع الفيديو! يظهر عند شريكك الآن');
   } catch(e) {
-    clearInterval(fakeInt);
     prog.style.display = 'none';
     showToast('خطأ في الرفع: ' + e.message);
   }
@@ -2827,13 +2838,11 @@ window.uploadNovelFile = async (inp) => {
   document.getElementById('novelUploadProgress').style.display='block';
   document.getElementById('novelUploadMsg').textContent='⬆️ جاري رفع: '+file.name;
 
-  let fakeP=0;
-  const fi=setInterval(()=>{fakeP=Math.min(fakeP+3,90);document.getElementById('novelUploadBar').style.width=fakeP+'%';},200);
-
   try {
     const path = cid()+'/novels/'+Date.now()+'_'+file.name;
-    const url  = await uploadToSupabase(file,'shared-media',path,null);
-    clearInterval(fi);
+    const url  = await uploadToSupabase(file,'shared-media',path, (p) => {
+      document.getElementById('novelUploadBar').style.width=p+'%';
+    });
     document.getElementById('novelUploadBar').style.width='100%';
     setTimeout(()=>document.getElementById('novelUploadProgress').style.display='none',800);
 
@@ -2850,7 +2859,6 @@ window.uploadNovelFile = async (inp) => {
     });
     showToast('✅ تم رفع الرواية! تظهر عند شريكك الآن');
   } catch(e) {
-    clearInterval(fi);
     document.getElementById('novelUploadProgress').style.display='none';
     showToast('خطأ: '+e.message);
   }
