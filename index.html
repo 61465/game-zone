@@ -940,143 +940,114 @@ textarea.field{resize:none}
 
   <!-- ══ CINEMA ══ -->
   <div class="panel" id="panel-cinema">
-    <div class="pi" style="align-items:center;justify-content:center;text-align:center;gap:16px">
-      <div style="font-size:64px">🎬</div>
-      <div style="font-size:22px;font-weight:700;color:var(--g)">سينما للإثنين</div>
-      <div style="font-size:13px;color:var(--tm);max-width:300px;line-height:1.7">شاهدا معاً بشكل متزامن! ارفع ملف فيديو أو أدخل رابط وسيُبث للطرفين في نفس الوقت</div>
-      <div class="card" style="width:100%;text-align:right">
-        <div class="ctitle">🎥 اختر مصدر الفيديو</div>
-        <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px;cursor:pointer;background:var(--d4);margin-bottom:10px;transition:all .2s" id="cinemaDropZone">
-          <span style="font-size:32px">📁</span>
-          <span style="font-size:13px;color:var(--tm)">اضغط لرفع فيديو من جهازك</span>
-          <input type="file" id="cinemaFile" accept="video/*" style="display:none" onchange="loadCinemaFile(this)">
-        </label>
-        <div style="text-align:center;color:var(--tm);font-size:12px;margin-bottom:8px">أو</div>
-        <input class="field" id="cinemaUrl" placeholder="ألصق رابط فيديو مباشر (MP4)..." style="margin-bottom:8px">
-        <button class="pbtn" onclick="openCinemaFromUrl()">🎬 افتح السينما</button>
+    <div class="pi" id="cinemaPanelInner">
+
+      <!-- No video loaded state -->
+      <div id="cinemaNoVideo">
+        <div class="ptitle">🎬 سينما معاً</div>
+        <div style="font-size:13px;color:var(--tm);margin-bottom:16px;line-height:1.7">
+          أرفع فيديو من جهازك — سيظهر تلقائياً عند شريكك ويمكنكما مشاهدته معاً بشكل متزامن
+        </div>
+        <div class="card" style="text-align:center;margin-bottom:12px">
+          <label style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;cursor:pointer;background:var(--d4)">
+            <span style="font-size:42px">🎥</span>
+            <span style="font-size:14px;color:var(--tm)">اضغط لاختيار فيديو</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.3)">يدعم MP4 وMOV وWebM</span>
+            <input type="file" id="cinemaFileInput" accept="video/*" style="display:none" onchange="onCinemaFileSelected(this)">
+          </label>
+        </div>
+        <!-- Partner loaded indicator -->
+        <div id="cinemaPartnerLoaded" style="display:none;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:12px;text-align:center;font-size:13px;color:var(--g)">
+          🎬 شريكك حمّل فيديو! اضغط للانضمام ومشاهدته
+          <button onclick="guestLoadVideo()" class="pbtn" style="margin-top:10px">▶ انضم للمشاهدة</button>
+        </div>
       </div>
-      <div class="card" style="width:100%;text-align:right" id="cinemaStatusCard">
-        <div class="ctitle">📡 حالة البث المشترك</div>
-        <div style="font-size:13px;color:var(--tm)" id="cinemaStatusTxt">لا يوجد بث نشط حالياً</div>
+
+      <!-- Upload progress -->
+      <div id="cinemaUploadState" style="display:none;text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">⬆️</div>
+        <div style="font-size:15px;font-weight:700;color:var(--g);margin-bottom:8px" id="cinemaUploadMsg">جاري تحضير الفيديو...</div>
+        <div style="background:var(--d4);border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px">
+          <div id="cinemaUploadBar" style="height:100%;width:0%;background:var(--g);border-radius:20px;transition:width .3s"></div>
+        </div>
+        <div style="font-size:12px;color:var(--tm)" id="cinemaUploadPct">0%</div>
+        <button onclick="cancelCinemaUpload()" style="margin-top:14px;padding:7px 18px;border-radius:20px;border:1px solid rgba(224,85,85,.3);background:transparent;color:#ff8080;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">إلغاء</button>
       </div>
+
+      <!-- Player state -->
+      <div id="cinemaPlayerState" style="display:none;flex-direction:column;gap:10px;flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:14px;font-weight:700;color:var(--g)" id="cinemaVideoTitle">فيديو مشترك</div>
+          <div id="cinemaSyncBadge" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:3px 10px;font-size:11px;color:#4ade80">🔴 متزامن</div>
+        </div>
+        <!-- Video element -->
+        <video id="cinemaVideoEl" style="width:100%;border-radius:14px;background:#000;max-height:45vh" controls></video>
+        <!-- Sync controls bar -->
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <button onclick="syncCinemaPlay()" id="cinemaSyncPlayBtn" style="padding:9px 18px;border-radius:12px;border:none;background:var(--g);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer">▶ شغّل للاثنين</button>
+          <button onclick="syncCinemaPause()" style="padding:9px 16px;border-radius:12px;border:1px solid rgba(201,168,76,.3);background:transparent;color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">⏸ أوقف</button>
+          <div style="font-size:12px;color:var(--tm);flex:1;text-align:center" id="cinemaTimeEl">0:00 / 0:00</div>
+          <button onclick="closeCinemaSession()" style="padding:7px 14px;border-radius:12px;border:1px solid rgba(224,85,85,.3);background:transparent;color:#ff8080;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🗑 حذف</button>
+        </div>
+        <!-- Partner status -->
+        <div id="cinemaPartnerStatus" style="font-size:12px;color:var(--tm);text-align:center"></div>
+      </div>
+
     </div>
   </div>
 
   <!-- ══ NOVEL ══ -->
   <div class="panel" id="panel-novel">
     <div class="pi">
-      <div class="ptitle">📖 قراءة رواية معاً</div>
-      <!-- Upload section (shown when no novel loaded) -->
+      <div class="ptitle">📖 قراءة معاً</div>
+
+      <!-- Upload section -->
       <div id="novelUploadSection">
-        <div class="card" style="text-align:center">
-          <div style="font-size:48px;margin-bottom:8px">📚</div>
-          <div style="font-size:15px;font-weight:700;color:var(--g);margin-bottom:6px">اقرأا رواية معاً</div>
-          <div style="font-size:13px;color:var(--tm);margin-bottom:16px;line-height:1.6">ارفع ملف نصي (.txt) للرواية وستظهر عند الطرفين مع مزامنة الصفحة</div>
-          <label style="display:inline-flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:14px;padding:20px 30px;cursor:pointer;background:var(--d4);width:100%">
-            <span style="font-size:32px">📄</span>
+        <div class="card">
+          <div class="ctitle">📚 أضف رواية للقراءة المشتركة</div>
+          <div style="font-size:13px;color:var(--tm);margin-bottom:12px;line-height:1.6">أرفع ملف نصي أو الصق النص — ستظهر الرواية عند شريكك تلقائياً وتتزامنان على نفس الصفحة</div>
+          <label style="display:flex;flex-direction:column;align-items:center;gap:8px;border:2px dashed rgba(201,168,76,.3);border-radius:12px;padding:18px;cursor:pointer;background:var(--d4);margin-bottom:10px">
+            <span style="font-size:30px">📄</span>
             <span style="font-size:13px;color:var(--tm)">اضغط لرفع ملف .txt</span>
-            <input type="file" id="novelFile" accept=".txt,text/plain" style="display:none" onchange="loadNovelFile(this)">
+            <input type="file" id="novelFileInput" accept=".txt,text/plain" style="display:none" onchange="onNovelFileSelected(this)">
           </label>
-          <div style="margin-top:12px;font-size:12px;color:var(--tm)">أو أدخل نص الرواية مباشرة:</div>
-          <textarea class="field" id="novelPasteArea" placeholder="الصق نص الرواية هنا..." rows="4" style="margin-top:8px;margin-bottom:8px"></textarea>
-          <button class="pbtn" onclick="loadNovelText()">📖 ابدأ القراءة</button>
+          <div style="text-align:center;color:var(--tm);font-size:12px;margin-bottom:8px">أو</div>
+          <textarea class="field" id="novelPasteArea" placeholder="الصق نص الرواية هنا..." rows="3" style="margin-bottom:8px"></textarea>
+          <button class="pbtn" onclick="onNovelTextPasted()">📖 ابدأ القراءة المشتركة</button>
         </div>
       </div>
-      <!-- Reader section (shown when novel loaded) -->
+
+      <!-- Reader section -->
       <div id="novelReaderSection" style="display:none;flex-direction:column;gap:10px;flex:1">
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-          <div style="font-size:14px;font-weight:700;color:var(--g)" id="novelTitle">الرواية</div>
-          <div class="partner-page-badge" id="partnerPageBadge" style="display:none">
-            <span>👁️</span><span id="partnerPageTxt">شريكتك في صفحة 1</span>
-          </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+          <div style="font-size:14px;font-weight:700;color:var(--g)" id="novelTitleEl">الرواية</div>
+          <div id="novelSyncBadge" style="background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);border-radius:20px;padding:3px 10px;font-size:11px;color:#4ade80">🔄 متزامن</div>
         </div>
-        <!-- Page display -->
+        <!-- Partner page indicator -->
+        <div id="novelPartnerPageEl" style="display:none;background:rgba(224,122,142,.1);border:1px solid rgba(224,122,142,.25);border-radius:10px;padding:7px 12px;font-size:12px;color:var(--pk)"></div>
+        <!-- Page content -->
         <div class="novel-page" id="novelPageContent"></div>
-        <!-- Controls -->
-        <div class="novel-ctrl">
-          <button class="novel-btn" id="novelPrevBtn" onclick="novelChangePage(-1)" disabled>→ السابقة</button>
-          <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">صفحة <span id="novelCurPage">1</span> من <span id="novelTotalPages">1</span></div>
-          <button class="novel-btn" id="novelNextBtn" onclick="novelChangePage(1)">التالية ←</button>
+        <!-- Navigation -->
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="novel-btn" id="novelPrevBtn" onclick="novelGoPage(-1)" disabled>→ السابقة</button>
+          <div style="flex:1;text-align:center;font-size:13px;color:var(--tm)">
+            صفحة <strong id="novelCurPageEl" style="color:var(--g)">1</strong> / <span id="novelTotalPagesEl">1</span>
+          </div>
+          <button class="novel-btn" id="novelNextBtn" onclick="novelGoPage(1)">التالية ←</button>
         </div>
-        <!-- Font size & close -->
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:12px;color:var(--tm)">حجم الخط:</span>
-          <button class="novel-btn" onclick="novelFontSize(-1)">أ-</button>
-          <button class="novel-btn" onclick="novelFontSize(1)">أ+</button>
-          <button class="novel-btn" style="margin-right:auto;color:#ff8080;border-color:rgba(224,85,85,.3)" onclick="closeNovel()">✕ إغلاق الرواية</button>
+        <!-- Font size + close -->
+        <div style="display:flex;gap:7px;align-items:center">
+          <span style="font-size:11px;color:var(--tm)">الخط:</span>
+          <button class="novel-btn" onclick="novelFont(-1)" style="padding:5px 10px">أ-</button>
+          <button class="novel-btn" onclick="novelFont(1)" style="padding:5px 10px">أ+</button>
+          <button onclick="closeNovelSession()" style="margin-right:auto;padding:7px 14px;border-radius:12px;border:1px solid rgba(224,85,85,.3);background:transparent;color:#ff8080;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🗑 حذف الرواية</button>
         </div>
       </div>
     </div>
   </div>
-
 
 </div>
 
-<!-- CINEMA OVERLAY -->
-<div class="cinema-overlay" id="cinemaOverlay">
-  <!-- Intro animation -->
-  <div class="cinema-intro" id="cinemaIntro">
-    <div class="film-curtain" style="width:100%;height:100%;position:absolute;inset:0">
-      <div class="film-strip">
-        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
-        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
-        <div class="film-hole"></div><div class="film-hole"></div>
-      </div>
-      <div style="font-size:72px;filter:drop-shadow(0 0 30px rgba(201,168,76,.6));animation:pulse 2s infinite">🎬</div>
-      <div style="font-size:26px;font-weight:700;color:var(--g);letter-spacing:3px;text-shadow:0 0 20px rgba(201,168,76,.5)">سينما للإثنين</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px" id="cinemaIntroSub">جاري تحضير العرض...</div>
-      <div class="film-strip">
-        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
-        <div class="film-hole"></div><div class="film-hole"></div><div class="film-hole"></div>
-        <div class="film-hole"></div><div class="film-hole"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Screen -->
-  <div class="cinema-screen" id="cinemaScreen">
-    <video id="cinemaVideo" playsinline webkit-playsinline></video>
-    <!-- Chat bubbles overlay -->
-    <div class="cinema-chat" id="cinemaBubbles"></div>
-    <!-- Sync indicator -->
-    <div id="cinemaSyncBadge" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid rgba(74,222,128,.4);border-radius:20px;padding:4px 10px;font-size:11px;color:#4ade80;display:none">🔴 بث مباشر</div>
-    <!-- Waiting for partner overlay -->
-    <div id="cinemaPartnerWait" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.75);flex-direction:column;align-items:center;justify-content:center;gap:12px;backdrop-filter:blur(4px)">
-      <div style="font-size:48px;animation:pulse 1.5s infinite">⏳</div>
-      <div style="font-size:16px;font-weight:700;color:var(--g)">بانتظار انضمام الشريك</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.6);text-align:center;max-width:260px">سيبدأ التشغيل تلقائياً عندما ينضم <strong style="color:var(--pk)" id="cinemaWaitName">شريكتك</strong></div>
-      <div style="font-size:12px;color:rgba(255,255,255,.4)">تم إرسال دعوة المشاهدة 📨</div>
-    </div>
-    <!-- Partner action popup -->
-    <div id="cinemaPartnerAct" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);border:1px solid rgba(201,168,76,.4);border-radius:14px;padding:14px 20px;font-size:14px;color:white;display:none;text-align:center;backdrop-filter:blur(10px)"></div>
-  </div>
-
-  <!-- Controls -->
-  <div class="cinema-ctrl">
-    <div class="cinema-progress" id="cinemaProgress" onclick="cinemaSeek(event)">
-      <div class="cinema-prog-fill" id="cinemaProgFill" style="width:0%"></div>
-    </div>
-    <div class="cinema-btns">
-      <button class="cinema-btn" onclick="cinemaPlayPause()" id="cinemaPlayBtn">▶</button>
-      <button class="cinema-btn" onclick="cinemaRewind()">⏪</button>
-      <button class="cinema-btn" onclick="cinemaForward()">⏩</button>
-      <button class="cinema-btn" onclick="toggleCinemaMute()" id="cinemaMuteBtn">🔊</button>
-      <span class="cinema-time" id="cinemaTimeDisp">0:00 / 0:00</span>
-      <button class="cinema-btn" onclick="toggleCinemaFs()" id="cinemaFsBtn">⛶</button>
-      <button class="cinema-btn" onclick="closeCinema()" style="background:rgba(224,85,85,.3);color:#ff8080">✕</button>
-    </div>
-    <!-- Share screen button (shown only for local file host) -->
-    <button id="cinemaShareBtn" onclick="startScreenShare()" 
-      style="display:none;padding:9px 16px;border-radius:12px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.2);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:7px;width:100%">
-      📡 شارك الشاشة مع شريكك
-    </button>
-    <!-- Chat row -->
-    <div class="cinema-input-row">
-      <input class="cinema-tinput" id="cinemaMsgInput" placeholder="💬 اكتب رسالة أثناء المشاهدة..." onkeydown="if(event.key==='Enter')sendCinemaMsg()">
-      <button class="cinema-tsend" onclick="sendCinemaMsg()">➤</button>
-    </div>
-  </div>
-</div>
 
 <!-- MODALS -->
 <div class="mbg" id="ideaModal">
@@ -1132,8 +1103,6 @@ textarea.field{resize:none}
 </div>
 
 <!-- PEERJS -->
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -1364,8 +1333,7 @@ onAuthStateChanged(auth, async (user) => {
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7].filter(Boolean);
     renderThemes(); renderGames(); initDraw();
     renderCustomStickers(); renderStkGrid();
-    // Pre-init PeerJS so guest is ready to receive calls
-    setTimeout(()=>initPeer().catch(()=>{}), 2000);
+    setTimeout(()=>initCinemaAndNovel(), 1500);
   });
 });
 
@@ -2668,393 +2636,431 @@ window.confirmSendMedia = async (dataUrl, type) => {
   });
 };
 
-// ── CINEMA FROM VIDEO ──
-// Called when user taps "شاهده معي في السينما" on a video message
-// OR when sending a video directly to cinema
-
-// ── VOICE DELETE ──
-// delVoiceMsg now handled by showDeleteModal
-
-
 // ── CINEMA ──
-// Screen share via PeerJS (free signaling server, no Firebase needed)
+// Flow: User picks video → base64 chunks → Firestore → partner receives → both play in sync
+const CINEMA_CHUNK = 600 * 1024; // 600KB per chunk (base64 ~800KB Firestore doc)
+let cinemaAbort  = false;
+let cinemaPages  = 0; // total chunks
+let cinemaSessId = null;
+let cinemaLocalUrl = null;
+let cinemaSyncing = false;
+let cinemaListenerUnsub = null;
 
-let myPeer        = null;   // Peer instance
-let screenConn    = null;   // MediaConnection
-let screenStream  = null;   // getDisplayMedia stream
-let cinemaIsSyncing = false;
-let cinemaUploadAbort = false;
-
-// ── Initialize PeerJS with a unique ID ──
-function initPeer() {
-  return new Promise((resolve) => {
-    if(myPeer && !myPeer.destroyed && myPeer.id) { resolve(myPeer); return; }
-    // Peer ID = uid so partner can call directly
-    const peer = new Peer(uid, {
-      host: '0.peerjs.com',
-      port: 443,
-      path: '/',
-      secure: true,
-      debug: 0
-    });
-    peer.on('open', (id) => {
-      myPeer = peer;
-      resolve(peer);
-    });
-    peer.on('error', (err) => {
-      // If ID taken (reconnect), use random ID
-      if(err.type === 'unavailable-id') {
-        const peer2 = new Peer(uid + '_' + Date.now(), {
-          host: '0.peerjs.com', port: 443, path: '/', secure: true, debug: 0
-        });
-        peer2.on('open', () => { myPeer = peer2; resolve(peer2); });
-      }
-    });
-    // Listen for incoming calls (guest side)
-    peer.on('call', (call) => {
-      call.answer(); // answer with no stream
-      screenConn = call;
-      call.on('stream', (remoteStream) => {
-        showScreenReceiveOverlay(remoteStream, call);
-      });
-    });
-    myPeer = peer;
-  });
-}
-
-// ── HOST: share screen ──
-window.startScreenShare = async () => {
-  if(!pId) { showToast('يجب ربط الحسابين أولاً'); return; }
-
-  // 1. Get screen
-  try {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: { frameRate: 30 }, audio: true
-    });
-  } catch(e) {
-    if(e.name !== 'NotAllowedError') showToast('خطأ: ' + e.message);
-    return;
-  }
-
-  // 2. Init PeerJS
-  showToast('⏳ جاري الاتصال...');
-  const peer = await initPeer();
-
-  // 3. Call partner using their uid as Peer ID
-  const call = peer.call(pId, screenStream);
-  screenConn = call;
-
-  call.on('stream', () => {}); // host doesn't need remote stream
-  call.on('error', (e) => showToast('خطأ في الاتصال: ' + e.message));
-  call.on('close', () => {
-    showToast('انتهت مشاركة الشاشة');
-    resetShareBtn();
-  });
-
-  // 4. Update UI
-  const sb = document.getElementById('cinemaShareBtn');
-  if(sb) {
-    sb.textContent = '⏹ إيقاف المشاركة';
-    sb.style.background = 'rgba(224,85,85,.5)';
-    sb.onclick = stopScreenShare;
-  }
-  const badge = document.getElementById('cinemaSyncBadge');
-  if(badge) { badge.style.display='flex'; badge.textContent='📡 يتم الإرسال...'; }
-
-  // 5. Send chat invite
-  await addDoc(collection(db,'chats',cid(),'messages'), {
-    content: JSON.stringify({ type:'cinema_invite', peerId: peer.id, title:'مشاركة الشاشة 🎬' }),
-    senderId: uid, type: 'cinema_invite', reactions: [], sentAt: serverTimestamp()
-  });
-
-  // 6. Handle stream ended (user stops from browser)
-  screenStream.getVideoTracks()[0].onended = () => stopScreenShare();
-
-  showToast('📡 رسالة مشاركة أُرسلت! بانتظار الشريك...');
-};
-
-window.stopScreenShare = async () => {
-  if(screenStream) { screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
-  if(screenConn)   { screenConn.close(); screenConn=null; }
-  resetShareBtn();
-  showToast('تم إيقاف مشاركة الشاشة');
-};
-
-function resetShareBtn() {
-  const sb = document.getElementById('cinemaShareBtn');
-  if(sb) { sb.textContent='📡 شارك الشاشة مع شريكك'; sb.style.background='rgba(201,168,76,.2)'; sb.onclick=startScreenShare; }
-  const badge = document.getElementById('cinemaSyncBadge');
-  if(badge) badge.style.display='none';
-}
-
-// ── GUEST: receive screen share ──
-window.joinScreenView = async (peerId) => {
-  if(!peerId) { showToast('⚠️ معرّف غير صالح'); return; }
-  showToast('⏳ جاري الاتصال بـ ' + (hrNick||pName) + '...');
-  const peer = await initPeer();
-  // Call the host peer — they will send us the screen stream
-  const call = peer.call(peerId, null);
-  if(!call) {
-    // Receiving side — just wait for incoming call
-    showToast('⏳ انتظر حتى يشارك الشريك شاشته...');
-    peer.on('call', (inCall) => {
-      inCall.answer();
-      inCall.on('stream', (remote) => showScreenReceiveOverlay(remote, inCall));
-    });
-    return;
-  }
-  screenConn = call;
-  call.on('stream', (remote) => showScreenReceiveOverlay(remote, call));
-  call.on('error', (e) => showToast('خطأ: ' + e.message));
-};
-
-// ── Full-screen receive overlay (guest) ──
-function showScreenReceiveOverlay(stream, call) {
-  let el = document.getElementById('screenReceiveOverlay');
-  if(!el) {
-    el = document.createElement('div');
-    el.id = 'screenReceiveOverlay';
-    el.style.cssText = 'position:fixed;inset:0;background:#000;z-index:600;display:flex;flex-direction:column';
-    document.body.appendChild(el);
-  }
-
-  el.innerHTML = ''
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(0,0,0,.8);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0">'
-    +   '<div style="font-size:13px;color:#4ade80;font-family:Tajawal,sans-serif">🔴 بث مباشر — شاشة ' + (hrNick||pName) + '</div>'
-    +   '<div style="display:flex;gap:8px">'
-    +     '<button onclick="document.getElementById(\'screenReceiveVideo\').muted=!document.getElementById(\'screenReceiveVideo\').muted;this.textContent=document.getElementById(\'screenReceiveVideo\').muted?\'🔇 صوت\':\'🔊 صوت\'" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">🔊 صوت</button>'
-    +     '<button onclick="const v=document.getElementById(\'screenReceiveVideo\');if(!document.fullscreenElement)v.requestFullscreen().catch(()=>{});else document.exitFullscreen();" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">⛶ ملء الشاشة</button>'
-    +     '<button onclick="closeScreenReceive()" style="padding:5px 12px;border-radius:20px;border:none;background:rgba(224,85,85,.4);color:white;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer">✕ إغلاق</button>'
-    +   '</div>'
-    + '</div>'
-    + '<video id="screenReceiveVideo" autoplay playsinline style="flex:1;width:100%;object-fit:contain;background:#000"></video>';
-
-  el.style.display = 'flex';
-
-  const vid = el.querySelector('#screenReceiveVideo');
-  vid.srcObject = stream;
-  vid.play().catch(()=>{});
-
-  call.on('close', () => {
-    showToast((hrNick||pName) + ' أوقف المشاركة');
-    if(vid) vid.srcObject = null;
-    el.style.display = 'none';
-  });
-}
-
-window.closeScreenReceive = () => {
-  const el = document.getElementById('screenReceiveOverlay');
-  if(el) el.style.display = 'none';
-  if(screenConn) { screenConn.close(); screenConn=null; }
-};
-
-// ── Local file cinema ──
-window.loadCinemaFile = (inp) => {
-  if(!inp.files.length) return;
-  const url = URL.createObjectURL(inp.files[0]);
-  openCinemaRoom(url, inp.files[0].name, true);
-};
-
-window.openCinemaFromUrl = async () => {
-  const url = (document.getElementById('cinemaUrl').value||'').trim();
-  if(!url) return;
-  openCinemaRoom(url, 'فيديو مشترك', false);
-};
-
-function openCinemaRoom(src, title, isLocal) {
-  const overlay = document.getElementById('cinemaOverlay');
-  const intro   = document.getElementById('cinemaIntro');
-  const video   = document.getElementById('cinemaVideo');
-  overlay.classList.add('show');
-  document.getElementById('cinemaIntroSub').textContent = '🎬 ' + title;
-  const sb = document.getElementById('cinemaShareBtn');
-  if(sb) sb.style.display = isLocal ? 'flex' : 'none';
-  setTimeout(()=>{
-    intro.classList.add('fade');
-    video.src = src; video.load();
-    document.getElementById('cinemaPlayBtn').disabled = false;
-    // Init peer in background so it's ready
-    if(isLocal && pId) initPeer().catch(()=>{});
-  }, 2000);
-  setTimeout(()=>{ intro.style.display='none'; }, 2800);
-}
-
-function fmtSec(s){if(!s||isNaN(s))return'0:00';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
-async function broadcastCinemaCmd(action,extra){if(!pId||cinemaIsSyncing)return;const v=document.getElementById('cinemaVideo');await setDoc(doc(db,'shared',cid()),{cinemaCmd:{action,time:v.currentTime,by:uid,at:Date.now(),...(extra||{})}},{merge:true});}
-
-window.cinemaPlayPause=async()=>{const v=document.getElementById('cinemaVideo'),b=document.getElementById('cinemaPlayBtn');if(v.paused){await v.play();b.textContent='⏸';await broadcastCinemaCmd('play');}else{v.pause();b.textContent='▶';await broadcastCinemaCmd('pause');}};
-window.cinemaRewind=async()=>{const v=document.getElementById('cinemaVideo');v.currentTime=Math.max(0,v.currentTime-10);await broadcastCinemaCmd('seek');};
-window.cinemaForward=async()=>{const v=document.getElementById('cinemaVideo');v.currentTime=Math.min(v.duration||0,v.currentTime+10);await broadcastCinemaCmd('seek');};
-window.cinemaSeek=async(e)=>{const v=document.getElementById('cinemaVideo'),b=document.getElementById('cinemaProgress');v.currentTime=(e.offsetX/b.offsetWidth)*(v.duration||0);await broadcastCinemaCmd('seek');};
-window.toggleCinemaMute=()=>{const v=document.getElementById('cinemaVideo');v.muted=!v.muted;document.getElementById('cinemaMuteBtn').textContent=v.muted?'🔇':'🔊';};
-window.toggleCinemaFs=()=>{const el=document.getElementById('cinemaOverlay');if(!document.fullscreenElement)el.requestFullscreen().catch(()=>{});else document.exitFullscreen();};
-
-function closeCinemaLocal(){
-  const v=document.getElementById('cinemaVideo');v.pause();v.srcObject=null;v.src='';
-  if(screenStream){screenStream.getTracks().forEach(t=>t.stop());screenStream=null;}
-  if(screenConn){screenConn.close();screenConn=null;}
-  document.getElementById('cinemaOverlay').classList.remove('show');
-  document.getElementById('cinemaIntro').classList.remove('fade');
-  document.getElementById('cinemaIntro').style.display='';
-  document.getElementById('cinemaBubbles').innerHTML='';
-  document.getElementById('cinemaPlayBtn').disabled=false;
-  document.getElementById('cinemaPlayBtn').textContent='▶';
-  resetShareBtn();
-  const st=document.getElementById('cinemaStatusTxt');if(st)st.textContent='لا يوجد بث نشط حالياً';
-}
-window.closeCinema=async()=>{
-  closeCinemaLocal();
-  if(pId) await setDoc(doc(db,'shared',cid()),{cinemaCmd:null,cinemaSession:null},{merge:true});
-};
-window.sendCinemaMsg=async()=>{const inp=document.getElementById('cinemaMsgInput');const msg=(inp.value||'').trim();if(!msg||!pId)return;inp.value='';addCinemaBubble(msg,true);await broadcastCinemaCmd('msg',{msg});await addDoc(collection(db,'chats',cid(),'messages'),{content:'🎬 '+msg,senderId:uid,type:'text',reactions:[],sentAt:serverTimestamp()});};
-function addCinemaBubble(msg,isMe){const c=document.getElementById('cinemaBubbles');const b=document.createElement('div');b.className='cinema-bubble'+(isMe?' me':'');b.textContent=(isMe?'':((hrNick||pName)+': '))+msg;c.appendChild(b);while(c.children.length>5)c.removeChild(c.firstChild);setTimeout(()=>b.remove(),5000);}
-function showPartnerAct(msg){const el=document.getElementById('cinemaPartnerAct');if(!el)return;el.textContent=msg;el.style.display='block';clearTimeout(el._t);el._t=setTimeout(()=>el.style.display='none',2500);}
-window.startCinemaFromVideo=(videoSrc)=>{openCinemaRoom(videoSrc,'فيديو مشترك 🎬',true);};
-window.joinCinema=(url,title,sessId)=>{openCinemaRoom(url||'',title||'فيديو',false);};
-
-// ── NOVEL READER ──
-let novelPages = [], novelCurPage = 0, novelFontSz = 15, novelTitle = '';
-let novelIsOwner = false; // true if I uploaded the novel
-const NOVEL_CHARS = 1800;
-
-window.loadNovelFile = (inp) => {
+// Called when user picks a file
+window.onCinemaFileSelected = async (inp) => {
   if(!inp.files.length) return;
   const file = inp.files[0];
-  novelTitle = file.name.replace('.txt','');
+  await uploadCinemaVideo(file);
+};
+
+async function uploadCinemaVideo(file) {
+  cinemaAbort = false;
+  const sessId = 'cv_' + Date.now();
+  cinemaSessId = sessId;
+  const mimeType = file.type || 'video/mp4';
+  const totalBytes = file.size;
+  const totalChunks = Math.ceil(totalBytes / CINEMA_CHUNK);
+
+  // Switch to upload UI
+  setCinemaState('upload');
+  setCinemaUploadProgress(0, '⬆️ جاري التحضير...');
+
+  try {
+    // Read file as ArrayBuffer → split to base64 chunks
+    const buffer = await file.arrayBuffer();
+    const bytes  = new Uint8Array(buffer);
+
+    for(let i = 0; i < totalChunks; i++) {
+      if(cinemaAbort) { setCinemaState('none'); return; }
+      const start = i * CINEMA_CHUNK;
+      const end   = Math.min(start + CINEMA_CHUNK, totalBytes);
+      const chunk = bytes.slice(start, end);
+
+      // Convert chunk to base64
+      let binary = '';
+      chunk.forEach(b => binary += String.fromCharCode(b));
+      const b64 = btoa(binary);
+
+      // Save chunk
+      await setDoc(doc(db, 'cvChunks', cid() + '_' + sessId + '_' + i), {
+        d: b64, i, s: sessId, c: cid()
+      });
+
+      const pct = Math.round((i + 1) / totalChunks * 100);
+      setCinemaUploadProgress(pct, `⬆️ جاري الرفع... ${pct}% (${i+1}/${totalChunks})`);
+    }
+
+    // Save session metadata — this triggers partner to load
+    await setDoc(doc(db, 'shared', cid()), {
+      cinemaSession: {
+        sessId, mimeType, totalChunks, totalBytes,
+        title: file.name.replace(/\.[^.]+$/, ''),
+        by: uid, status: 'ready', at: Date.now()
+      }
+    }, { merge: true });
+
+    // Load video locally from the file
+    cinemaLocalUrl = URL.createObjectURL(file);
+    loadCinemaPlayer(cinemaLocalUrl, file.name.replace(/\.[^.]+$/, ''), sessId);
+
+  } catch(e) {
+    setCinemaState('none');
+    showToast('خطأ: ' + e.message);
+  }
+}
+
+// Partner clicks "انضم للمشاهدة"
+window.guestLoadVideo = async () => {
+  const snap = await getDoc(doc(db, 'shared', cid()));
+  if(!snap.exists()) return;
+  const cs = snap.data().cinemaSession;
+  if(!cs || cs.status !== 'ready') { showToast('الفيديو لم يكتمل بعد'); return; }
+  await downloadAndPlayCinema(cs);
+};
+
+async function downloadAndPlayCinema(cs) {
+  setCinemaState('upload');
+  cinemaSessId = cs.sessId;
+  const chunks = [];
+  for(let i = 0; i < cs.totalChunks; i++) {
+    setCinemaUploadProgress(
+      Math.round((i / cs.totalChunks) * 100),
+      `⬇️ جاري التحميل... ${i+1}/${cs.totalChunks}`
+    );
+    const d = await getDoc(doc(db, 'cvChunks', cid() + '_' + cs.sessId + '_' + i));
+    if(!d.exists()) { showToast('خطأ: chunk مفقود'); setCinemaState('none'); return; }
+    chunks.push(d.data().d);
+  }
+  setCinemaUploadProgress(100, '✅ جاري التحضير...');
+
+  // Assemble base64 → Blob → URL
+  const fullB64  = chunks.join('');
+  const binary   = atob(fullB64);
+  const byteArr  = new Uint8Array(binary.length);
+  for(let i = 0; i < binary.length; i++) byteArr[i] = binary.charCodeAt(i);
+  const blob = new Blob([byteArr], { type: cs.mimeType || 'video/mp4' });
+  cinemaLocalUrl = URL.createObjectURL(blob);
+  loadCinemaPlayer(cinemaLocalUrl, cs.title || 'فيديو مشترك', cs.sessId);
+}
+
+function loadCinemaPlayer(url, title, sessId) {
+  const vid = document.getElementById('cinemaVideoEl');
+  vid.src = url;
+  vid.load();
+  document.getElementById('cinemaVideoTitle').textContent = '🎬 ' + title;
+  setCinemaState('player');
+
+  // Time update
+  vid.ontimeupdate = () => {
+    const p = vid.duration ? vid.currentTime / vid.duration * 100 : 0;
+    const cur = fmtSecC(vid.currentTime);
+    const dur = fmtSecC(vid.duration || 0);
+    document.getElementById('cinemaTimeEl').textContent = cur + ' / ' + dur;
+  };
+
+  // Listen for sync commands from partner
+  if(cinemaListenerUnsub) cinemaListenerUnsub();
+  cinemaListenerUnsub = onSnapshot(doc(db, 'shared', cid()), snap => {
+    if(!snap.exists()) return;
+    const sd = snap.data();
+
+    // Sync command from partner
+    if(sd.cinemaCmd && sd.cinemaCmd.by !== uid) {
+      const cmd = sd.cinemaCmd;
+      cinemaSyncing = true;
+      if(cmd.a === 'play') {
+        if(Math.abs(vid.currentTime - cmd.t) > 1.5) vid.currentTime = cmd.t;
+        vid.play().catch(()=>{});
+        document.getElementById('cinemaSyncPlayBtn').textContent = '⏸ أوقف للاثنين';
+        showCinemaPartnerStatus((hrNick||pName) + ' ▶ شغّل');
+      } else if(cmd.a === 'pause') {
+        if(Math.abs(vid.currentTime - cmd.t) > 1.5) vid.currentTime = cmd.t;
+        vid.pause();
+        document.getElementById('cinemaSyncPlayBtn').textContent = '▶ شغّل للاثنين';
+        showCinemaPartnerStatus((hrNick||pName) + ' ⏸ أوقف');
+      } else if(cmd.a === 'seek') {
+        vid.currentTime = cmd.t;
+        showCinemaPartnerStatus((hrNick||pName) + ' ⏩ تقديم');
+      }
+      setTimeout(() => cinemaSyncing = false, 300);
+    }
+
+    // Partner loaded a new video
+    if(sd.cinemaSession && sd.cinemaSession.by !== uid && sd.cinemaSession.status === 'ready') {
+      const pn = document.getElementById('cinemaPartnerLoaded');
+      if(pn) pn.style.display = 'block';
+    }
+
+    // Session deleted
+    if(!sd.cinemaSession && cinemaSessId) {
+      setCinemaState('none');
+      cinemaSessId = null;
+      if(cinemaListenerUnsub) { cinemaListenerUnsub(); cinemaListenerUnsub = null; }
+    }
+  });
+}
+
+window.syncCinemaPlay = async () => {
+  const vid = document.getElementById('cinemaVideoEl');
+  const btn = document.getElementById('cinemaSyncPlayBtn');
+  if(vid.paused) {
+    vid.play();
+    btn.textContent = '⏸ أوقف للاثنين';
+    await setDoc(doc(db,'shared',cid()), { cinemaCmd:{a:'play', t:vid.currentTime, by:uid, at:Date.now()} }, {merge:true});
+  } else {
+    vid.pause();
+    btn.textContent = '▶ شغّل للاثنين';
+    await setDoc(doc(db,'shared',cid()), { cinemaCmd:{a:'pause', t:vid.currentTime, by:uid, at:Date.now()} }, {merge:true});
+  }
+};
+
+window.syncCinemaPause = async () => {
+  const vid = document.getElementById('cinemaVideoEl');
+  vid.pause();
+  document.getElementById('cinemaSyncPlayBtn').textContent = '▶ شغّل للاثنين';
+  await setDoc(doc(db,'shared',cid()), { cinemaCmd:{a:'pause', t:vid.currentTime, by:uid, at:Date.now()} }, {merge:true});
+};
+
+window.closeCinemaSession = async () => {
+  const vid = document.getElementById('cinemaVideoEl');
+  vid.pause(); vid.src = '';
+  if(cinemaListenerUnsub) { cinemaListenerUnsub(); cinemaListenerUnsub = null; }
+  cinemaSessId = null;
+  setCinemaState('none');
+  if(pId) await setDoc(doc(db,'shared',cid()), { cinemaSession:null, cinemaCmd:null }, {merge:true});
+};
+
+window.cancelCinemaUpload = () => { cinemaAbort = true; };
+
+function setCinemaState(state) {
+  document.getElementById('cinemaNoVideo').style.display    = state==='none'?'block':'none';
+  document.getElementById('cinemaUploadState').style.display= state==='upload'?'block':'none';
+  const ps = document.getElementById('cinemaPlayerState');
+  ps.style.display = state==='player'?'flex':'none';
+}
+
+function setCinemaUploadProgress(pct, msg) {
+  const bar = document.getElementById('cinemaUploadBar');
+  const pctEl = document.getElementById('cinemaUploadPct');
+  const msgEl = document.getElementById('cinemaUploadMsg');
+  if(bar) bar.style.width = pct + '%';
+  if(pctEl) pctEl.textContent = pct + '%';
+  if(msgEl) msgEl.textContent = msg || '';
+}
+
+function showCinemaPartnerStatus(msg) {
+  const el = document.getElementById('cinemaPartnerStatus');
+  if(!el) return;
+  el.textContent = msg;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.textContent = '', 3000);
+}
+
+function fmtSecC(s) {
+  if(!s||isNaN(s)) return '0:00';
+  return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+}
+
+// Initialize cinema panel listener on app load
+function initCinemaListener() {
+  if(!pId) return;
+  onSnapshot(doc(db, 'shared', cid()), snap => {
+    if(!snap.exists()) return;
+    const cs = snap.data().cinemaSession;
+    // If partner uploaded a video and we don't have one playing
+    if(cs && cs.by !== uid && cs.status === 'ready' && !cinemaSessId) {
+      const pn = document.getElementById('cinemaPartnerLoaded');
+      if(pn) pn.style.display = 'block';
+      // Auto-show notification in chat tab
+      showToast('🎬 ' + (hrNick||pName) + ' أضاف فيديو في السينما!');
+    }
+  });
+}
+
+// ── NOVEL READER ──
+const NOVEL_CPP   = 1800; // chars per page
+let novelPages    = [];
+let novelCurPage  = 0;
+let novelFontSize = 15;
+let novelSessId   = null;
+let novelListenerUnsub = null;
+let novelIsOwner  = false;
+
+window.onNovelFileSelected = (inp) => {
+  if(!inp.files.length) return;
   const reader = new FileReader();
-  reader.onload = e => initNovel(e.target.result, novelTitle);
-  reader.readAsText(file, 'UTF-8');
+  reader.onload = e => startNovelSession(e.target.result, inp.files[0].name.replace('.txt',''));
+  reader.readAsText(inp.files[0], 'UTF-8');
 };
 
-window.loadNovelText = () => {
+window.onNovelTextPasted = () => {
   const txt = (document.getElementById('novelPasteArea').value||'').trim();
-  if(!txt) return;
-  initNovel(txt, 'الرواية');
+  if(!txt) { showToast('الصق نصاً أولاً'); return; }
+  startNovelSession(txt, 'الرواية');
 };
 
-function splitNovelToPages(text) {
+async function startNovelSession(text, title) {
+  novelIsOwner = true;
+  novelSessId  = 'nv_' + Date.now();
+  buildNovelPages(text);
+  novelCurPage = 0;
+
+  // Save to Firestore — partner receives automatically
+  await setDoc(doc(db,'shared',cid()), {
+    novelSession: {
+      text, title, sessId: novelSessId,
+      curPage: 0, by: uid, at: Date.now()
+    }
+  }, {merge:true});
+
+  showNovelReader(title);
+  renderNovelPage();
+  listenNovelChanges();
+}
+
+function buildNovelPages(text) {
+  novelPages = [];
   const clean = text.split('\r\n').join('\n').split('\r').join('\n');
   const NL2 = '\n\n';
   const paras = clean.split(NL2);
-  const pages = [];
   let page = '';
-  for(const para of paras) {
-    if((page + para).length > NOVEL_CHARS && page.length > 0) {
-      pages.push(page.trim());
-      page = para + NL2;
+  for(const p of paras) {
+    if((page + p).length > NOVEL_CPP && page.length > 0) {
+      novelPages.push(page.trim());
+      page = p + NL2;
     } else {
-      page += para + NL2;
+      page += p + NL2;
     }
   }
-  if(page.trim()) pages.push(page.trim());
-  return pages;
+  if(page.trim()) novelPages.push(page.trim());
 }
 
-async function initNovel(text, title) {
-  novelIsOwner = true;
-  novelTitle = title;
-  novelPages = splitNovelToPages(text);
-  novelCurPage = 0;
-  // Save to Firebase so partner receives it
-  if(pId) {
-    await setDoc(doc(db,'shared',cid()),{
-      novelSession:{
-        text, title,
-        currentPage: 0,
-        by: uid,
-        startedAt: Date.now()
-      }
-    },{merge:true});
-  }
-  showNovelReader();
-  showNovelPage();
-}
-
-function showNovelReader() {
+function showNovelReader(title) {
   document.getElementById('novelUploadSection').style.display = 'none';
-  document.getElementById('novelReaderSection').style.display = 'flex';
-  document.getElementById('novelTitle').textContent = '📖 ' + novelTitle;
+  const rs = document.getElementById('novelReaderSection');
+  rs.style.display = 'flex';
+  document.getElementById('novelTitleEl').textContent = '📖 ' + (title||'الرواية');
+  document.getElementById('novelTotalPagesEl').textContent = novelPages.length;
 }
 
-function showNovelPage() {
+function renderNovelPage() {
   const el = document.getElementById('novelPageContent');
   if(!el || !novelPages.length) return;
-  el.style.fontSize = novelFontSz + 'px';
+  el.style.fontSize = novelFontSize + 'px';
   el.textContent = novelPages[novelCurPage] || '';
-  document.getElementById('novelCurPage').textContent = novelCurPage + 1;
-  document.getElementById('novelTotalPages').textContent = novelPages.length;
+  document.getElementById('novelCurPageEl').textContent = novelCurPage + 1;
+  document.getElementById('novelTotalPagesEl').textContent = novelPages.length;
   document.getElementById('novelPrevBtn').disabled = novelCurPage === 0;
   document.getElementById('novelNextBtn').disabled = novelCurPage >= novelPages.length - 1;
 }
 
-window.novelChangePage = async (dir) => {
+window.novelGoPage = async (dir) => {
   const next = novelCurPage + dir;
   if(next < 0 || next >= novelPages.length) return;
   novelCurPage = next;
-  showNovelPage();
-  // Sync page to Firebase so partner follows
-  if(pId) {
-    await setDoc(doc(db,'shared',cid()),{
-      novelSession:{ currentPage: novelCurPage, pageBy: uid, at: Date.now() }
-    },{merge:true});
-  }
+  renderNovelPage();
+  // Sync page to both
+  await setDoc(doc(db,'shared',cid()), {
+    novelSession: { curPage: novelCurPage, pageBy: uid, at: Date.now() }
+  }, {merge:true});
 };
 
-window.novelFontSize = (dir) => {
-  novelFontSz = Math.max(12, Math.min(22, novelFontSz + dir * 2));
-  showNovelPage();
+window.novelFont = (dir) => {
+  novelFontSize = Math.max(12, Math.min(24, novelFontSize + dir * 2));
+  renderNovelPage();
 };
 
-window.closeNovel = async () => {
-  novelPages = []; novelCurPage = 0; novelIsOwner = false;
+window.closeNovelSession = async () => {
+  novelPages = []; novelCurPage = 0; novelSessId = null; novelIsOwner = false;
   document.getElementById('novelUploadSection').style.display = '';
   document.getElementById('novelReaderSection').style.display = 'none';
   document.getElementById('novelPasteArea').value = '';
-  if(pId) await setDoc(doc(db,'shared',cid()),{novelSession:null},{merge:true});
+  if(novelListenerUnsub) { novelListenerUnsub(); novelListenerUnsub = null; }
+  if(pId) await setDoc(doc(db,'shared',cid()), { novelSession: null }, {merge:true});
 };
 
-// Called from the shared Firestore listener
-function handleNovelSync(sd) {
-  if(!sd.novelSession) {
-    // Novel was closed by partner
-    if(novelPages.length > 0 && !novelIsOwner) {
-      novelPages = []; novelCurPage = 0;
-      document.getElementById('novelUploadSection').style.display = '';
-      document.getElementById('novelReaderSection').style.display = 'none';
+function listenNovelChanges() {
+  if(!pId) return;
+  if(novelListenerUnsub) novelListenerUnsub();
+  novelListenerUnsub = onSnapshot(doc(db,'shared',cid()), snap => {
+    if(!snap.exists()) return;
+    const nv = snap.data().novelSession;
+
+    if(!nv) {
+      // Novel deleted
+      if(novelPages.length > 0 && !novelIsOwner) {
+        novelPages = []; novelCurPage = 0; novelSessId = null;
+        document.getElementById('novelUploadSection').style.display = '';
+        document.getElementById('novelReaderSection').style.display = 'none';
+        showToast('🗑 الرواية أُغلقت من الطرف الآخر');
+      }
+      return;
     }
-    return;
-  }
-  const nv = sd.novelSession;
 
-  // If novel has full text and I haven't loaded it yet → load it (I'm the partner)
-  if(nv.text && nv.by !== uid && novelPages.length === 0) {
-    novelIsOwner = false;
-    novelTitle = nv.title || 'الرواية';
-    novelPages = splitNovelToPages(nv.text);
-    novelCurPage = nv.currentPage || 0;
-    showNovelReader();
-    showNovelPage();
-    // Switch to novel tab automatically
-    swTab('novel');
-    return;
-  }
+    // Partner uploaded a new novel — load it automatically
+    if(nv.text && nv.by !== uid && nv.sessId !== novelSessId) {
+      novelIsOwner = false;
+      novelSessId  = nv.sessId;
+      buildNovelPages(nv.text);
+      novelCurPage = nv.curPage || 0;
+      showNovelReader(nv.title || 'الرواية');
+      renderNovelPage();
+      swTab('novel'); // auto-navigate to novel tab
+      showToast('📖 ' + (hrNick||pName) + ' أضاف رواية! تم فتحها تلقائياً');
+      return;
+    }
 
-  // Page sync — partner changed page
-  if(nv.pageBy !== undefined && nv.pageBy !== uid) {
-    const newPage = nv.currentPage || 0;
-    if(newPage !== novelCurPage && novelPages.length > 0) {
-      novelCurPage = newPage;
-      showNovelPage();
-      // Show badge
-      const badge = document.getElementById('partnerPageBadge');
-      const txt   = document.getElementById('partnerPageTxt');
-      if(badge && txt) {
-        badge.style.display = 'flex';
-        txt.textContent = (hrNick||pName) + ' انتقل لصفحة ' + (novelCurPage+1);
-        setTimeout(() => badge.style.display = 'none', 3000);
+    // Partner changed page
+    if(nv.pageBy && nv.pageBy !== uid && nv.curPage !== undefined) {
+      if(nv.curPage !== novelCurPage && novelPages.length > 0) {
+        novelCurPage = nv.curPage;
+        renderNovelPage();
+        const badge = document.getElementById('novelPartnerPageEl');
+        if(badge) {
+          badge.style.display = 'block';
+          badge.textContent = '👁 ' + (hrNick||pName) + ' انتقل لصفحة ' + (novelCurPage+1);
+          clearTimeout(badge._t);
+          badge._t = setTimeout(() => badge.style.display='none', 4000);
+        }
       }
     }
-  }
+  });
+}
+
+// Called after app loads to start listeners
+function initCinemaAndNovel() {
+  if(!pId) return;
+  initCinemaListener();
+  // Check if there's an active novel session
+  getDoc(doc(db,'shared',cid())).then(snap => {
+    if(!snap.exists()) return;
+    const nv = snap.data().novelSession;
+    if(nv && nv.text && nv.by !== uid) {
+      // Partner has an active novel
+      novelIsOwner = false;
+      novelSessId  = nv.sessId;
+      buildNovelPages(nv.text);
+      novelCurPage = nv.curPage || 0;
+      showNovelReader(nv.title || 'الرواية');
+      renderNovelPage();
+      listenNovelChanges();
+    } else if(nv && nv.by === uid) {
+      // Our own novel still active
+      novelIsOwner = true;
+      novelSessId  = nv.sessId;
+      buildNovelPages(nv.text);
+      novelCurPage = nv.curPage || 0;
+      showNovelReader(nv.title || 'الرواية');
+      renderNovelPage();
+      listenNovelChanges();
+    }
+    // Check cinema
+    const cs = snap.data().cinemaSession;
+    if(cs && cs.status === 'ready' && cs.by !== uid) {
+      const pn = document.getElementById('cinemaPartnerLoaded');
+      if(pn) pn.style.display = 'block';
+    }
+  });
 }
 
 // ── ROCK PAPER SCISSORS ──
