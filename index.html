@@ -670,6 +670,64 @@ textarea.field{resize:none}
 .img-viewer.show{display:flex}
 .img-viewer img{max-width:95vw;max-height:82vh;object-fit:contain;border-radius:12px}
 .img-viewer-bar{display:flex;gap:10px;align-items:center}
+/* ── STICKER PANEL ── */
+.sp{
+  background:var(--d2);
+  border-top:1px solid rgba(201,168,76,.12);
+  padding:10px 12px;
+  display:none;
+  flex-direction:column;
+  gap:8px;
+  flex-shrink:0;
+  max-height:220px;
+  overflow-y:auto;
+}
+.sp.show{display:flex}
+.sp-header{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.sp-label{font-size:12px;font-weight:700;color:var(--g)}
+.sp-import{
+  padding:3px 10px;border-radius:20px;
+  background:var(--gl);color:var(--g);
+  font-size:11px;cursor:pointer;
+  border:1px solid rgba(201,168,76,.3);
+  white-space:nowrap;
+}
+.sp-grid{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.stk{
+  font-size:30px;cursor:pointer;
+  transition:transform .15s;
+  display:inline-flex;align-items:center;justify-content:center;
+  line-height:1;
+}
+.stk:hover{transform:scale(1.3)}
+.stk:active{transform:scale(.9)}
+.stk-img{
+  width:52px;height:52px;
+  object-fit:contain;cursor:pointer;
+  border-radius:10px;
+  transition:transform .15s;
+  background:rgba(255,255,255,.04);
+}
+.stk-img:hover{transform:scale(1.15)}
+.stk-wrap{position:relative;display:inline-flex}
+
+/* ── EMOJI PICKER PANEL ── */
+#emojiPickerPanel{
+  background:var(--d2);
+  border-top:1px solid rgba(201,168,76,.1);
+  padding:10px 12px;
+  display:none;
+  flex-wrap:wrap;
+  gap:6px;
+  flex-shrink:0;
+  max-height:180px;
+  overflow-y:auto;
+}
+
 /* STICKER SAVED TOAST */
 @keyframes toastIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toastOut{from{opacity:1}to{opacity:0;transform:translateY(-10px)}}
