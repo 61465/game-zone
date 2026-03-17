@@ -80,92 +80,358 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .pi{padding:16px;display:flex;flex-direction:column;gap:12px;flex:1}
 .ptitle{font-size:17px;font-weight:700;color:var(--g);margin-bottom:4px}
 
-/* MESSAGES — WhatsApp Style */
-.msgs{flex:1;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:1px;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.15) transparent;background:var(--d)}
-.dsep{text-align:center;color:rgba(255,255,255,.35);font-size:10px;display:flex;align-items:center;gap:8px;margin:8px 4px;background:rgba(0,0,0,.25);border-radius:20px;padding:3px 10px;align-self:center}
-.mrow{display:flex;align-items:flex-end;gap:6px;padding:1px 4px;max-width:100%}
+/* ═══════════════════════════════════
+   MESSAGES — Elegant Romantic Style
+   ═══════════════════════════════════ */
+/* ══════════════════════════════════════
+   CHAT — Romantic Professional System
+   ══════════════════════════════════════ */
+
+.msgs{
+  flex:1;overflow-y:auto;
+  padding:10px 8px 6px;
+  display:flex;flex-direction:column;gap:0;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(201,168,76,.12) transparent;
+  background:var(--d);
+  overscroll-behavior:contain;
+}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:rgba(201,168,76,.18);border-radius:3px}
+
+/* Date separator */
+.dsep{
+  text-align:center;font-size:10px;
+  color:rgba(255,255,255,.32);
+  display:flex;align-items:center;gap:8px;
+  margin:10px auto;align-self:center;
+  background:rgba(0,0,0,.28);
+  border-radius:20px;padding:3px 12px;
+  backdrop-filter:blur(6px);
+  border:1px solid rgba(255,255,255,.05);
+  letter-spacing:.3px;
+}
+
+/* Message row */
+.mrow{
+  display:flex;align-items:flex-end;gap:5px;
+  padding:2px 4px;max-width:100%;
+}
 .mrow.me{flex-direction:row-reverse}
-.mrow+.mrow.me,.mrow.me+.mrow{margin-top:2px}
-.mrow+.mrow.me .mav2,.mrow.me+.mrow .mav2{opacity:0}
-@keyframes msgIn{from{opacity:0;transform:scale(.96) translateY(4px)}to{opacity:1;transform:scale(1) translateY(0)}}
-.mav2{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;align-self:flex-end;margin-bottom:2px;overflow:hidden;position:relative}
+@keyframes msgIn{
+  from{opacity:0;transform:translateY(8px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* Avatar */
+.mav2{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:white;
+  flex-shrink:0;align-self:flex-end;margin-bottom:2px;
+  overflow:hidden;position:relative;
+}
 .mav2.me{background:linear-gradient(135deg,var(--g),#c4813a)}
 .mav2.hr{background:linear-gradient(135deg,var(--pk),var(--g))}
-.mav2 img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:50%}
-/* Profile photo overlay */
-.av-wrap{position:relative;cursor:pointer}
-.av-wrap:hover .av-edit{opacity:1}
-.av-edit{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:14px;cursor:pointer}
-/* Profile modal */
-#profileModal .mbox{max-width:340px}
-.av-preview{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--g);margin:0 auto 12px;display:block;background:linear-gradient(135deg,var(--g),#c4813a)}
-.mwrap{display:flex;flex-direction:column;max-width:75%;position:relative;animation:msgIn .15s ease}
-.bub{padding:7px 12px 5px;border-radius:12px;font-size:14px;line-height:1.5;word-wrap:break-word;word-break:break-word;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.3)}
-.bub.hr{background:var(--d3);border:1px solid rgba(255,255,255,.05);border-top-right-radius:0;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.25)}
-.bub.me{background:linear-gradient(135deg,var(--gl),rgba(201,168,76,.1));border:1px solid rgba(201,168,76,.2);border-top-left-radius:0;color:var(--tx);box-shadow:0 1px 2px rgba(0,0,0,.25)}
-.bub.sys{background:rgba(0,0,0,.3);border-radius:10px;font-size:11px;color:rgba(255,255,255,.5);padding:4px 12px;text-align:center;align-self:center;backdrop-filter:blur(4px)}
-.bub.ltr{background:linear-gradient(135deg,rgba(0,88,71,.6),rgba(0,60,50,.4));border:1.5px solid rgba(0,168,132,.3);cursor:pointer;border-radius:12px;padding:10px 12px}
+.mav2 img,.mav2 .av-img{width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0}
+.mrow+.mrow.me .mav2,
+.mrow.me+.mrow .mav2{visibility:hidden}
+
+/* Message wrap */
+.mwrap{
+  display:flex;flex-direction:column;
+  max-width:72%;
+  animation:msgIn .16s ease;
+  position:relative;
+}
+@media(max-width:480px){.mwrap{max-width:80%}}
+
+/* ── BUBBLES ── */
+.bub{
+  padding:8px 12px 18px;
+  border-radius:18px;
+  font-size:14.5px;line-height:1.55;
+  word-wrap:break-word;word-break:break-word;
+  position:relative;
+  min-width:60px;
+}
+/* Partner bubble */
+.bub.hr{
+  background:var(--d3);
+  border:1px solid rgba(255,255,255,.05);
+  border-bottom-left-radius:5px;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+/* My bubble */
+.bub.me{
+  background:var(--gl);
+  border:1px solid rgba(201,168,76,.2);
+  border-bottom-right-radius:5px;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+}
+/* Consecutive: no corner */
+.mrow.no-tail .bub.hr{border-bottom-left-radius:18px}
+.mrow.no-tail .bub.me{border-bottom-right-radius:18px}
+/* Tails */
+.bub.hr::before{
+  content:'';position:absolute;bottom:0;left:-5px;
+  width:9px;height:9px;
+  background:var(--d3);
+  clip-path:polygon(100% 0,0 100%,100% 100%);
+}
+.bub.me::before{
+  content:'';position:absolute;bottom:0;right:-5px;
+  width:9px;height:9px;
+  background:var(--gl);
+  clip-path:polygon(0 0,0 100%,100% 100%);
+}
+.mrow.no-tail .bub::before{display:none}
+
+/* System message */
+.bub.sys{
+  background:rgba(255,255,255,.05);border:none;
+  border-radius:12px;font-size:11px;
+  color:rgba(255,255,255,.4);padding:4px 14px;
+  text-align:center;backdrop-filter:blur(4px);
+  align-self:center;
+}
+/* Letter bubble */
+.bub.ltr{
+  background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.04));
+  border:1.5px solid rgba(201,168,76,.28);
+  cursor:pointer;border-radius:15px;padding:12px;
+}
 .ltr-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px}
 .ltr-time{font-size:11px;color:rgba(255,255,255,.4)}
-.ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.1);display:none;line-height:1.6}
+.ltr-body{font-size:14px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,168,76,.15);display:none;line-height:1.65}
 .ltr-body.open{display:block}
-/* WA tail on bubble */
-.bub.hr::before{content:'';position:absolute;top:0;right:-6px;width:8px;height:8px;background:var(--d3);clip-path:polygon(0 0,100% 0,0 100%)}
-.bub.me::before{content:'';position:absolute;top:0;left:-6px;width:8px;height:8px;background:var(--g);opacity:.3;clip-path:polygon(100% 0,0 0,100% 100%)}
-/* Hide tail when consecutive same-sender */
-.mrow.no-tail .bub.hr::before,.mrow.no-tail .bub.me::before{display:none}
-.mtime{font-size:11px;color:rgba(255,255,255,.45);float:right;margin-top:2px;margin-right:-4px;margin-left:6px;margin-bottom:-2px;display:flex;align-items:center;gap:3px;direction:ltr}
-.msg-tick{font-size:12px;color:rgba(255,255,255,.4)}
-.msg-tick.read{color:#53bdeb}
-/* Reactions WA style */
-.rxns{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap}
-.rxn{background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2px 8px;font-size:12px;cursor:pointer;backdrop-filter:blur(6px);transition:all .15s;display:flex;align-items:center;gap:3px}
-.rxn:hover{background:rgba(0,0,0,.5);border-color:rgba(255,255,255,.25);transform:scale(1.08)}
-.rxn-count{font-size:11px;color:rgba(255,255,255,.6)}
-.starred-msg .bub{outline:2px solid rgba(201,168,76,.5);outline-offset:1px}
-/* WhatsApp emoji reaction picker (appears on long press / right-click) */
-.wa-reaction-picker{position:absolute;background:var(--d2);border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:6px 10px;display:none;gap:6px;z-index:20;box-shadow:0 4px 20px rgba(0,0,0,.6);bottom:calc(100% + 8px);animation:popUp .15s ease}
-.mrow.me .wa-reaction-picker{right:0;left:auto}
-.mrow:not(.me) .wa-reaction-picker{left:0;right:auto}
+
+/* Timestamp — absolute bottom-right inside bubble */
+.mtime{
+  position:absolute;
+  bottom:4px;right:8px;
+  font-size:10px;color:rgba(255,255,255,.32);
+  display:flex;align-items:center;gap:3px;
+  direction:ltr;line-height:1;
+  white-space:nowrap;
+}
+.mrow.me .mtime{right:8px;left:auto}
+.mrow:not(.me) .mtime{left:8px;right:auto}
+.msg-tick{font-size:10px;color:rgba(255,255,255,.3)}
+.msg-tick.read{color:var(--g);opacity:.9}
+
+/* Reactions */
+.rxns{
+  display:flex;gap:3px;margin-top:4px;
+  flex-wrap:wrap;padding:0 2px;
+}
+.rxn{
+  background:rgba(0,0,0,.3);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:20px;padding:2px 7px;font-size:12px;
+  cursor:pointer;backdrop-filter:blur(6px);
+  transition:all .15s;
+  display:flex;align-items:center;gap:3px;
+}
+.rxn:active{transform:scale(.92)}
+.rxn:hover{transform:scale(1.08);background:rgba(0,0,0,.5)}
+.rxn-count{font-size:10px;color:rgba(255,255,255,.5)}
+.starred-msg .bub{
+  outline:2px solid rgba(201,168,76,.4);
+  outline-offset:2px;
+}
+
+/* Reply preview inside bubble */
+.reply-preview{
+  background:rgba(0,0,0,.2);
+  border-right:3px solid var(--g);
+  border-radius:6px;padding:5px 8px;
+  margin-bottom:5px;font-size:12px;
+  color:rgba(255,255,255,.6);
+  cursor:pointer;
+}
+.reply-preview strong{
+  color:var(--g);display:block;
+  margin-bottom:2px;font-size:11px;
+}
+
+/* ── REACTION PICKER ── */
+.wa-reaction-picker{
+  position:absolute;
+  bottom:calc(100% + 8px);
+  background:var(--d2);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:40px;
+  padding:8px 12px;
+  display:none;gap:6px;z-index:50;
+  box-shadow:0 8px 30px rgba(0,0,0,.7);
+  backdrop-filter:blur(16px);
+  animation:rxnPop .18s cubic-bezier(.34,1.56,.64,1);
+  white-space:nowrap;
+}
+.mrow.me .wa-reaction-picker{right:28px;left:auto}
+.mrow:not(.me) .wa-reaction-picker{left:28px;right:auto}
 .wa-reaction-picker.show{display:flex}
-.wa-reaction-btn{font-size:22px;cursor:pointer;transition:transform .15s;line-height:1;padding:2px}
-.wa-reaction-btn:hover{transform:scale(1.3) translateY(-4px)}
-@keyframes popUp{from{opacity:0;transform:scale(.8) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
-/* Context menu (long press) */
-.wa-ctx-menu{position:fixed;background:var(--d2);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:4px 0;z-index:100;min-width:160px;box-shadow:0 4px 24px rgba(0,0,0,.7);display:none}
+.wa-reaction-btn{
+  font-size:26px;cursor:pointer;
+  transition:transform .15s;
+  line-height:1;
+}
+.wa-reaction-btn:hover{transform:scale(1.45) translateY(-6px)}
+.wa-reaction-btn:active{transform:scale(.9)}
+@keyframes rxnPop{
+  from{opacity:0;transform:scale(.6) translateY(10px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+/* ── CONTEXT MENU ── */
+.wa-ctx-menu{
+  position:fixed;
+  background:var(--d2);
+  border:1px solid rgba(201,168,76,.12);
+  border-radius:14px;padding:5px 0;
+  z-index:200;min-width:175px;
+  box-shadow:0 10px 40px rgba(0,0,0,.75);
+  display:none;
+  animation:ctxIn .15s ease;
+  backdrop-filter:blur(16px);
+  overflow:hidden;
+}
 .wa-ctx-menu.show{display:block}
-.wa-ctx-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:14px;color:var(--tx);transition:background .15s}
+@keyframes ctxIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.wa-ctx-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 16px;cursor:pointer;
+  font-family:Tajawal,sans-serif;font-size:14px;
+  color:var(--tx);transition:background .1s;
+}
 .wa-ctx-item:hover{background:rgba(255,255,255,.06)}
-.wa-ctx-item.danger{color:#ff6b6b}
+.wa-ctx-item .ctx-icon{font-size:16px;width:20px;text-align:center}
+.wa-ctx-item.danger{color:#ff7070}
+.wa-ctx-sep{height:1px;background:rgba(255,255,255,.06);margin:4px 0}
 
-/* INPUT — WhatsApp style */
-.iarea{background:var(--d2);border-top:none;padding:6px 8px 8px;flex-shrink:0}
-.irow{display:flex;align-items:flex-end;gap:6px}
-.ibtn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;color:rgba(255,255,255,.45);font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
-.ibtn:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.06)}
-.minput-wrap{flex:1;background:var(--d3);border-radius:24px;display:flex;align-items:flex-end;padding:6px 12px;gap:6px}
-.minput{flex:1;background:transparent;border:none;color:var(--tx);font-family:'Tajawal',sans-serif;font-size:15px;resize:none;min-height:26px;max-height:100px;outline:none;direction:rtl;line-height:1.5;padding:0}
-.minput::placeholder{color:rgba(255,255,255,.3)}
-.sbtn{width:44px;height:44px;border-radius:50%;border:none;background:#00a884;color:white;font-size:18px;cursor:pointer;flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,168,132,.4)}
-.sbtn:hover{background:#00c49a;transform:scale(1.05)}
-.sbtn:active{transform:scale(.95)}
-.hints{display:flex;gap:5px;margin:4px 0 2px;flex-wrap:wrap;padding:0 4px}
-.hint{font-size:11px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:3px 10px;cursor:pointer;transition:all .2s}
-.hint:hover{color:var(--g);border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.08)}
+/* ── INPUT AREA ── */
+.iarea{
+  background:var(--d2);
+  border-top:1px solid rgba(255,255,255,.04);
+  padding:7px 8px 9px;
+  flex-shrink:0;
+}
+/* Safe area for phones with home bar */
+@supports(padding-bottom: env(safe-area-inset-bottom)){
+  .iarea{padding-bottom:calc(9px + env(safe-area-inset-bottom));}
+}
+.irow{display:flex;align-items:flex-end;gap:5px}
+.ibtn{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:transparent;color:rgba(255,255,255,.38);
+  font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .15s;padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.ibtn:hover,.ibtn:active{color:var(--g);background:rgba(201,168,76,.1)}
+/* Input bubble wrap */
+.minput-wrap{
+  flex:1;
+  background:var(--d3);
+  border-radius:22px;
+  display:flex;align-items:center;
+  padding:4px 6px 4px 10px;
+  gap:2px;
+  border:1px solid transparent;
+  transition:border-color .2s;
+  min-height:36px;max-height:120px;
+}
+.minput-wrap:focus-within{
+  border-color:rgba(201,168,76,.3);
+}
+.minput{
+  flex:1;background:transparent;border:none;
+  color:var(--tx);
+  font-family:'Tajawal',sans-serif;font-size:14px;
+  resize:none;
+  min-height:22px;max-height:100px;
+  height:22px;
+  outline:none;direction:rtl;
+  line-height:1.45;padding:2px 0;
+  align-self:center;
+  overflow-y:hidden;
+}
+@media(max-width:600px){.minput{font-size:16px}}
+.minput::placeholder{color:rgba(255,255,255,.22)}
+/* Send button */
+.sbtn{
+  width:38px;height:38px;border-radius:50%;border:none;
+  background:linear-gradient(135deg,var(--g),#b8832a);
+  color:#000;font-size:16px;cursor:pointer;
+  flex-shrink:0;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 12px rgba(201,168,76,.35);
+  -webkit-tap-highlight-color:transparent;
+}
+.sbtn:hover{transform:scale(1.08);box-shadow:0 4px 18px rgba(201,168,76,.55)}
+.sbtn:active{transform:scale(.92)}
+/* Quick hints */
+.hints{
+  display:flex;gap:5px;margin:5px 2px 0;
+  overflow-x:auto;scrollbar-width:none;
+  flex-wrap:nowrap;padding-bottom:2px;
+}
+.hints::-webkit-scrollbar{display:none}
+.hint{
+  font-size:11px;color:rgba(255,255,255,.3);
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:20px;padding:3px 10px;
+  cursor:pointer;transition:all .2s;
+  white-space:nowrap;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.hint:hover,.hint:active{color:var(--g);border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.07)}
 
-/* STICKERS PANEL */
-.sp{background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:10px 14px;display:none;flex-direction:column;gap:8px;flex-shrink:0;max-height:200px;overflow-y:auto}
-.sp.show{display:flex}
-.sp-header{display:flex;align-items:center;gap:8px}
-.sp-label{font-size:11px;color:var(--tm);color:var(--g);font-weight:600}
-.sp-import{padding:4px 10px;border-radius:20px;background:var(--gl);color:var(--g);font-size:11px;cursor:pointer;border:1px solid rgba(201,168,76,.3)}
-.sp-grid{display:flex;flex-wrap:wrap;gap:8px}
-.stk{font-size:28px;cursor:pointer;transition:transform .15s;display:inline-flex;align-items:center;justify-content:center}
-.stk:hover{transform:scale(1.25)}
-.stk-img{width:48px;height:48px;object-fit:contain;cursor:pointer;border-radius:8px;transition:transform .15s}
-.stk-img:hover{transform:scale(1.15)}
-.stk-wrap{position:relative;display:inline-flex}
-.stk-del{position:absolute;top:-4px;right:-4px;background:#e05555;border:none;border-radius:50%;width:16px;height:16px;color:white;cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+/* ── REPLY BAR (above input) ── */
+#replyBar{
+  display:none;
+  background:rgba(201,168,76,.07);
+  border-top:1px solid rgba(201,168,76,.15);
+  padding:7px 12px;
+  flex-direction:row;align-items:center;gap:8px;
+  flex-shrink:0;
+  animation:slideUp .15s ease;
+}
+#replyBar.show{display:flex}
+@keyframes slideUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+#replyBarText{
+  font-size:12px;color:var(--tm);
+  flex:1;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+#replyBarName{font-size:11px;color:var(--g);font-weight:700;margin-bottom:2px}
+
+/* ── CLAP BURST ── */
+@keyframes clapBurst{
+  0%  {opacity:1;transform:translateY(0) scale(1)}
+  30% {opacity:1;transform:translateY(-40px) scale(1.3)}
+  70% {opacity:.7;transform:translateY(-80px) scale(1.1)}
+  100%{opacity:0;transform:translateY(-120px) scale(.8)}
+}
+.clap-text{
+  position:fixed;
+  font-family:Tajawal,sans-serif;
+  font-size:20px;font-weight:800;
+  color:var(--g);
+  text-shadow:0 0 20px rgba(201,168,76,.7),0 0 40px rgba(201,168,76,.4);
+  pointer-events:none;z-index:999;
+  animation:clapBurst 1s ease forwards;
+}
+
+/* Media bubbles */
+.media-bub{background:transparent;border:none;padding:2px;max-width:220px}
+.media-bub img{width:100%;display:block;cursor:pointer;border-radius:14px;transition:transform .2s}
+.media-bub img:hover{transform:scale(1.02)}
+.media-bub video{width:100%;display:block;border-radius:14px}
+
 
 /* CARDS */
 .card{background:var(--d3);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:14px}
@@ -726,7 +992,7 @@ textarea.field{resize:none}
 
   <!-- ══ CHAT ══ -->
   <div class="panel on" id="panel-chat" style="overflow:hidden">
-    <div class="msgs" id="msgsArea"></div>
+    <div class="msgs" id="msgsArea" onclick="document.querySelectorAll('.wa-reaction-picker.show').forEach(p=>p.classList.remove('show'));const m=document.getElementById('waCtxMenu');if(m)m.classList.remove('show');"></div>
     <!-- Quick emoji picker -->
 <div id="emojiPickerPanel" style="display:none;flex-direction:column;background:var(--d2);border-top:1px solid rgba(201,168,76,.1);padding:8px 12px;flex-shrink:0">
   <div style="display:flex;flex-wrap:wrap;gap:4px;max-height:120px;overflow-y:auto">
@@ -813,6 +1079,15 @@ textarea.field{resize:none}
       <div class="sp-grid" id="stickerGrid"></div>
       <div class="sp-grid" id="customSGrid"></div>
     </div>
+    <!-- Reply preview bar -->
+    <div id="replyBar">
+      <div style="border-right:3px solid var(--g);padding-right:8px;flex:1;min-width:0">
+        <div id="replyBarName"></div>
+        <div id="replyBarText"></div>
+      </div>
+      <button onclick="cancelReply()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:18px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    </div>
+
     <!-- Typing indicator -->
     <div id="typingIndicator" style="display:none;padding:6px 16px;background:var(--d2)">
       <div style="display:flex;align-items:center;gap:8px">
@@ -1659,328 +1934,255 @@ function renderMsg(id, data) {
   const area = document.getElementById('msgsArea');
   if(!area) return;
 
-  // Deleted for both — subtle placeholder
+  // Deleted for both
   if(data.deletedForBoth) {
     const row = document.createElement('div');
     row.className = 'mrow' + (data.senderId===uid?' me':'');
-    row.style.cssText = 'opacity:.5;padding:1px 4px';
-    const wrap = document.createElement('div'); wrap.className = 'mwrap';
+    const wrap = document.createElement('div'); wrap.className='mwrap';
     const bub  = document.createElement('div');
-    bub.className = 'bub ' + (data.senderId===uid?'me':'hr');
-    bub.style.cssText = 'font-style:italic;font-size:13px;opacity:.7;display:flex;align-items:center;gap:5px';
+    bub.className = 'bub '+(data.senderId===uid?'me':'hr');
+    bub.style.cssText = 'font-style:italic;font-size:12px;opacity:.5;display:flex;align-items:center;gap:5px';
     bub.innerHTML = '🚫 <span>تم حذف هذه الرسالة</span>';
     wrap.appendChild(bub); row.appendChild(wrap); area.appendChild(row); return;
   }
 
   // RPS invite card
   if(data.type === 'rps_invite') {
-    const isMyInvite = data.senderId === uid;
-    let d = {}; try { d = JSON.parse(data.content); } catch(e) {}
-    const challenger = d.challenger || (hrNick||pName);
-
+    const isMe = data.senderId === uid;
+    let d = {}; try { d = JSON.parse(data.content); } catch(e){}
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;justify-content:center;padding:4px 0';
-
+    row.style.cssText='display:flex;justify-content:center;padding:6px 4px';
     const card = document.createElement('div');
-    card.style.cssText = 'background:linear-gradient(135deg,rgba(60,0,80,.7),rgba(20,0,30,.8));border:1px solid rgba(201,168,76,.35);border-radius:16px;padding:14px 20px;text-align:center;max-width:260px;width:100%';
-
-    const icon  = document.createElement('div'); icon.style.cssText='font-size:32px;margin-bottom:6px'; icon.textContent='⚔️';
-    const title = document.createElement('div'); title.style.cssText='font-size:14px;font-weight:700;color:var(--g);margin-bottom:4px';
-    title.textContent = isMyInvite ? 'أرسلت تحدياً!' : challenger + ' يتحداك!';
-    const sub   = document.createElement('div'); sub.style.cssText='font-size:12px;color:rgba(255,255,255,.45);margin-bottom:12px';
-    sub.textContent = 'حجرة ورقة مقص 🪨📄✂️';
-
-    card.appendChild(icon); card.appendChild(title); card.appendChild(sub);
-
-    if(!isMyInvite) {
-      const joinBtn = document.createElement('button');
-      joinBtn.style.cssText = 'width:100%;padding:10px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px';
-      joinBtn.innerHTML = '✊ ادخل الحلبة';
-      joinBtn.onclick = () => window.acceptRPSChallenge();
-      card.appendChild(joinBtn);
+    card.style.cssText='background:linear-gradient(135deg,rgba(60,0,80,.7),rgba(20,0,30,.8));border:1px solid rgba(201,168,76,.3);border-radius:18px;padding:14px 18px;text-align:center;max-width:240px;width:100%';
+    const icon=document.createElement('div');icon.style.cssText='font-size:28px;margin-bottom:5px';icon.textContent='⚔️';
+    const title=document.createElement('div');title.style.cssText='font-size:14px;font-weight:700;color:var(--g);margin-bottom:3px';
+    title.textContent=isMe?'أرسلت تحدياً!':(d.challenger||hrNick||pName)+' يتحداك!';
+    const sub=document.createElement('div');sub.style.cssText='font-size:11px;color:rgba(255,255,255,.4);margin-bottom:10px';sub.textContent='حجرة ورقة مقص ✊🖐️✌️';
+    card.appendChild(icon);card.appendChild(title);card.appendChild(sub);
+    if(!isMe){
+      const btn=document.createElement('button');
+      btn.style.cssText='width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer';
+      btn.textContent='✊ ادخل الحلبة';
+      btn.onclick=()=>window.acceptRPSChallenge(d.sid);
+      card.appendChild(btn);
     } else {
-      const wait = document.createElement('div');
-      wait.style.cssText='font-size:12px;color:rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;gap:5px';
-      wait.innerHTML='⏳ بانتظار القبول...';
+      const wait=document.createElement('div');wait.style.cssText='font-size:11px;color:rgba(255,255,255,.3)';wait.textContent='⏳ بانتظار القبول...';
       card.appendChild(wait);
     }
-
-    const t = document.createElement('div');
-    t.style.cssText='font-size:10px;color:rgba(255,255,255,.25);margin-top:8px';
-    t.textContent = fmtT(data.sentAt);
-
-    card.appendChild(t);
-    row.appendChild(card);
-    area.appendChild(row);
-    return;
+    const t=document.createElement('div');t.style.cssText='font-size:10px;color:rgba(255,255,255,.2);margin-top:8px';t.textContent=fmtT(data.sentAt);
+    card.appendChild(t);row.appendChild(card);area.appendChild(row);return;
   }
 
   // Cinema invite card
-  if(data.type === 'cinema_invite') {
-    const isMyInvite = data.senderId === uid;
-    let inviteData = {};
-    try { inviteData = JSON.parse(data.content); } catch(e) {}
-    const invUrl = inviteData.url || '';
-    const invTitle = inviteData.title || 'فيديو مشترك';
-    const invSessionId = inviteData.sessId || inviteData.sessionId || null;
-
-    const row = document.createElement('div');
-    row.className = 'mrow' + (isMyInvite?' me':'');
-    const av = document.createElement('div');
-    av.className = 'mav2 ' + (isMyInvite?'me':'hr');
-    av.textContent = isMyInvite ? ((myNick||myName)[0]||'أ') : ((hrNick||pName)[0]||'س');
-
-    const wrap = document.createElement('div'); wrap.className='mwrap'; wrap.style.maxWidth='240px';
-    const card = document.createElement('div');
-    card.style.cssText = 'background:linear-gradient(135deg,#1a1f2e,#0d1520);border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:14px;text-align:center;overflow:hidden;position:relative';
-    card.innerHTML = '<div style="font-size:11px;color:rgba(201,168,76,.7);font-weight:600;letter-spacing:1px;margin-bottom:8px">🎬 دعوة مشاهدة مشتركة</div>'
-      + '<div style="font-size:13px;color:#e9f0f3;margin-bottom:12px">'+(isMyInvite?'أرسلت دعوة':'(hrNick||pName)+\' يدعوك للمشاهدة معه!\'')+'</div>';
-
-    if(isMyInvite) {
-      card.querySelector('div:nth-child(2)').textContent = 'أرسلت دعوة — بانتظار الشريك ⏳';
+  if(data.type==='cinema_invite') {
+    const isMe=data.senderId===uid;
+    let inv={};try{inv=JSON.parse(data.content);}catch(e){}
+    const invSessId=inv.sessId||inv.sessionId||null;
+    const row=document.createElement('div');row.style.cssText='display:flex;justify-content:center;padding:6px 4px';
+    const card=document.createElement('div');
+    card.style.cssText='background:linear-gradient(135deg,rgba(10,20,40,.8),rgba(0,60,40,.4));border:1px solid rgba(201,168,76,.25);border-radius:18px;padding:14px 18px;text-align:center;max-width:240px;width:100%';
+    const icon=document.createElement('div');icon.style.cssText='font-size:28px;margin-bottom:5px';icon.textContent='🎬';
+    const title=document.createElement('div');title.style.cssText='font-size:13px;font-weight:700;color:var(--g);margin-bottom:3px';
+    title.textContent=isMe?'دعوة مشاهدة مشتركة':(hrNick||pName)+' يدعوك للمشاهدة!';
+    card.appendChild(icon);card.appendChild(title);
+    if(!isMe){
+      const btn=document.createElement('button');
+      btn.style.cssText='width:100%;padding:9px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:8px';
+      btn.textContent='▶ افتح السينما';
+      btn.onclick=()=>{swTab('cinema');setTimeout(()=>joinScreenView(invSessId),300);};
+      card.appendChild(btn);
     } else {
-      card.querySelector('div:nth-child(2)').textContent = (hrNick||pName) + ' يدعوك للمشاهدة معه!';
-      const joinBtn = document.createElement('button');
-      joinBtn.textContent = '▶ افتح السينما';
-      joinBtn.style.cssText = 'width:100%;padding:9px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--g),#9a6e2a);color:#000;font-family:Tajawal,sans-serif;font-size:13px;font-weight:700;cursor:pointer';
-      joinBtn.onclick = () => { swTab('cinema'); setTimeout(()=>joinScreenView(invSessionId||invUrl),300); };
-      card.appendChild(joinBtn);
+      const w=document.createElement('div');w.style.cssText='font-size:11px;color:rgba(255,255,255,.3);margin-top:8px';w.textContent='⏳ بانتظار الشريك...';card.appendChild(w);
     }
-    wrap.appendChild(card);
-    const t = document.createElement('div'); t.className='mtime'; t.textContent=fmtT(data.sentAt);
-    wrap.appendChild(t);
-    row.appendChild(av); row.appendChild(wrap); area.appendChild(row); return;
+    const t=document.createElement('div');t.style.cssText='font-size:10px;color:rgba(255,255,255,.2);margin-top:8px';t.textContent=fmtT(data.sentAt);card.appendChild(t);
+    row.appendChild(card);area.appendChild(row);return;
   }
 
-  const content = (data.content !== undefined && data.content !== null) ? String(data.content) : '';
-  const isMe    = data.senderId === uid;
-  const mn = myNick||myName, hn = hrNick||pName;
-  const mi = mn[0]||'أ',    hi = hn[0]||'س';
+  const msgContent=(data.content!==undefined&&data.content!==null)?String(data.content):'';
+  const isMe=data.senderId===uid;
+  const mn=myNick||myName, hn=hrNick||pName;
 
   // System message
-  if(data.type === 'system') {
-    const div = document.createElement('div');
-    div.style.cssText = 'display:flex;justify-content:center;padding:4px 0';
-    const bub = document.createElement('span');
-    bub.className = 'bub sys';
-    bub.textContent = content;
-    div.appendChild(bub); area.appendChild(div); return;
+  if(data.type==='system'){
+    const div=document.createElement('div');div.style.cssText='display:flex;justify-content:center;padding:3px 0';
+    const bub=document.createElement('span');bub.className='bub sys';bub.textContent=msgContent;
+    div.appendChild(bub);area.appendChild(div);return;
   }
 
-  // Check if previous message was same sender (for tail hiding + avatar hiding)
-  const rows = area.querySelectorAll('.mrow:not([style*="display:none"])');
-  const prevRow = rows.length > 0 ? rows[rows.length-1] : null;
-  const prevIsMe = prevRow && prevRow.classList.contains('me');
-  const sameAsPrev = (isMe && prevIsMe) || (!isMe && !prevIsMe && prevRow);
-  const noTailClass = sameAsPrev ? ' no-tail' : '';
+  // Check consecutive same-sender
+  const prevRows=area.querySelectorAll('.mrow[data-sender]');
+  const lastRow=prevRows.length?prevRows[prevRows.length-1]:null;
+  const lastSender=lastRow?lastRow.dataset.sender:'';
+  const sameAsPrev=(data.senderId===lastSender);
 
-  const row  = document.createElement('div');
-  row.className = 'mrow' + (isMe?' me':'') + noTailClass;
-  row.dataset.msgid = id;
+  const row=document.createElement('div');
+  row.className='mrow'+(isMe?' me':'')+(sameAsPrev?' no-tail':'');
+  row.dataset.msgid=id;
+  row.dataset.sender=data.senderId;
 
-  const av = document.createElement('div');
-  av.className = 'mav2 ' + (isMe?'me':'hr');
-  const avPhotoUrl = isMe ? myPhotoUrl : hrPhotoUrl;
-  if(avPhotoUrl) {
-    const avImg = document.createElement('img'); avImg.className='av-img';
-    avImg.src=avPhotoUrl; avImg.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';
-    avImg.onerror=()=>{avImg.style.display='none';av.textContent=isMe?mi:hi;};
-    av.appendChild(avImg);
-  } else {
-    av.textContent = isMe ? mi : hi;
-  }
-  if(sameAsPrev) av.style.visibility = 'hidden';
+  // Avatar
+  const av=document.createElement('div');
+  av.className='mav2 '+(isMe?'me':'hr');
+  const avUrl=isMe?myPhotoUrl:hrPhotoUrl;
+  if(avUrl){const img=document.createElement('img');img.src=avUrl;img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%';img.onerror=()=>{img.style.display='none';av.textContent=isMe?mn[0]:hn[0];};av.appendChild(img);}
+  else{av.textContent=isMe?mn[0]:hn[0];}
+  if(sameAsPrev)av.style.visibility='hidden';
 
-  const wrap = document.createElement('div');
-  wrap.className = 'mwrap';
-  if(starredMsgs.includes(id)) wrap.classList.add('starred-msg');
+  const wrap=document.createElement('div');
+  wrap.className='mwrap';
+  if(starredMsgs.includes(id))wrap.classList.add('starred-msg');
 
-  // === REACTION PICKER (WA style — shows on tap/click) ===
-  const picker = document.createElement('div');
-  picker.className = 'wa-reaction-picker';
-  const reactions = ['❤️','😂','😮','😢','🙏','🎀'];
-  reactions.forEach(emoji => {
-    const btn = document.createElement('span');
-    btn.className = 'wa-reaction-btn';
-    btn.textContent = emoji;
-    btn.onclick = (e) => { e.stopPropagation(); addRxn(id, emoji); picker.classList.remove('show'); };
+  // ─ REACTION PICKER (shows on picker trigger) ─
+  const picker=document.createElement('div');
+  picker.className='wa-reaction-picker';
+  // 👏 clap reaction is special
+  ['❤️','😂','😮','😢','🙏','👏'].forEach(emoji=>{
+    const btn=document.createElement('span');
+    btn.className='wa-reaction-btn';
+    btn.textContent=emoji;
+    btn.onclick=e=>{
+      e.stopPropagation();
+      picker.classList.remove('show');
+      if(emoji==='👏'){
+        addRxn(id,emoji);
+        const r = btn.getBoundingClientRect();
+        triggerClapBurst(r.left + r.width/2, r.top);
+      } else {
+        addRxn(id,emoji);
+      }
+    };
     picker.appendChild(btn);
   });
   wrap.appendChild(picker);
 
-  // === BUBBLE ===
-  let bub;
-
-  if(data.type === 'voice') {
-    bub = document.createElement('div');
-    bub.className = 'bub ' + (isMe?'me':'hr');
-    bub.style.cssText = 'display:flex;align-items:center;gap:10px;min-width:180px;padding:8px 12px 5px';
-    const audio = document.createElement('audio');
-    audio.src = content; audio.preload = 'metadata';
-    const playBtn = document.createElement('button');
-    playBtn.style.cssText = 'width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:white;font-size:14px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center';
-    playBtn.textContent = '▶';
-    playBtn.onclick = () => { if(audio.paused){audio.play();playBtn.textContent='⏸';}else{audio.pause();playBtn.textContent='▶';} };
-    audio.onended = () => playBtn.textContent = '▶';
-    const wave = document.createElement('div');
-    wave.style.cssText = 'display:flex;align-items:center;gap:2px;height:22px;flex:1';
-    [8,14,6,18,10,16,5,12,18,8,14,6,16,10,8].forEach(h => {
-      const b = document.createElement('div');
-      b.style.cssText = `width:3px;height:${h}px;border-radius:2px;background:rgba(255,255,255,.3);flex-shrink:0`;
-      wave.appendChild(b);
-    });
-    const dur = document.createElement('span');
-    dur.style.cssText = 'font-size:11px;color:rgba(255,255,255,.5);flex-shrink:0';
-    dur.textContent = '🎙️';
-    audio.onloadedmetadata = () => {
-      const s = Math.floor(audio.duration);
-      dur.textContent = Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
-    };
-    if(isMe) {
-      const delVBtn = document.createElement('button');
-      delVBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:13px;padding:0;flex-shrink:0';
-      delVBtn.textContent = '🗑️'; delVBtn.onclick = () => showDeleteModal(id);
-      bub.appendChild(delVBtn);
-    }
-    bub.appendChild(playBtn); bub.appendChild(wave); bub.appendChild(dur);
-
-  } else if(data.type === 'img_sticker') {
-    bub = document.createElement('div');
-    bub.style.cssText = 'background:transparent;border:none;padding:0;position:relative;display:inline-block';
-    const img = document.createElement('img');
-    img.src = content;
-    img.style.cssText = 'width:80px;height:80px;object-fit:contain;border-radius:10px;display:block;cursor:pointer';
-    img.onerror = () => { bub.textContent = '🖼️'; };
-    bub.appendChild(img);
-    const stkOv = document.createElement('div');
-    stkOv.style.cssText = 'position:absolute;top:-5px;right:-5px;display:flex;gap:3px;opacity:0;transition:opacity .2s';
-    bub.onmouseenter = () => stkOv.style.opacity='1';
-    bub.onmouseleave = () => stkOv.style.opacity='0';
-    if(isMe) {
-      const d = document.createElement('button');
-      d.style.cssText = 'width:20px;height:20px;border-radius:50%;border:none;background:rgba(224,85,85,.9);color:white;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center';
-      d.textContent='🗑️'; d.onclick=(e)=>{e.stopPropagation();showDeleteModal(id);}; stkOv.appendChild(d);
-    }
-    const s2 = document.createElement('button');
-    s2.style.cssText = 'width:20px;height:20px;border-radius:50%;border:none;background:rgba(201,168,76,.9);color:#000;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center';
-    s2.textContent='💾'; s2.onclick=(e)=>{e.stopPropagation();saveImgAsSticker(content);}; stkOv.appendChild(s2);
-    bub.appendChild(stkOv);
-
-  } else if(data.type === 'media_img') {
-    bub = document.createElement('div');
-    bub.className = 'media-bub';
-    bub.style.position = 'relative';
-    const img = document.createElement('img');
-    img.src = content;
-    img.onclick = () => openImgViewer(content);
-    img.onerror = () => { bub.textContent = '🖼️'; };
-    bub.appendChild(img);
-    const ov = document.createElement('div');
-    ov.style.cssText = 'position:absolute;top:6px;right:6px;display:flex;gap:5px;opacity:0;transition:opacity .2s';
-    bub.onmouseenter=()=>ov.style.opacity='1'; bub.onmouseleave=()=>ov.style.opacity='0';
-    let pressTimer;
-    bub.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>ov.style.opacity='1',500)},{passive:true});
-    bub.addEventListener('touchend',()=>clearTimeout(pressTimer),{passive:true});
-    if(isMe){const d=document.createElement('button');d.style.cssText='width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.7);color:white;font-size:13px;cursor:pointer';d.textContent='🗑️';d.onclick=(e)=>{e.stopPropagation();showDeleteModal(id);};ov.appendChild(d);}
-    const sv=document.createElement('button');sv.style.cssText='width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.7);color:white;font-size:13px;cursor:pointer';sv.textContent='🎭';sv.onclick=(e)=>{e.stopPropagation();saveImgAsSticker(content);};ov.appendChild(sv);
-    bub.appendChild(ov);
-
-  } else if(data.type === 'media_video') {
-    bub = document.createElement('div');
-    bub.className = 'media-bub';
-    const vid = document.createElement('video');
-    vid.src=content; vid.controls=true;
-    bub.appendChild(vid);
-    const cinBtn = document.createElement('button');
-    cinBtn.style.cssText='margin-top:5px;width:100%;padding:6px 10px;border-radius:8px;border:1px solid rgba(201,168,76,.3);background:rgba(0,88,71,.5);color:var(--g);font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer';
-    cinBtn.innerHTML='🎬 شاهده في السينما';
-    cinBtn.onclick=()=>startCinemaFromVideo(content);
-    bub.appendChild(cinBtn);
-    if(isMe){const d=document.createElement('button');d.style.cssText='margin-top:3px;width:100%;padding:5px;border-radius:8px;border:none;background:rgba(224,85,85,.2);color:#ff8080;font-family:Tajawal,sans-serif;font-size:12px;cursor:pointer';d.textContent='🗑️ حذف';d.onclick=()=>showDeleteModal(id);bub.appendChild(d);}
-
-  } else if(data.type === 'letter') {
-    bub = document.createElement('div');
-    bub.className = 'bub ltr';
-    const locked = data.openAt && !data.isOpened && data.openAt.toDate() > new Date();
-    bub.innerHTML = '<div style="font-size:14px">'+(data.isOpened?'💌':'🔒')+'</div>'
-      + '<div class="ltr-title">'+(data.letterTitle||'رسالة مؤجلة 💌')+'</div>'
-      + (locked?'<div class="ltr-time">تُفتح: '+fmtD(data.openAt)+' ⏰</div>':'')
-      + '<div class="ltr-body'+(data.isOpened?' open':'')+'">'+content+'</div>';
-    if(!locked && !data.isOpened) {
-      bub.onclick = () => updateDoc(doc(db,'chats',cid(),'messages',id),{isOpened:true});
-    }
-
-  } else {
-    // Regular text bubble
-    bub = document.createElement('div');
-    bub.className = 'bub ' + (isMe?'me':'hr');
-    bub.textContent = content;
+  // ─ REPLY PREVIEW inside bubble ─
+  if(data.replyTo){
+    const rp=document.createElement('div');rp.className='reply-preview';
+    rp.innerHTML='<strong>'+(data.replyTo.sender===uid?'أنت':hn)+'</strong>'+(data.replyTo.text||'رسالة');
+    wrap.appendChild(rp);
   }
 
-  // Time + ticks inside bubble for text
-  if(bub && bub.className && (bub.className.includes('bub me') || bub.className.includes('bub hr'))) {
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'mtime';
-    timeSpan.innerHTML = fmtT(data.sentAt) + (isMe ? ' <span class="msg-tick read">✓✓</span>' : '');
-    bub.appendChild(timeSpan);
+  // ─ BUILD BUBBLE ─
+  let bub;
+
+  if(data.type==='voice'){
+    bub=document.createElement('div');
+    bub.className='bub '+(isMe?'me':'hr');
+    bub.style.cssText='display:flex;align-items:center;gap:10px;min-width:180px;padding:8px 12px 6px';
+    const audio=document.createElement('audio');audio.src=msgContent;audio.preload='metadata';
+    const pb=document.createElement('button');
+    pb.style.cssText='width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:white;font-size:13px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center';
+    pb.textContent='▶';
+    pb.onclick=()=>{if(audio.paused){audio.play();pb.textContent='⏸';}else{audio.pause();pb.textContent='▶';}};
+    audio.onended=()=>pb.textContent='▶';
+    // Waveform bars
+    const wave=document.createElement('div');wave.style.cssText='display:flex;align-items:center;gap:2px;height:20px;flex:1';
+    [7,13,5,17,9,15,4,11,17,7,13,5,15,9,7].forEach((h,i)=>{
+      const b=document.createElement('div');
+      b.style.cssText=`width:3px;height:${h}px;border-radius:2px;background:rgba(255,255,255,.25);flex-shrink:0`;
+      wave.appendChild(b);
+    });
+    const dur=document.createElement('span');dur.style.cssText='font-size:11px;color:rgba(255,255,255,.4);flex-shrink:0';dur.textContent='0:00';
+    audio.onloadedmetadata=()=>{const s=Math.floor(audio.duration);dur.textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+    bub.appendChild(pb);bub.appendChild(wave);bub.appendChild(dur);
+
+  } else if(data.type==='img_sticker'){
+    bub=document.createElement('div');bub.style.cssText='background:transparent;border:none;padding:0;position:relative;display:inline-block;max-width:90px';
+    const img=document.createElement('img');img.src=msgContent;img.style.cssText='width:80px;height:80px;object-fit:contain;border-radius:12px;display:block;cursor:pointer';
+    img.onerror=()=>{bub.textContent='🖼️';};
+    bub.appendChild(img);
+
+  } else if(data.type==='media_img'){
+    bub=document.createElement('div');bub.className='media-bub';
+    const img=document.createElement('img');img.src=msgContent;
+    img.onclick=()=>openImgViewer(msgContent);
+    img.onerror=()=>{bub.textContent='🖼️';};
+    bub.appendChild(img);
+
+  } else if(data.type==='media_video'){
+    bub=document.createElement('div');bub.className='media-bub';
+    const vid=document.createElement('video');vid.src=msgContent;vid.controls=true;bub.appendChild(vid);
+    const cb=document.createElement('button');
+    cb.style.cssText='width:100%;padding:6px 10px;border-radius:0 0 14px 14px;border:none;background:rgba(0,0,0,.5);color:var(--g);font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;cursor:pointer';
+    cb.innerHTML='🎬 شاهد في السينما';cb.onclick=()=>startCinemaFromVideo(msgContent);bub.appendChild(cb);
+
+  } else if(data.type==='letter'){
+    bub=document.createElement('div');bub.className='bub ltr';
+    const locked=data.openAt&&!data.isOpened&&data.openAt.toDate()>new Date();
+    bub.innerHTML='<div style="font-size:16px;margin-bottom:4px">'+(data.isOpened?'💌':'🔒')+'</div>'
+      +'<div class="ltr-title">'+(data.letterTitle||'رسالة مؤجلة 💌')+'</div>'
+      +(locked?'<div class="ltr-time">تُفتح: '+fmtD(data.openAt)+'</div>':'')
+      +'<div class="ltr-body'+(data.isOpened?' open':'')+'">'+msgContent+'</div>';
+    if(!locked&&!data.isOpened)bub.onclick=()=>updateDoc(doc(db,'chats',cid(),'messages',id),{isOpened:true});
+
+  } else {
+    bub=document.createElement('div');
+    bub.className='bub '+(isMe?'me':'hr');
+    bub.textContent=msgContent;
+  }
+
+  // Timestamp inside bubble (for text/voice/letter)
+  if(bub.className&&(bub.className.includes('bub me')||bub.className.includes('bub hr'))){
+    const ts=document.createElement('span');ts.className='mtime';
+    ts.innerHTML=fmtT(data.sentAt)+(isMe?' <span class="msg-tick">✓✓</span>':'');
+    bub.appendChild(ts);
   }
 
   wrap.appendChild(bub);
 
   // Reactions below bubble
-  if(data.reactions && data.reactions.length) {
-    const rxns = document.createElement('div');
-    rxns.className = 'rxns';
-    const counts = {};
-    data.reactions.forEach(r => counts[r]=(counts[r]||0)+1);
-    Object.entries(counts).forEach(([e,c]) => {
-      const chip = document.createElement('div');
-      chip.className = 'rxn';
-      chip.innerHTML = `<span>${e}</span>${c>1?`<span class="rxn-count">${c}</span>`:''}`;
-      chip.onclick = () => addRxn(id, e);
+  if(data.reactions&&data.reactions.length){
+    const rxns=document.createElement('div');rxns.className='rxns';
+    const counts={};
+    data.reactions.forEach(r=>counts[r]=(counts[r]||0)+1);
+    Object.entries(counts).forEach(([e,c])=>{
+      const chip=document.createElement('div');chip.className='rxn';
+      chip.innerHTML=`<span>${e}</span>${c>1?`<span class="rxn-count">${c}</span>`:''}`;
+      chip.onclick=()=>addRxn(id,e);
       rxns.appendChild(chip);
     });
     wrap.appendChild(rxns);
   }
 
-  // === Long press / right-click context menu ===
-  let pressT;
-  const showCtx = (clientX, clientY) => {
-    let menu = document.getElementById('waCtxMenu');
-    if(!menu) {
-      menu = document.createElement('div');
-      menu.id = 'waCtxMenu';
-      menu.className = 'wa-ctx-menu';
-      document.body.appendChild(menu);
-      document.addEventListener('click', () => menu.classList.remove('show'), {once:true});
+  // ─ SWIPE TO REPLY ─
+  let swipeX=0, swiping=false;
+  wrap.addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX;swiping=true;},{passive:true});
+  wrap.addEventListener('touchmove',e=>{
+    if(!swiping) return;
+    const dx=e.touches[0].clientX-swipeX;
+    const dir=isMe?-1:1;
+    if(dx*dir>20&&dx*dir<80){
+      wrap.style.transform=`translateX(${dx*dir>60?60*dir:dx}px)`;
+      wrap.style.transition='none';
     }
-    menu.innerHTML = '';
-    const items = [
-      {icon:'😊', label:'تفاعل', fn: () => { picker.classList.toggle('show'); }},
-      {icon:'↩️', label:'رد', fn: () => {}},
-      {icon:'⭐', label: starredMsgs.includes(id)?'إلغاء التمييز':'تمييز', fn: () => toggleStar(id)},
-      {icon:'📋', label:'نسخ', fn: () => navigator.clipboard.writeText(content).catch(()=>{})},
-    ];
-    if(isMe) items.push({icon:'🗑️', label:'حذف', fn:()=>showDeleteModal(id), danger:true});
-    items.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'wa-ctx-item' + (item.danger?' danger':'');
-      el.innerHTML = `<span>${item.icon}</span><span>${item.label}</span>`;
-      el.onclick = () => { menu.classList.remove('show'); item.fn(); };
-      menu.appendChild(el);
-    });
-    // Position
-    const vw = window.innerWidth, vh = window.innerHeight;
-    const mx = Math.min(clientX, vw - 180);
-    const my = clientY + 200 > vh ? clientY - 220 : clientY;
-    menu.style.left = mx + 'px'; menu.style.top = my + 'px';
-    menu.classList.add('show');
-  };
+  },{passive:true});
+  wrap.addEventListener('touchend',e=>{
+    swiping=false;
+    const dx=e.changedTouches[0].clientX-swipeX;
+    const dir=isMe?-1:1;
+    wrap.style.transition='transform .2s ease';
+    wrap.style.transform='';
+    if(Math.abs(dx)>50){
+      setReply(id,msgContent,isMe?mn:hn);
+    }
+  });
 
-  wrap.addEventListener('contextmenu', e => { e.preventDefault(); showCtx(e.clientX, e.clientY); });
-  wrap.addEventListener('touchstart', e => { pressT = setTimeout(() => { showCtx(e.touches[0].clientX, e.touches[0].clientY); }, 500); }, {passive:true});
-  wrap.addEventListener('touchend', () => clearTimeout(pressT), {passive:true});
-  wrap.addEventListener('touchmove', () => clearTimeout(pressT), {passive:true});
+  // ─ LONG PRESS / RIGHT-CLICK CONTEXT MENU ─
+  let pressT;
+  const showCtxMenu=(cx,cy)=>{
+    // Close picker if open
+    picker.classList.remove('show');
+    // Show picker first (WA style: emoji bar then options below)
+    picker.classList.add('show');
+    // Also show context menu after slight delay
+    setTimeout(()=>showCtx(id,msgContent,isMe,cx,cy,picker),0);
+  };
+  wrap.addEventListener('contextmenu',e=>{e.preventDefault();showCtxMenu(e.clientX,e.clientY);});
+  wrap.addEventListener('touchstart',e=>{pressT=setTimeout(()=>showCtxMenu(e.touches[0].clientX,e.touches[0].clientY),500);},{passive:true});
+  wrap.addEventListener('touchend',()=>clearTimeout(pressT),{passive:true});
+  wrap.addEventListener('touchmove',()=>clearTimeout(pressT),{passive:true});
+
+
 
   row.appendChild(av);
   row.appendChild(wrap);
@@ -1988,7 +2190,107 @@ function renderMsg(id, data) {
 }
 
 
-let _sending = false;
+// ── CLAP BURST ──
+function triggerClapBurst(x, y) {
+  // If no coordinates, burst from center-top of screen
+  const cx = x || window.innerWidth / 2;
+  const cy = y || window.innerHeight * 0.6;
+  const words = ['شطورتي! 💫','رائع! ✨','أحسنت! 🌟','ما شاء الله! 💛','ذكية! ⭐'];
+  const word  = words[Math.floor(Math.random() * words.length)];
+  for(let i = 0; i < 3; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'clap-text';
+      el.textContent = i === 0 ? word : '👏';
+      el.style.left  = (cx + (Math.random()-0.5)*60) + 'px';
+      el.style.top   = cy + 'px';
+      el.style.fontSize = i === 0 ? '22px' : '28px';
+      el.style.animationDelay = (i*0.12)+'s';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }, i * 80);
+  }
+}
+
+// ── CONTEXT MENU ──
+function showCtx(id, msgContent, isMe, cx, cy, picker) {
+  // Remove existing menu
+  let menu = document.getElementById('waCtxMenu');
+  if(!menu) {
+    menu = document.createElement('div');
+    menu.id = 'waCtxMenu';
+    menu.className = 'wa-ctx-menu';
+    document.body.appendChild(menu);
+  }
+  menu.innerHTML = '';
+
+  const mk = (icon, label, fn, danger) => {
+    const el = document.createElement('div');
+    el.className = 'wa-ctx-item' + (danger?' danger':'');
+    el.innerHTML = '<span class="ctx-icon">'+icon+'</span><span>'+label+'</span>';
+    el.onclick = () => { menu.classList.remove('show'); fn(); };
+    menu.appendChild(el);
+  };
+  const sep = () => { const s=document.createElement('div'); s.className='wa-ctx-sep'; menu.appendChild(s); };
+
+  mk('😊', 'تفاعل', () => { picker && picker.classList.toggle('show'); });
+  mk('↩️', 'رد', () => {
+    const name = isMe ? (myNick||myName) : (hrNick||pName);
+    setReply(id, msgContent, name);
+  });
+  sep();
+  mk('⭐', starredMsgs.includes(id)?'إلغاء التمييز':'تمييز بنجمة', () => toggleStar(id));
+  mk('📋', 'نسخ النص', () => {
+    navigator.clipboard.writeText(msgContent).then(()=>showToast('تم نسخ النص')).catch(()=>{});
+  });
+  if(isMe) {
+    sep();
+    mk('🗑️', 'حذف', () => showDeleteModal(id), true);
+  }
+
+  // Position smartly
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const menuW = 200, menuH = 220;
+  let left = cx, top = cy + 8;
+  if(left + menuW > vw - 8) left = vw - menuW - 8;
+  if(left < 8) left = 8;
+  if(top + menuH > vh - 8) top = cy - menuH - 8;
+  menu.style.left = left + 'px';
+  menu.style.top  = top  + 'px';
+  menu.classList.add('show');
+
+  // Close on outside click
+  const closeMenu = (e) => {
+    if(!menu.contains(e.target)) {
+      menu.classList.remove('show');
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 50);
+}
+
+// ── REPLY SYSTEM ──
+let replyingTo = null;
+
+function setReply(id, text, senderName) {
+  replyingTo = { id, text, sender: senderName };
+  const bar     = document.getElementById('replyBar');
+  const nameEl  = document.getElementById('replyBarName');
+  const textEl  = document.getElementById('replyBarText');
+  if(!bar) return;
+  nameEl.textContent = senderName;
+  textEl.textContent = text.length > 60 ? text.slice(0,60)+'…' : text;
+  bar.classList.add('show');
+  document.getElementById('msgInput').focus();
+}
+
+window.cancelReply = () => {
+  replyingTo = null;
+  const bar = document.getElementById('replyBar');
+  if(bar) bar.classList.remove('show');
+};
+
+
 window.sendMsg = async () => {
   if(_sending) return;
   const inp=document.getElementById('msgInput');
@@ -1997,10 +2299,16 @@ window.sendMsg = async () => {
   _sending = true;
   inp.value=''; aR(inp);
   try {
-    await addDoc(collection(db,'chats',cid(),'messages'),{
+    const msgData = {
       content:text, senderId:uid, type:'text', reactions:[],
       sentAt:serverTimestamp(), readBy:[]
-    });
+    };
+    if(replyingTo) {
+      msgData.replyTo = { id:replyingTo.id, text:replyingTo.text, sender:replyingTo.sender };
+      replyingTo = null;
+      cancelReply();
+    }
+    await addDoc(collection(db,'chats',cid(),'messages'), msgData);
   } finally { _sending = false; }
 };
 
@@ -2103,8 +2411,11 @@ window.onKey = (ev) => {
 };
 window.aR = (el) => {
   if(!el) return;
-  el.style.height='auto';
-  el.style.height=Math.min(el.scrollHeight,100)+'px';
+  el.style.height = 'auto';
+  const h = Math.min(el.scrollHeight, 100);
+  el.style.height = h + 'px';
+  // Control overflow
+  el.style.overflowY = el.scrollHeight > 100 ? 'auto' : 'hidden';
 };
 
 // ── STICKERS IMPORT ──
