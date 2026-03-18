@@ -1242,12 +1242,12 @@ onAuthStateChanged(auth,async(user)=>{
     const unsub8=listenCinema(),unsub9=listenNovels();
     unsubs=[unsub1,unsub2,unsub3,unsub4,unsub5,unsub6,unsub7,unsub8,unsub9].filter(Boolean);
     renderThemes();renderGames();initDraw();renderCustomStickers();renderStkGrid();initEmojiGrid();
-    setTimeout(()=>{initPresence();initMobileNav();},600);
+    setTimeout(()=>{initPresence();initMobileNav();patchListenMsgs();},600);
   });
 });
 
 // NAVIGATION
-window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
+window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')setTimeout(()=>loadStats(),50);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
 
 // MESSAGES
 function listenMsgs(){if(!pId)return null;const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));return onSnapshot(q,snap=>{const area=document.getElementById('msgsArea');if(!area)return;const wasAtBottom=area.scrollHeight-area.clientHeight-area.scrollTop<100;area.innerHTML='';snap.docs.forEach(d=>renderMsg(d.id,d.data()));if(wasAtBottom)requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
@@ -1569,16 +1569,7 @@ let allMsgsCache = [];  // cache of all messages for search
 // Live-update cache whenever messages load
 const _origListenMsgs = listenMsgs;
 
-function initStatsSearch() {
-  // Watch for tab switch to stats
-  const origSwTab = window.swTab;
-  window.swTab = (n) => {
-    origSwTab(n);
-    if (n === 'stats') loadStats();
-  };
-}
-// Call after DOM ready
-setTimeout(initStatsSearch, 100);
+// stats loaded via swTab directly
 
 window.doSearch = (query) => {
   const q = (query || '').trim().toLowerCase();
@@ -1685,7 +1676,12 @@ function scrollToMsg(msgId) {
 
 // ── STATS ──
 window.loadStats = async () => {
-  if (!pId) return;
+  if (!pId) {
+    // Show "not ready" message and retry
+    const g = document.getElementById('statsGrid');
+    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:20px;font-size:13px">⏳ جارٍ التحميل... تأكد من ربط الحسابات أولاً</div>';
+    return;
+  }
 
   const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
 
@@ -1695,8 +1691,13 @@ window.loadStats = async () => {
     if (el) el.textContent = '…';
   });
 
-  const snap = await new Promise(res => {
-    const unsub = onSnapshot(q, s => { unsub(); res(s); });
+  // Use onSnapshot with immediate unsubscribe for a one-time read
+  const snap = await new Promise((res, rej) => {
+    let done = false;
+    const unsub = onSnapshot(q, 
+      s => { if(!done){done=true; unsub(); res(s);} },
+      e => { if(!done){done=true; rej(e);} }
+    );
   });
 
   const msgs = [];
@@ -1875,7 +1876,7 @@ function patchListenMsgs() {
     }));
   });
 }
-setTimeout(patchListenMsgs, 2000);
+// patchListenMsgs is called from auth after pId is set
 
 
 window.addEventListener('resize',()=>window.initMobileNav&&window.initMobileNav());
