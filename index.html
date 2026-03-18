@@ -1248,7 +1248,7 @@ onAuthStateChanged(auth,async(user)=>{
 });
 
 // NAVIGATION
-window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')loadStats();if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
+window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')loadStats();if(p)p.scrollTop=0;if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
 
 // MESSAGES
 function listenMsgs(){if(!pId)return null;const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));return onSnapshot(q,snap=>{const area=document.getElementById('msgsArea');if(!area)return;const wasAtBottom=area.scrollHeight-area.clientHeight-area.scrollTop<100;area.innerHTML='';snap.docs.forEach(d=>renderMsg(d.id,d.data()));if(wasAtBottom)requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
@@ -1664,35 +1664,21 @@ window.loadStats = () => {
     if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:30px;font-size:14px">🔗 يرجى ربط الحساب أولاً</div>';
     return;
   }
-
-  // Use the live cache populated by listenMsgs (already subscribed)
-  // If empty, subscribe fresh
   if (allMsgsCache.length > 0) {
     renderStats(allMsgsCache);
-  } else {
-    // Show spinners while loading
-    ['statTotalMsgs','statMyMsgs','statHrMsgs','statDays','statVoice','statImages'].forEach(id => {
-      const el = document.getElementById(id);
-      if(el) el.innerHTML = '<div style="width:20px;height:20px;border:2px solid rgba(201,168,76,.3);border-top-color:var(--g);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>';
-    });
-    // Fresh subscription
-    const q = query(collection(db,'chats',cid(),'messages'), orderBy('sentAt','asc'));
-    let done = false;
-    const unsub = onSnapshot(q, snap => {
-      if(done) return;
-      done = true;
-      unsub();
-      allMsgsCache = snap.docs.map(d => ({
-        id: d.id, ...d.data(),
-        _timeStr: d.data().sentAt ? fmtT(d.data().sentAt) : ''
-      }));
-      renderStats(allMsgsCache);
-    }, err => {
-      if(done) return; done = true;
-      const g = document.getElementById('statsGrid');
-      if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ff8080;padding:30px;font-size:13px">❌ تعذّر التحميل<br><br><button onclick="loadStats()" style="padding:8px 20px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">إعادة المحاولة 🔄</button></div>';
-    });
+    return;
   }
+  // Cache empty: fetch directly
+  const g = document.getElementById('statsGrid');
+  if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px"><div style="width:28px;height:28px;border:3px solid rgba(201,168,76,.3);border-top-color:var(--g);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div><div style="font-size:13px;color:var(--tm)">جارٍ التحميل...</div></div>';
+  const q = query(collection(db,'chats',cid(),'messages'), orderBy('sentAt','asc'));
+  const unsub = onSnapshot(q, snap => {
+    unsub();
+    allMsgsCache = snap.docs.map(d=>({id:d.id,...d.data(),_timeStr:d.data().sentAt?fmtT(d.data().sentAt):''}));
+    renderStats(allMsgsCache);
+  }, () => {
+    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ff8080;padding:30px;font-size:13px">❌ تعذّر التحميل<br><br><button onclick="loadStats()" style="margin-top:8px;padding:8px 20px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">🔄 إعادة المحاولة</button></div>';
+  });
 };
 
 function renderStats(msgs) {
