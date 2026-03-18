@@ -455,6 +455,7 @@ textarea.field{resize:none}
     <button class="tab" onclick="swTab('themes')">🎨 سمات</button>
     <button class="tab" onclick="swTab('cinema')">🎬 سينما</button>
     <button class="tab" onclick="swTab('novel')">📖 رواية</button>
+    <button class="tab" onclick="swTab('stats')">📊 إحصائيات</button>
   </div>
 
   <!-- CHAT -->
@@ -875,6 +876,85 @@ textarea.field{resize:none}
   </div>
 </div><!-- end appScreen -->
 
+  <!-- ══ STATS ══ -->
+  <div class="panel" id="panel-stats">
+    <div class="pi">
+      <div class="ptitle">📊 إحصائيات المحادثة</div>
+
+      <!-- Search bar -->
+      <div style="position:sticky;top:0;z-index:10;background:var(--d);padding-bottom:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;background:var(--d3);border:1px solid rgba(201,168,76,.2);border-radius:22px;display:flex;align-items:center;padding:6px 14px;gap:8px;transition:all .2s" id="searchWrap">
+            <span style="font-size:16px;color:var(--tm)">🔍</span>
+            <input id="searchInput" type="text" placeholder="ابحث في المحادثة..." style="flex:1;background:transparent;border:none;color:var(--tx);font-family:Tajawal,sans-serif;font-size:14px;outline:none;direction:rtl" oninput="doSearch(this.value)" onkeydown="if(event.key==='Enter')jumpSearch(1)">
+            <span id="searchCount" style="font-size:11px;color:var(--tm);white-space:nowrap;display:none"></span>
+            <button onclick="jumpSearch(-1)" id="searchPrev" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:14px;padding:0 2px;display:none">▲</button>
+            <button onclick="jumpSearch(1)"  id="searchNext" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:14px;padding:0 2px;display:none">▼</button>
+            <button onclick="clearSearch()" id="searchClear" style="background:none;border:none;color:var(--tm);cursor:pointer;font-size:14px;padding:0 2px;display:none">✕</button>
+          </div>
+        </div>
+        <!-- Search results preview -->
+        <div id="searchResults" style="display:none;margin-top:8px;background:var(--d3);border:1px solid rgba(201,168,76,.12);border-radius:14px;max-height:240px;overflow-y:auto"></div>
+      </div>
+
+      <!-- Stats cards -->
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px" id="statsGrid">
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:var(--g)" id="statTotalMsgs">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px">إجمالي الرسائل</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:var(--pk)" id="statMyMsgs">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px">رسائلك</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:var(--g)" id="statHrMsgs">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px" id="statHrLabel">رسائل شريكتك</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:#4ade80" id="statDays">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px">يوم معاً</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:var(--pk)" id="statVoice">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px">رسائل صوتية</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-size:36px;font-weight:800;color:#ffb347" id="statImages">—</div>
+          <div style="font-size:12px;color:var(--tm);margin-top:3px">صور وملصقات</div>
+        </div>
+      </div>
+
+      <!-- Activity bar chart -->
+      <div class="card">
+        <div class="ctitle">📅 نشاط آخر 7 أيام</div>
+        <div id="activityChart" style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:4px 0"></div>
+        <div id="activityLabels" style="display:flex;gap:6px;margin-top:4px;justify-content:space-between"></div>
+      </div>
+
+      <!-- Most used emojis -->
+      <div class="card">
+        <div class="ctitle">😍 أكثر الإيموجيات استخداماً</div>
+        <div id="topEmojis" style="display:flex;gap:8px;flex-wrap:wrap;font-size:22px"></div>
+      </div>
+
+      <!-- Message streak -->
+      <div class="card" style="background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(224,122,142,.07));border-color:rgba(201,168,76,.25)">
+        <div class="ctitle">🔥 أطول سلسلة محادثة متواصلة</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:44px;font-weight:800;color:var(--g)" id="statStreak">—</div>
+          <div>
+            <div style="font-size:13px;color:var(--tx);font-weight:600">يوم متواصل</div>
+            <div style="font-size:11px;color:var(--tm);margin-top:2px" id="statStreakDate"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Refresh button -->
+      <button class="pbtn" onclick="loadStats()" style="margin-top:4px">🔄 تحديث الإحصائيات</button>
+    </div>
+  </div>
+
 <!-- MODALS -->
 <div class="mbg" id="ideaModal">
   <div class="mbox">
@@ -1020,6 +1100,7 @@ textarea.field{resize:none}
     <button class="more-menu-item" onclick="mobileNav('fight');toggleMobileMore()"><span class="mi-icon">😤</span><span>مشاجرة</span></button>
     <button class="more-menu-item" onclick="mobileNav('nick');toggleMobileMore()"><span class="mi-icon">🏷️</span><span>كنيات</span></button>
     <button class="more-menu-item" onclick="mobileNav('lottery');toggleMobileMore()"><span class="mi-icon">🎲</span><span>قرعة</span></button>
+    <button class="more-menu-item" onclick="mobileNav('stats');toggleMobileMore()"><span class="mi-icon">📊</span><span>إحصائيات</span></button>
   </div>
 </div>
 
@@ -1166,7 +1247,7 @@ onAuthStateChanged(auth,async(user)=>{
 });
 
 // NAVIGATION
-window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
+window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
 
 // MESSAGES
 function listenMsgs(){if(!pId)return null;const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));return onSnapshot(q,snap=>{const area=document.getElementById('msgsArea');if(!area)return;const wasAtBottom=area.scrollHeight-area.clientHeight-area.scrollTop<100;area.innerHTML='';snap.docs.forEach(d=>renderMsg(d.id,d.data()));if(wasAtBottom)requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
@@ -1475,6 +1556,328 @@ document.querySelectorAll('.mbg').forEach(m=>m.addEventListener('click',function
 window.mobileNav=(tab)=>{swTab(tab);document.querySelectorAll('.mobile-nav-item').forEach(b=>b.classList.remove('on'));const mainTabs=['chat','games','cinema','novel'];const navId=mainTabs.includes(tab)?'mnav-'+tab:'mnav-more';const el=document.getElementById(navId);if(el)el.classList.add('on');};
 window.toggleMobileMore=()=>{const menu=document.getElementById('mobileMoreMenu');if(menu)menu.classList.toggle('show');};
 window.initMobileNav=()=>{const nav=document.getElementById('mobileBottomNav');if(nav)nav.style.display=window.innerWidth<=600?'flex':'none';};
+
+// ══════════════════════════════════
+// STATS & SEARCH
+// ══════════════════════════════════
+
+// ── SEARCH ──
+let searchMatches = [];
+let searchIdx = 0;
+let allMsgsCache = [];  // cache of all messages for search
+
+// Live-update cache whenever messages load
+const _origListenMsgs = listenMsgs;
+
+function initStatsSearch() {
+  // Watch for tab switch to stats
+  const origSwTab = window.swTab;
+  window.swTab = (n) => {
+    origSwTab(n);
+    if (n === 'stats') loadStats();
+  };
+}
+// Call after DOM ready
+setTimeout(initStatsSearch, 100);
+
+window.doSearch = (query) => {
+  const q = (query || '').trim().toLowerCase();
+  const resultsEl = document.getElementById('searchResults');
+  const countEl   = document.getElementById('searchCount');
+  const prevBtn   = document.getElementById('searchPrev');
+  const nextBtn   = document.getElementById('searchNext');
+  const clearBtn  = document.getElementById('searchClear');
+
+  if (!q) {
+    resultsEl.style.display = 'none';
+    countEl.style.display   = 'none';
+    if (prevBtn) prevBtn.style.display = 'none';
+    if (nextBtn) nextBtn.style.display = 'none';
+    if (clearBtn) clearBtn.style.display = 'none';
+    searchMatches = [];
+    return;
+  }
+
+  // Filter cached messages
+  searchMatches = allMsgsCache.filter(m => {
+    if (!m.content) return false;
+    if (m.type === 'img_sticker' || m.type === 'media_img' ||
+        m.type === 'media_video' || m.type === 'voice') return false;
+    return String(m.content).toLowerCase().includes(q);
+  });
+
+  searchIdx = 0;
+  countEl.style.display = 'inline';
+  if (prevBtn) prevBtn.style.display = 'inline';
+  if (nextBtn) nextBtn.style.display = 'inline';
+  if (clearBtn) clearBtn.style.display = 'inline';
+
+  if (!searchMatches.length) {
+    countEl.textContent = 'لا نتائج';
+    resultsEl.style.display = 'none';
+    return;
+  }
+
+  countEl.textContent = searchMatches.length + ' نتيجة';
+  resultsEl.style.display = 'block';
+  resultsEl.innerHTML = '';
+
+  searchMatches.forEach((m, i) => {
+    const isMe = m.senderId === uid;
+    const name = isMe ? (myNick || myName) : (hrNick || pName);
+    const text = String(m.content);
+    // Highlight the match
+    const re  = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    const highlighted = text.replace(re, '<mark style="background:rgba(201,168,76,.4);border-radius:3px;padding:0 2px;color:var(--tx)">$1</mark>');
+    const truncated = text.length > 80 ? text.slice(0, 80) + '…' : text;
+    const highlTrunc = truncated.replace(re, '<mark style="background:rgba(201,168,76,.4);border-radius:3px;padding:0 2px;color:var(--tx)">$1</mark>');
+
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s';
+    div.onmouseenter = () => div.style.background = 'rgba(201,168,76,.08)';
+    div.onmouseleave = () => div.style.background = '';
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
+        '<div style="width:18px;height:18px;border-radius:50%;background:' + (isMe ? 'var(--g)' : 'var(--pk)') + ';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#000;flex-shrink:0">' + name[0] + '</div>' +
+        '<span style="font-size:11px;font-weight:700;color:' + (isMe ? 'var(--g)' : 'var(--pk)') + '">' + name + '</span>' +
+        '<span style="font-size:10px;color:var(--tm);margin-right:auto">' + (m._timeStr || '') + '</span>' +
+      '</div>' +
+      '<div style="font-size:13px;color:var(--tx);line-height:1.5">' + highlTrunc + '</div>';
+
+    div.onclick = () => {
+      searchIdx = i;
+      countEl.textContent = (i + 1) + ' / ' + searchMatches.length;
+      // Switch to chat and scroll to message
+      window.swTab('chat');
+      setTimeout(() => scrollToMsg(m.id), 300);
+    };
+    resultsEl.appendChild(div);
+  });
+};
+
+window.jumpSearch = (dir) => {
+  if (!searchMatches.length) return;
+  searchIdx = (searchIdx + dir + searchMatches.length) % searchMatches.length;
+  const countEl = document.getElementById('searchCount');
+  if (countEl) countEl.textContent = (searchIdx + 1) + ' / ' + searchMatches.length;
+  window.swTab('chat');
+  setTimeout(() => scrollToMsg(searchMatches[searchIdx].id), 300);
+};
+
+window.clearSearch = () => {
+  const inp = document.getElementById('searchInput');
+  if (inp) inp.value = '';
+  window.doSearch('');
+};
+
+function scrollToMsg(msgId) {
+  const el = document.querySelector('[data-msgid="' + msgId + '"]');
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Flash highlight
+  const wrap = el.querySelector('.mwrap');
+  if (wrap) {
+    wrap.style.transition = 'background .2s';
+    wrap.style.background = 'rgba(201,168,76,.25)';
+    setTimeout(() => { wrap.style.background = ''; }, 1500);
+  }
+}
+
+// ── STATS ──
+window.loadStats = async () => {
+  if (!pId) return;
+
+  const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
+
+  // Show loading state
+  ['statTotalMsgs','statMyMsgs','statHrMsgs','statVoice','statImages'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '…';
+  });
+
+  const snap = await new Promise(res => {
+    const unsub = onSnapshot(q, s => { unsub(); res(s); });
+  });
+
+  const msgs = [];
+  snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
+
+  // Update search cache
+  allMsgsCache = msgs.map(m => ({
+    ...m,
+    _timeStr: m.sentAt ? fmtT(m.sentAt) : ''
+  }));
+
+  // ── Counters ──
+  const realMsgs  = msgs.filter(m => m.type !== 'system');
+  const myMsgs    = realMsgs.filter(m => m.senderId === uid);
+  const hrMsgs    = realMsgs.filter(m => m.senderId !== uid);
+  const voiceMsgs = realMsgs.filter(m => m.type === 'voice');
+  const imgMsgs   = realMsgs.filter(m => m.type === 'img_sticker' || m.type === 'media_img' || m.type === 'media_video');
+
+  setEl('statTotalMsgs', realMsgs.length.toLocaleString('ar-SA'));
+  setEl('statMyMsgs',    myMsgs.length.toLocaleString('ar-SA'));
+  setEl('statHrMsgs',    hrMsgs.length.toLocaleString('ar-SA'));
+  setEl('statVoice',     voiceMsgs.length.toLocaleString('ar-SA'));
+  setEl('statImages',    imgMsgs.length.toLocaleString('ar-SA'));
+  setEl('statHrLabel',   'رسائل ' + (hrNick || pName));
+
+  // ── Days together ──
+  if (msgs.length >= 2) {
+    const first = msgs[0].sentAt;
+    const last  = msgs[msgs.length - 1].sentAt;
+    if (first && last) {
+      const fd = first.toDate ? first.toDate() : new Date(first);
+      const ld = last.toDate  ? last.toDate()  : new Date(last);
+      const days = Math.max(1, Math.round((ld - fd) / 86400000));
+      setEl('statDays', days.toLocaleString('ar-SA'));
+    }
+  }
+
+  // ── Activity chart (last 7 days) ──
+  buildActivityChart(msgs);
+
+  // ── Top emojis ──
+  buildTopEmojis(msgs);
+
+  // ── Streak ──
+  buildStreak(msgs);
+};
+
+function buildActivityChart(msgs) {
+  const chartEl  = document.getElementById('activityChart');
+  const labelsEl = document.getElementById('activityLabels');
+  if (!chartEl || !labelsEl) return;
+
+  const days = [];
+  const now  = new Date();
+  const dayNames = ['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    days.push({
+      date: d.toDateString(),
+      label: i === 0 ? 'اليوم' : dayNames[d.getDay()],
+      count: 0
+    });
+  }
+
+  msgs.forEach(m => {
+    if (!m.sentAt) return;
+    const d = m.sentAt.toDate ? m.sentAt.toDate() : new Date(m.sentAt);
+    const key = d.toDateString();
+    const day = days.find(x => x.date === key);
+    if (day) day.count++;
+  });
+
+  const maxCount = Math.max(...days.map(d => d.count), 1);
+
+  chartEl.innerHTML  = '';
+  labelsEl.innerHTML = '';
+
+  days.forEach(day => {
+    const pct   = day.count / maxCount;
+    const height = Math.max(4, Math.round(pct * 72));
+
+    const col = document.createElement('div');
+    col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end';
+
+    const countLbl = document.createElement('div');
+    countLbl.style.cssText = 'font-size:9px;color:var(--tm)';
+    countLbl.textContent = day.count || '';
+
+    const bar = document.createElement('div');
+    bar.style.cssText = 'width:100%;border-radius:6px 6px 3px 3px;transition:height .4s ease;background:' +
+      (day.label === 'اليوم' ? 'var(--g)' : 'rgba(201,168,76,.35)');
+    bar.style.height = height + 'px';
+
+    col.appendChild(countLbl);
+    col.appendChild(bar);
+    chartEl.appendChild(col);
+
+    const lbl = document.createElement('div');
+    lbl.style.cssText = 'flex:1;text-align:center;font-size:9px;color:' +
+      (day.label === 'اليوم' ? 'var(--g)' : 'var(--tm)') + ';font-weight:' +
+      (day.label === 'اليوم' ? '700' : '400');
+    lbl.textContent = day.label;
+    labelsEl.appendChild(lbl);
+  });
+}
+
+function buildTopEmojis(msgs) {
+  const el = document.getElementById('topEmojis');
+  if (!el) return;
+  const emojiRe = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
+  const counts  = {};
+  msgs.forEach(m => {
+    if (!m.content || typeof m.content !== 'string') return;
+    const found = m.content.match(emojiRe);
+    if (found) found.forEach(e => { counts[e] = (counts[e] || 0) + 1; });
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  el.innerHTML = '';
+  if (!sorted.length) { el.textContent = 'لا يوجد إيموجي بعد'; el.style.fontSize = '13px'; el.style.color = 'var(--tm)'; return; }
+  sorted.forEach(([emoji, count]) => {
+    const span = document.createElement('span');
+    span.title = count + ' مرة';
+    span.style.cssText = 'cursor:default;position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:1px';
+    span.innerHTML = '<span style="font-size:26px">' + emoji + '</span><span style="font-size:9px;color:var(--tm)">' + count + '</span>';
+    el.appendChild(span);
+  });
+}
+
+function buildStreak(msgs) {
+  const el       = document.getElementById('statStreak');
+  const dateEl   = document.getElementById('statStreakDate');
+  if (!el) return;
+
+  const daySet = new Set();
+  msgs.forEach(m => {
+    if (!m.sentAt) return;
+    const d = m.sentAt.toDate ? m.sentAt.toDate() : new Date(m.sentAt);
+    daySet.add(d.toDateString());
+  });
+
+  const sortedDays = Array.from(daySet)
+    .map(s => new Date(s))
+    .sort((a, b) => a - b);
+
+  if (!sortedDays.length) { el.textContent = '0'; return; }
+
+  let maxStreak = 1, curStreak = 1, maxStart = sortedDays[0], curStart = sortedDays[0];
+  for (let i = 1; i < sortedDays.length; i++) {
+    const diff = (sortedDays[i] - sortedDays[i-1]) / 86400000;
+    if (diff === 1) {
+      curStreak++;
+      if (curStreak > maxStreak) { maxStreak = curStreak; maxStart = curStart; }
+    } else {
+      curStreak = 1;
+      curStart  = sortedDays[i];
+    }
+  }
+
+  el.textContent = maxStreak.toLocaleString('ar-SA');
+  if (dateEl) dateEl.textContent = 'بدءاً من ' + maxStart.toLocaleDateString('ar-SA');
+}
+
+// Auto-load when switching to stats panel
+// (handled via swTab override in initStatsSearch)
+
+// Also update cache whenever messages update
+function patchListenMsgs() {
+  if (!pId) return;
+  const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
+  onSnapshot(q, snap => {
+    allMsgsCache = snap.docs.map(d => ({
+      id: d.id, ...d.data(),
+      _timeStr: d.data().sentAt ? fmtT(d.data().sentAt) : ''
+    }));
+  });
+}
+setTimeout(patchListenMsgs, 2000);
+
+
 window.addEventListener('resize',()=>window.initMobileNav&&window.initMobileNav());
 </script>
 </body>
