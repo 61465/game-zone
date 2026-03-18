@@ -115,6 +115,7 @@ body{font-family:'Tajawal',sans-serif;background:var(--d);color:var(--tx);min-he
 .wa-reaction-btn{font-size:26px;cursor:pointer;transition:transform .15s;line-height:1}
 .wa-reaction-btn:hover{transform:scale(1.45) translateY(-6px)}
 @keyframes rxnPop{from{opacity:0;transform:scale(.6) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .wa-ctx-menu{position:fixed;background:var(--d2);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:5px 0;z-index:200;min-width:175px;box-shadow:0 10px 40px rgba(0,0,0,.75);display:none;animation:ctxIn .15s ease;backdrop-filter:blur(16px);overflow:hidden}
 .wa-ctx-menu.show{display:block}
 @keyframes ctxIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
@@ -1247,7 +1248,7 @@ onAuthStateChanged(auth,async(user)=>{
 });
 
 // NAVIGATION
-window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')setTimeout(()=>loadStats(),50);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
+window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')setTimeout(()=>{if(pId)loadStats();else{const g=document.getElementById('statsGrid');if(g)g.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:30px;font-size:13px">🔗 يرجى ربط الحساب أولاً</div>';}},200);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
 
 // MESSAGES
 function listenMsgs(){if(!pId)return null;const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));return onSnapshot(q,snap=>{const area=document.getElementById('msgsArea');if(!area)return;const wasAtBottom=area.scrollHeight-area.clientHeight-area.scrollTop<100;area.innerHTML='';snap.docs.forEach(d=>renderMsg(d.id,d.data()));if(wasAtBottom)requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
@@ -1677,11 +1678,15 @@ function scrollToMsg(msgId) {
 // ── STATS ──
 window.loadStats = async () => {
   if (!pId) {
-    // Show "not ready" message and retry
     const g = document.getElementById('statsGrid');
-    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:20px;font-size:13px">⏳ جارٍ التحميل... تأكد من ربط الحسابات أولاً</div>';
+    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:30px;font-size:14px">🔗 يرجى ربط الحساب أولاً</div>';
     return;
   }
+  // Show loading spinner in each card
+  ['statTotalMsgs','statMyMsgs','statHrMsgs','statDays','statVoice','statImages'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.innerHTML = '<div style="width:24px;height:24px;border:2px solid rgba(201,168,76,.3);border-top-color:var(--g);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>'; }
+  });
 
   const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
 
@@ -1692,13 +1697,23 @@ window.loadStats = async () => {
   });
 
   // Use onSnapshot with immediate unsubscribe for a one-time read
-  const snap = await new Promise((res, rej) => {
-    let done = false;
-    const unsub = onSnapshot(q, 
-      s => { if(!done){done=true; unsub(); res(s);} },
-      e => { if(!done){done=true; rej(e);} }
-    );
-  });
+  let snap;
+  try {
+    snap = await new Promise((res, rej) => {
+      let done = false;
+      const timer = setTimeout(() => {
+        if(!done){ done=true; rej(new Error('timeout')); }
+      }, 10000);
+      const unsub = onSnapshot(q,
+        s => { if(!done){done=true; clearTimeout(timer); unsub(); res(s);} },
+        e => { if(!done){done=true; clearTimeout(timer); rej(e);} }
+      );
+    });
+  } catch(err) {
+    const g = document.getElementById('statsGrid');
+    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ff8080;padding:30px;font-size:13px">❌ تعذّر التحميل — تحقق من الاتصال<br><br><button onclick="loadStats()" style="padding:8px 20px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">إعادة المحاولة 🔄</button></div>';
+    return;
+  }
 
   const msgs = [];
   snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
@@ -1878,6 +1893,25 @@ function patchListenMsgs() {
 }
 // patchListenMsgs is called from auth after pId is set
 
+
+
+// ── Auto-load stats when panel becomes visible ──
+(function() {
+  const statsPanel = document.getElementById('panel-stats');
+  if (!statsPanel) return;
+  const obs = new MutationObserver((mutations) => {
+    mutations.forEach(m => {
+      if (m.type === 'attributes' && m.attributeName === 'style') {
+        const isVisible = statsPanel.style.display === 'flex';
+        if (isVisible && pId) {
+          // Small delay to ensure Firebase is ready
+          setTimeout(loadStats, 150);
+        }
+      }
+    });
+  });
+  obs.observe(statsPanel, { attributes: true, attributeFilter: ['style'] });
+})();
 
 window.addEventListener('resize',()=>window.initMobileNav&&window.initMobileNav());
 </script>
