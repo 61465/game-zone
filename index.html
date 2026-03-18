@@ -1248,7 +1248,7 @@ onAuthStateChanged(auth,async(user)=>{
 });
 
 // NAVIGATION
-window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')setTimeout(()=>{if(pId)loadStats();else{const g=document.getElementById('statsGrid');if(g)g.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:30px;font-size:13px">🔗 يرجى ربط الحساب أولاً</div>';}},200);if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
+window.swTab=(n)=>{document.querySelectorAll('.panel').forEach(p=>{p.classList.remove('on');p.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));const p=document.getElementById('panel-'+n);if(p){p.style.display='flex';p.classList.add('on');}const map={chat:0,letter:1,mood:2,fight:3,games:4,disc:5,ideas:6,todo:7,draw:8,nick:9,lottery:10,memories:11,themes:12,cinema:13,novel:14,stats:15};const tabs=document.querySelectorAll('.tab');if(tabs[map[n]])tabs[map[n]].classList.add('on');if(n==='draw')setTimeout(resizeCanvas,100);if(n==='stats')loadStats();if(uid)setDoc(doc(db,'presence',uid),{tab:n,online:true,at:Date.now()},{merge:true}).catch(()=>{});};
 
 // MESSAGES
 function listenMsgs(){if(!pId)return null;const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));return onSnapshot(q,snap=>{const area=document.getElementById('msgsArea');if(!area)return;const wasAtBottom=area.scrollHeight-area.clientHeight-area.scrollTop<100;area.innerHTML='';snap.docs.forEach(d=>renderMsg(d.id,d.data()));if(wasAtBottom)requestAnimationFrame(()=>{area.scrollTop=area.scrollHeight;});});}
@@ -1562,15 +1562,12 @@ window.initMobileNav=()=>{const nav=document.getElementById('mobileBottomNav');i
 // STATS & SEARCH
 // ══════════════════════════════════
 
-// ── SEARCH ──
+// ══════════════════════════════════
+// SEARCH
+// ══════════════════════════════════
 let searchMatches = [];
 let searchIdx = 0;
-let allMsgsCache = [];  // cache of all messages for search
-
-// Live-update cache whenever messages load
-const _origListenMsgs = listenMsgs;
-
-// stats loaded via swTab directly
+let allMsgsCache = [];
 
 window.doSearch = (query) => {
   const q = (query || '').trim().toLowerCase();
@@ -1579,68 +1576,52 @@ window.doSearch = (query) => {
   const prevBtn   = document.getElementById('searchPrev');
   const nextBtn   = document.getElementById('searchNext');
   const clearBtn  = document.getElementById('searchClear');
+  const hide = (el) => { if(el) el.style.display='none'; };
+  const show = (el,d) => { if(el) el.style.display=d||'inline'; };
 
   if (!q) {
-    resultsEl.style.display = 'none';
-    countEl.style.display   = 'none';
-    if (prevBtn) prevBtn.style.display = 'none';
-    if (nextBtn) nextBtn.style.display = 'none';
-    if (clearBtn) clearBtn.style.display = 'none';
+    hide(resultsEl); hide(countEl); hide(prevBtn); hide(nextBtn); hide(clearBtn);
     searchMatches = [];
     return;
   }
-
-  // Filter cached messages
   searchMatches = allMsgsCache.filter(m => {
     if (!m.content) return false;
-    if (m.type === 'img_sticker' || m.type === 'media_img' ||
-        m.type === 'media_video' || m.type === 'voice') return false;
+    const t = m.type||'text';
+    if (t==='img_sticker'||t==='media_img'||t==='media_video'||t==='voice') return false;
     return String(m.content).toLowerCase().includes(q);
   });
-
   searchIdx = 0;
-  countEl.style.display = 'inline';
-  if (prevBtn) prevBtn.style.display = 'inline';
-  if (nextBtn) nextBtn.style.display = 'inline';
-  if (clearBtn) clearBtn.style.display = 'inline';
-
+  show(countEl); show(prevBtn); show(nextBtn); show(clearBtn);
   if (!searchMatches.length) {
     countEl.textContent = 'لا نتائج';
-    resultsEl.style.display = 'none';
+    hide(resultsEl);
     return;
   }
-
   countEl.textContent = searchMatches.length + ' نتيجة';
-  resultsEl.style.display = 'block';
+  show(resultsEl, 'block');
   resultsEl.innerHTML = '';
-
+  const re2 = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
   searchMatches.forEach((m, i) => {
     const isMe = m.senderId === uid;
-    const name = isMe ? (myNick || myName) : (hrNick || pName);
+    const name = isMe ? (myNick||myName) : (hrNick||pName);
     const text = String(m.content);
-    // Highlight the match
-    const re  = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-    const highlighted = text.replace(re, '<mark style="background:rgba(201,168,76,.4);border-radius:3px;padding:0 2px;color:var(--tx)">$1</mark>');
-    const truncated = text.length > 80 ? text.slice(0, 80) + '…' : text;
-    const highlTrunc = truncated.replace(re, '<mark style="background:rgba(201,168,76,.4);border-radius:3px;padding:0 2px;color:var(--tx)">$1</mark>');
-
+    const trunc = text.length > 80 ? text.slice(0,80)+'…' : text;
+    const hl = trunc.replace(re2, '<mark style="background:rgba(201,168,76,.4);border-radius:3px;padding:0 2px;color:var(--tx)">$1</mark>');
     const div = document.createElement('div');
     div.style.cssText = 'padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s';
     div.onmouseenter = () => div.style.background = 'rgba(201,168,76,.08)';
     div.onmouseleave = () => div.style.background = '';
     div.innerHTML =
-      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
-        '<div style="width:18px;height:18px;border-radius:50%;background:' + (isMe ? 'var(--g)' : 'var(--pk)') + ';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#000;flex-shrink:0">' + name[0] + '</div>' +
-        '<span style="font-size:11px;font-weight:700;color:' + (isMe ? 'var(--g)' : 'var(--pk)') + '">' + name + '</span>' +
-        '<span style="font-size:10px;color:var(--tm);margin-right:auto">' + (m._timeStr || '') + '</span>' +
-      '</div>' +
-      '<div style="font-size:13px;color:var(--tx);line-height:1.5">' + highlTrunc + '</div>';
-
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">'
+      + '<div style="width:18px;height:18px;border-radius:50%;background:'+(isMe?'var(--g)':'var(--pk)')+';display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#000;flex-shrink:0">'+name[0]+'</div>'
+      + '<span style="font-size:11px;font-weight:700;color:'+(isMe?'var(--g)':'var(--pk)')+'">'+name+'</span>'
+      + '<span style="font-size:10px;color:var(--tm);margin-right:auto">'+(m._timeStr||'')+'</span>'
+      + '</div>'
+      + '<div style="font-size:13px;color:var(--tx);line-height:1.5">'+hl+'</div>';
     div.onclick = () => {
       searchIdx = i;
-      countEl.textContent = (i + 1) + ' / ' + searchMatches.length;
-      // Switch to chat and scroll to message
-      window.swTab('chat');
+      countEl.textContent = (i+1)+' / '+searchMatches.length;
+      swTab('chat');
       setTimeout(() => scrollToMsg(m.id), 300);
     };
     resultsEl.appendChild(div);
@@ -1650,268 +1631,186 @@ window.doSearch = (query) => {
 window.jumpSearch = (dir) => {
   if (!searchMatches.length) return;
   searchIdx = (searchIdx + dir + searchMatches.length) % searchMatches.length;
-  const countEl = document.getElementById('searchCount');
-  if (countEl) countEl.textContent = (searchIdx + 1) + ' / ' + searchMatches.length;
-  window.swTab('chat');
+  const c = document.getElementById('searchCount');
+  if(c) c.textContent = (searchIdx+1)+' / '+searchMatches.length;
+  swTab('chat');
   setTimeout(() => scrollToMsg(searchMatches[searchIdx].id), 300);
 };
 
 window.clearSearch = () => {
   const inp = document.getElementById('searchInput');
-  if (inp) inp.value = '';
+  if(inp) inp.value = '';
   window.doSearch('');
 };
 
 function scrollToMsg(msgId) {
-  const el = document.querySelector('[data-msgid="' + msgId + '"]');
+  const el = document.querySelector('[data-msgid="'+msgId+'"]');
   if (!el) return;
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  // Flash highlight
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
   const wrap = el.querySelector('.mwrap');
   if (wrap) {
-    wrap.style.transition = 'background .2s';
-    wrap.style.background = 'rgba(201,168,76,.25)';
-    setTimeout(() => { wrap.style.background = ''; }, 1500);
+    wrap.style.transition = 'outline .2s';
+    wrap.style.outline = '2px solid rgba(201,168,76,.6)';
+    setTimeout(() => { wrap.style.outline = ''; }, 1800);
   }
 }
 
-// ── STATS ──
-window.loadStats = async () => {
-  if (!pId) {
+// ══════════════════════════════════
+// STATS
+// ══════════════════════════════════
+window.loadStats = () => {
+  if (!pId || !uid) {
     const g = document.getElementById('statsGrid');
     if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--tm);padding:30px;font-size:14px">🔗 يرجى ربط الحساب أولاً</div>';
     return;
   }
-  // Show loading spinner in each card
-  ['statTotalMsgs','statMyMsgs','statHrMsgs','statDays','statVoice','statImages'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.innerHTML = '<div style="width:24px;height:24px;border:2px solid rgba(201,168,76,.3);border-top-color:var(--g);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>'; }
-  });
 
-  const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
-
-  // Show loading state
-  ['statTotalMsgs','statMyMsgs','statHrMsgs','statVoice','statImages'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = '…';
-  });
-
-  // Use onSnapshot with immediate unsubscribe for a one-time read
-  let snap;
-  try {
-    snap = await new Promise((res, rej) => {
-      let done = false;
-      const timer = setTimeout(() => {
-        if(!done){ done=true; rej(new Error('timeout')); }
-      }, 10000);
-      const unsub = onSnapshot(q,
-        s => { if(!done){done=true; clearTimeout(timer); unsub(); res(s);} },
-        e => { if(!done){done=true; clearTimeout(timer); rej(e);} }
-      );
+  // Use the live cache populated by listenMsgs (already subscribed)
+  // If empty, subscribe fresh
+  if (allMsgsCache.length > 0) {
+    renderStats(allMsgsCache);
+  } else {
+    // Show spinners while loading
+    ['statTotalMsgs','statMyMsgs','statHrMsgs','statDays','statVoice','statImages'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '<div style="width:20px;height:20px;border:2px solid rgba(201,168,76,.3);border-top-color:var(--g);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto"></div>';
     });
-  } catch(err) {
-    const g = document.getElementById('statsGrid');
-    if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ff8080;padding:30px;font-size:13px">❌ تعذّر التحميل — تحقق من الاتصال<br><br><button onclick="loadStats()" style="padding:8px 20px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">إعادة المحاولة 🔄</button></div>';
-    return;
+    // Fresh subscription
+    const q = query(collection(db,'chats',cid(),'messages'), orderBy('sentAt','asc'));
+    let done = false;
+    const unsub = onSnapshot(q, snap => {
+      if(done) return;
+      done = true;
+      unsub();
+      allMsgsCache = snap.docs.map(d => ({
+        id: d.id, ...d.data(),
+        _timeStr: d.data().sentAt ? fmtT(d.data().sentAt) : ''
+      }));
+      renderStats(allMsgsCache);
+    }, err => {
+      if(done) return; done = true;
+      const g = document.getElementById('statsGrid');
+      if(g) g.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#ff8080;padding:30px;font-size:13px">❌ تعذّر التحميل<br><br><button onclick="loadStats()" style="padding:8px 20px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:var(--gl);color:var(--g);font-family:Tajawal,sans-serif;font-size:13px;cursor:pointer">إعادة المحاولة 🔄</button></div>';
+    });
   }
+};
 
-  const msgs = [];
-  snap.forEach(d => msgs.push({ id: d.id, ...d.data() }));
-
-  // Update search cache
-  allMsgsCache = msgs.map(m => ({
-    ...m,
-    _timeStr: m.sentAt ? fmtT(m.sentAt) : ''
-  }));
-
-  // ── Counters ──
+function renderStats(msgs) {
   const realMsgs  = msgs.filter(m => m.type !== 'system');
   const myMsgs    = realMsgs.filter(m => m.senderId === uid);
   const hrMsgs    = realMsgs.filter(m => m.senderId !== uid);
   const voiceMsgs = realMsgs.filter(m => m.type === 'voice');
-  const imgMsgs   = realMsgs.filter(m => m.type === 'img_sticker' || m.type === 'media_img' || m.type === 'media_video');
+  const imgMsgs   = realMsgs.filter(m => ['img_sticker','media_img','media_video'].includes(m.type));
 
   setEl('statTotalMsgs', realMsgs.length.toLocaleString('ar-SA'));
   setEl('statMyMsgs',    myMsgs.length.toLocaleString('ar-SA'));
   setEl('statHrMsgs',    hrMsgs.length.toLocaleString('ar-SA'));
   setEl('statVoice',     voiceMsgs.length.toLocaleString('ar-SA'));
   setEl('statImages',    imgMsgs.length.toLocaleString('ar-SA'));
-  setEl('statHrLabel',   'رسائل ' + (hrNick || pName));
+  setEl('statHrLabel',   'رسائل '+(hrNick||pName));
 
-  // ── Days together ──
-  if (msgs.length >= 2) {
+  // Days together
+  if (msgs.length >= 1) {
     const first = msgs[0].sentAt;
-    const last  = msgs[msgs.length - 1].sentAt;
-    if (first && last) {
+    if (first) {
       const fd = first.toDate ? first.toDate() : new Date(first);
-      const ld = last.toDate  ? last.toDate()  : new Date(last);
-      const days = Math.max(1, Math.round((ld - fd) / 86400000));
+      const days = Math.max(1, Math.round((Date.now() - fd.getTime()) / 86400000));
       setEl('statDays', days.toLocaleString('ar-SA'));
     }
   }
 
-  // ── Activity chart (last 7 days) ──
   buildActivityChart(msgs);
-
-  // ── Top emojis ──
   buildTopEmojis(msgs);
-
-  // ── Streak ──
   buildStreak(msgs);
-};
+}
 
 function buildActivityChart(msgs) {
   const chartEl  = document.getElementById('activityChart');
   const labelsEl = document.getElementById('activityLabels');
-  if (!chartEl || !labelsEl) return;
-
-  const days = [];
-  const now  = new Date();
-  const dayNames = ['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'];
-
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(now);
-    d.setDate(d.getDate() - i);
-    days.push({
-      date: d.toDateString(),
-      label: i === 0 ? 'اليوم' : dayNames[d.getDay()],
-      count: 0
-    });
+  if (!chartEl||!labelsEl) return;
+  const days=[], now=new Date();
+  const dayNames=['أحد','اثن','ثلا','أرب','خمي','جمع','سبت'];
+  for(let i=6;i>=0;i--){
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    days.push({date:d.toDateString(),label:i===0?'اليوم':dayNames[d.getDay()],count:0});
   }
-
-  msgs.forEach(m => {
-    if (!m.sentAt) return;
-    const d = m.sentAt.toDate ? m.sentAt.toDate() : new Date(m.sentAt);
-    const key = d.toDateString();
-    const day = days.find(x => x.date === key);
-    if (day) day.count++;
+  msgs.forEach(m=>{
+    if(!m.sentAt) return;
+    const d=m.sentAt.toDate?m.sentAt.toDate():new Date(m.sentAt);
+    const day=days.find(x=>x.date===d.toDateString());
+    if(day) day.count++;
   });
-
-  const maxCount = Math.max(...days.map(d => d.count), 1);
-
-  chartEl.innerHTML  = '';
-  labelsEl.innerHTML = '';
-
-  days.forEach(day => {
-    const pct   = day.count / maxCount;
-    const height = Math.max(4, Math.round(pct * 72));
-
-    const col = document.createElement('div');
-    col.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end';
-
-    const countLbl = document.createElement('div');
-    countLbl.style.cssText = 'font-size:9px;color:var(--tm)';
-    countLbl.textContent = day.count || '';
-
-    const bar = document.createElement('div');
-    bar.style.cssText = 'width:100%;border-radius:6px 6px 3px 3px;transition:height .4s ease;background:' +
-      (day.label === 'اليوم' ? 'var(--g)' : 'rgba(201,168,76,.35)');
-    bar.style.height = height + 'px';
-
-    col.appendChild(countLbl);
-    col.appendChild(bar);
-    chartEl.appendChild(col);
-
-    const lbl = document.createElement('div');
-    lbl.style.cssText = 'flex:1;text-align:center;font-size:9px;color:' +
-      (day.label === 'اليوم' ? 'var(--g)' : 'var(--tm)') + ';font-weight:' +
-      (day.label === 'اليوم' ? '700' : '400');
-    lbl.textContent = day.label;
+  const maxCount=Math.max(...days.map(d=>d.count),1);
+  chartEl.innerHTML=''; labelsEl.innerHTML='';
+  days.forEach(day=>{
+    const pct=day.count/maxCount, height=Math.max(4,Math.round(pct*72));
+    const col=document.createElement('div');
+    col.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end';
+    const cntLbl=document.createElement('div');
+    cntLbl.style.cssText='font-size:9px;color:var(--tm)';
+    cntLbl.textContent=day.count||'';
+    const bar=document.createElement('div');
+    bar.style.cssText='width:100%;border-radius:6px 6px 3px 3px;background:'+(day.label==='اليوم'?'var(--g)':'rgba(201,168,76,.35)');
+    bar.style.height=height+'px';
+    col.appendChild(cntLbl); col.appendChild(bar); chartEl.appendChild(col);
+    const lbl=document.createElement('div');
+    lbl.style.cssText='flex:1;text-align:center;font-size:9px;color:'+(day.label==='اليوم'?'var(--g)':'var(--tm)')+';font-weight:'+(day.label==='اليوم'?'700':'400');
+    lbl.textContent=day.label;
     labelsEl.appendChild(lbl);
   });
 }
 
 function buildTopEmojis(msgs) {
-  const el = document.getElementById('topEmojis');
-  if (!el) return;
-  const emojiRe = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-  const counts  = {};
-  msgs.forEach(m => {
-    if (!m.content || typeof m.content !== 'string') return;
-    const found = m.content.match(emojiRe);
-    if (found) found.forEach(e => { counts[e] = (counts[e] || 0) + 1; });
+  const el=document.getElementById('topEmojis'); if(!el) return;
+  const emojiRe=/\p{Emoji_Presentation}/gu, counts={};
+  msgs.forEach(m=>{
+    if(!m.content||typeof m.content!=='string') return;
+    const found=m.content.match(emojiRe);
+    if(found) found.forEach(e=>{counts[e]=(counts[e]||0)+1;});
   });
-  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  el.innerHTML = '';
-  if (!sorted.length) { el.textContent = 'لا يوجد إيموجي بعد'; el.style.fontSize = '13px'; el.style.color = 'var(--tm)'; return; }
-  sorted.forEach(([emoji, count]) => {
-    const span = document.createElement('span');
-    span.title = count + ' مرة';
-    span.style.cssText = 'cursor:default;position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:1px';
-    span.innerHTML = '<span style="font-size:26px">' + emoji + '</span><span style="font-size:9px;color:var(--tm)">' + count + '</span>';
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  el.innerHTML='';
+  if(!sorted.length){el.innerHTML='<span style="font-size:13px;color:var(--tm)">لا يوجد إيموجي بعد</span>';return;}
+  sorted.forEach(([emoji,count])=>{
+    const span=document.createElement('span');
+    span.style.cssText='cursor:default;display:inline-flex;flex-direction:column;align-items:center;gap:2px';
+    span.innerHTML='<span style="font-size:26px">'+emoji+'</span><span style="font-size:9px;color:var(--tm)">'+count+'</span>';
     el.appendChild(span);
   });
 }
 
 function buildStreak(msgs) {
-  const el       = document.getElementById('statStreak');
-  const dateEl   = document.getElementById('statStreakDate');
-  if (!el) return;
-
-  const daySet = new Set();
-  msgs.forEach(m => {
-    if (!m.sentAt) return;
-    const d = m.sentAt.toDate ? m.sentAt.toDate() : new Date(m.sentAt);
+  const el=document.getElementById('statStreak'), dateEl=document.getElementById('statStreakDate');
+  if(!el) return;
+  const daySet=new Set();
+  msgs.forEach(m=>{
+    if(!m.sentAt) return;
+    const d=m.sentAt.toDate?m.sentAt.toDate():new Date(m.sentAt);
     daySet.add(d.toDateString());
   });
-
-  const sortedDays = Array.from(daySet)
-    .map(s => new Date(s))
-    .sort((a, b) => a - b);
-
-  if (!sortedDays.length) { el.textContent = '0'; return; }
-
-  let maxStreak = 1, curStreak = 1, maxStart = sortedDays[0], curStart = sortedDays[0];
-  for (let i = 1; i < sortedDays.length; i++) {
-    const diff = (sortedDays[i] - sortedDays[i-1]) / 86400000;
-    if (diff === 1) {
-      curStreak++;
-      if (curStreak > maxStreak) { maxStreak = curStreak; maxStart = curStart; }
-    } else {
-      curStreak = 1;
-      curStart  = sortedDays[i];
-    }
+  const sortedDays=Array.from(daySet).map(s=>new Date(s)).sort((a,b)=>a-b);
+  if(!sortedDays.length){el.textContent='0';return;}
+  let maxStreak=1,curStreak=1,maxStart=sortedDays[0],curStart=sortedDays[0];
+  for(let i=1;i<sortedDays.length;i++){
+    const diff=(sortedDays[i]-sortedDays[i-1])/86400000;
+    if(diff===1){curStreak++;if(curStreak>maxStreak){maxStreak=curStreak;maxStart=curStart;}}
+    else{curStreak=1;curStart=sortedDays[i];}
   }
-
-  el.textContent = maxStreak.toLocaleString('ar-SA');
-  if (dateEl) dateEl.textContent = 'بدءاً من ' + maxStart.toLocaleDateString('ar-SA');
+  el.textContent=maxStreak.toLocaleString('ar-SA');
+  if(dateEl) dateEl.textContent='بدءاً من '+maxStart.toLocaleDateString('ar-SA');
 }
 
-// Auto-load when switching to stats panel
-// (handled via swTab override in initStatsSearch)
-
-// Also update cache whenever messages update
+// Keep allMsgsCache fresh from the live listener (called after pId is known)
 function patchListenMsgs() {
-  if (!pId) return;
-  const q = query(collection(db, 'chats', cid(), 'messages'), orderBy('sentAt', 'asc'));
-  onSnapshot(q, snap => {
-    allMsgsCache = snap.docs.map(d => ({
-      id: d.id, ...d.data(),
+  if(!pId) return;
+  const q=query(collection(db,'chats',cid(),'messages'),orderBy('sentAt','asc'));
+  onSnapshot(q, snap=>{
+    allMsgsCache=snap.docs.map(d=>({
+      id:d.id, ...d.data(),
       _timeStr: d.data().sentAt ? fmtT(d.data().sentAt) : ''
     }));
   });
 }
-// patchListenMsgs is called from auth after pId is set
-
-
-
-// ── Auto-load stats when panel becomes visible ──
-(function() {
-  const statsPanel = document.getElementById('panel-stats');
-  if (!statsPanel) return;
-  const obs = new MutationObserver((mutations) => {
-    mutations.forEach(m => {
-      if (m.type === 'attributes' && m.attributeName === 'style') {
-        const isVisible = statsPanel.style.display === 'flex';
-        if (isVisible && pId) {
-          // Small delay to ensure Firebase is ready
-          setTimeout(loadStats, 150);
-        }
-      }
-    });
-  });
-  obs.observe(statsPanel, { attributes: true, attributeFilter: ['style'] });
-})();
 
 window.addEventListener('resize',()=>window.initMobileNav&&window.initMobileNav());
 </script>
